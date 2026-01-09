@@ -16,11 +16,11 @@ const PLACEHOLDER_WIDGET_2 = <BigNum value="Right" label="Region B" />;
 
 export function LayoutsSection() {
   return (
-    <section id="layouts" className="space-y-12 pt-16">
-      <div className="pb-4 border-b border-gray-200 dark:border-gray-700">
-        <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Layouts</h2>
-        <p className="mt-2 text-lg text-gray-600 dark:text-gray-400">
-          Structural components that define how widgets are positioned on a slide.
+    <section id="layouts" className="space-y-8">
+      <div className="pb-4 border-b border-neutral-200">
+        <h2 className="text-2xl font-bold text-neutral-900">Layouts (L1)</h2>
+        <p className="mt-1 text-sm text-neutral-600">
+          Structural components that define how blocks are positioned on a slide.
         </p>
       </div>
 
@@ -28,6 +28,7 @@ export function LayoutsSection() {
         title="LayoutCover"
         description="Used for title slides or section headers. Vertically centered content."
         component={LayoutCover}
+        level="layout"
         defaultProps={{
             title: "Project Alpha",
             subtitle: "Q3 Strategy Update",
@@ -46,6 +47,7 @@ export function LayoutsSection() {
         title="LayoutStacked"
         description="Simple single-column vertical stack."
         component={LayoutStacked}
+        level="layout"
         defaultProps={{
             title: "Executive Summary"
         }}
@@ -54,10 +56,10 @@ export function LayoutsSection() {
         ]}
       >
         <div className="w-full p-4 bg-blue-100 border border-blue-300 rounded text-center text-blue-800">
-            Widget Slot 1
+            Block Slot 1
         </div>
         <div className="w-full p-4 bg-green-100 border border-green-300 rounded text-center text-green-800">
-             Widget Slot 2
+             Block Slot 2
         </div>
       </ComponentShowcase>
 
@@ -65,6 +67,7 @@ export function LayoutsSection() {
         title="LayoutSplit"
         description="Two-column layout with adjustable ratios."
         component={LayoutSplit}
+        level="layout"
         defaultProps={{
             title: "Comparison",
             subtitle: "Year over Year analysis",
@@ -90,6 +93,7 @@ export function LayoutsSection() {
         title="LayoutGrid"
         description="Grid layout for displaying multiple items."
         component={LayoutGrid}
+        level="layout"
         defaultProps={{
             title: "Key Metrics Grid",
             columns: 2
@@ -109,6 +113,7 @@ export function LayoutsSection() {
         title="LayoutDashboard"
         description="Multi-panel dashboard layout with Header, Main, and Sidebar slots."
         component={LayoutDashboard}
+        level="layout"
         defaultProps={{
             variant: 'default'
         }}
@@ -117,17 +122,17 @@ export function LayoutsSection() {
         ]}
       >
         <Header>
-          <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded">
+          <div className="p-2 bg-blue-100 rounded">
             <Heading level={3}>Dashboard Header</Heading>
           </div>
         </Header>
         <Main>
-          <div className="p-4 bg-green-100 dark:bg-green-900 rounded h-32 flex items-center justify-center">
+          <div className="p-4 bg-green-100 rounded h-32 flex items-center justify-center">
             <Text>Main Content Area</Text>
           </div>
         </Main>
         <Sidebar>
-          <div className="p-4 bg-purple-100 dark:bg-purple-900 rounded h-32 flex items-center justify-center">
+          <div className="p-4 bg-purple-100 rounded h-32 flex items-center justify-center">
             <Text>Sidebar</Text>
           </div>
         </Sidebar>
@@ -137,6 +142,7 @@ export function LayoutsSection() {
         title="LayoutTimeline"
         description="Horizontal timeline with alternating nodes above/below center line."
         component={LayoutTimeline}
+        level="layout"
         defaultProps={{}}
         propConfigs={[]}
       >

@@ -28,11 +28,11 @@ import {
 
 export function WidgetsSection() {
   return (
-    <section id="widgets" className="space-y-12">
-      <div className="pb-4 border-b border-gray-200 dark:border-gray-700">
-        <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Widgets</h2>
-        <p className="mt-2 text-lg text-gray-600 dark:text-gray-400">
-          Atomic-level display components used to present specific data points.
+    <section id="widgets" className="space-y-8">
+      <div className="pb-4 border-b border-neutral-200">
+        <h2 className="text-2xl font-bold text-neutral-900">Blocks (L2)</h2>
+        <p className="mt-1 text-sm text-neutral-600">
+          Data display components: charts, metrics, lists, tables. Rendered inside a LayoutStacked wrapper.
         </p>
       </div>
 
@@ -40,6 +40,7 @@ export function WidgetsSection() {
         title="BigNum"
         description="Displays a single prominent number with label and sublabel."
         component={BigNum}
+        level="block"
         defaultProps={{
             value: MOCK_BIGNUM.value,
             label: MOCK_BIGNUM.label,
@@ -56,6 +57,7 @@ export function WidgetsSection() {
         title="MetricStrip"
         description="A horizontal strip of metrics, useful for dashboard summaries."
          component={MetricStrip}
+         level="block"
          defaultProps={{
              title: "Key Performance Indicators",
              metrics: [
@@ -74,6 +76,7 @@ export function WidgetsSection() {
         title="MetricCard"
         description="A card container for grouping related metrics."
         component={MetricCard}
+        level="block"
         defaultProps={{
             title: MOCK_METRIC_CARD.title,
             metrics: MOCK_METRIC_CARD.items
@@ -90,6 +93,7 @@ export function WidgetsSection() {
         title="ChartBar"
         description="Standard bar chart for categorical data."
         component={ChartBar}
+        level="block"
         defaultProps={MOCK_CHART_BAR}
         propConfigs={[
             { name: 'title', type: 'text', label: 'Chart Title' },
@@ -101,6 +105,7 @@ export function WidgetsSection() {
           title="SmartList"
           description="A styled list component."
           component={SmartList}
+          level="block"
           defaultProps={MOCK_SMART_LIST}
           propConfigs={[
               { name: 'items', type: 'json', label: 'List Items (Array of strings)'}
@@ -111,6 +116,7 @@ export function WidgetsSection() {
           title="TableData"
           description="A basic data table."
           component={TableData}
+          level="block"
           defaultProps={MOCK_TABLE_DATA}
           propConfigs={[
               { name: 'headers', type: 'json', label: 'Headers (Array)'},
@@ -122,6 +128,7 @@ export function WidgetsSection() {
         title="ChartLine"
         description="Line chart for trend visualization over time."
         component={ChartLine}
+        level="block"
         defaultProps={MOCK_CHART_LINE}
         propConfigs={[
           { name: 'title', type: 'text', label: 'Chart Title' },
@@ -136,6 +143,7 @@ export function WidgetsSection() {
         title="ChartPie"
         description="Pie/donut chart for proportional data."
         component={ChartPie}
+        level="block"
         defaultProps={MOCK_CHART_PIE}
         propConfigs={[
           { name: 'title', type: 'text', label: 'Chart Title' },
@@ -149,6 +157,7 @@ export function WidgetsSection() {
         title="StepList"
         description="Vertical numbered steps with visual connectors."
         component={StepList}
+        level="block"
         defaultProps={MOCK_STEP_LIST}
         propConfigs={[
           { name: 'title', type: 'text', label: 'Title' },
@@ -161,6 +170,7 @@ export function WidgetsSection() {
         title="ProcessStrip"
         description="Horizontal process phases with status indicators."
         component={ProcessStrip}
+        level="block"
         defaultProps={MOCK_PROCESS_STRIP}
         propConfigs={[
           { name: 'title', type: 'text', label: 'Title' },
@@ -174,6 +184,7 @@ export function WidgetsSection() {
         title="QuoteBlock"
         description="Block quote for testimonials and citations."
         component={QuoteBlock}
+        level="block"
         defaultProps={MOCK_QUOTE}
         propConfigs={[
           { name: 'author', type: 'text', label: 'Author' },
