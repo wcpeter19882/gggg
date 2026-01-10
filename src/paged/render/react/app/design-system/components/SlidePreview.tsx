@@ -11,9 +11,10 @@
  * - Scaled down to fit container (maintains aspect ratio)
  * - Isolated theme injection (CSS variables scoped to this element)
  * - Optional debug bounds overlay
+ * - fillContainer mode: auto-scales to fill parent while maintaining 16:9
  */
 
-import React, { useEffect, useRef, type ReactNode } from 'react';
+import React, { useEffect, useRef, useState, type ReactNode } from 'react';
 import { getTheme, themeToCSSVariables, vibeToCSSVariables } from '@/themes';
 import type { ThemeName, VibeLevel } from '@/utils/types';
 
@@ -23,6 +24,7 @@ import type { ThemeName, VibeLevel } from '@/utils/types';
 
 const SLIDE_WIDTH = 1920;
 const SLIDE_HEIGHT = 1080;
+const ASPECT_RATIO = SLIDE_WIDTH / SLIDE_HEIGHT;
 
 // =============================================================================
 // Types
@@ -38,8 +40,10 @@ export interface SlidePreviewProps {
   showBounds?: boolean;
   /** Scale factor (default auto-calculated to fit container) */
   scale?: number;
-  /** Container max width in pixels */
+  /** Container max width in pixels (ignored if fillContainer is true) */
   maxWidth?: number;
+  /** If true, auto-scale to fill parent container while maintaining 16:9 ratio */
+  fillContainer?: boolean;
 }
 
 // =============================================================================
@@ -52,12 +56,46 @@ export function SlidePreview({
   vibe,
   showBounds = false,
   maxWidth = 800,
+  fillContainer = false,
 }: SlidePreviewProps): JSX.Element {
   const slideRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerSize, setContainerSize] = useState<{ width: number; height: number } | null>(null);
   
-  // Calculate scale based on maxWidth
-  const scale = maxWidth / SLIDE_WIDTH;
-  const scaledHeight = SLIDE_HEIGHT * scale;
+  // Use ResizeObserver to track container size when fillContainer is true
+  useEffect(() => {
+    if (!fillContainer || !containerRef.current) return;
+    
+    const resizeObserver = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (entry) {
+        setContainerSize({
+          width: entry.contentRect.width,
+          height: entry.contentRect.height,
+        });
+      }
+    });
+    
+    resizeObserver.observe(containerRef.current);
+    return () => resizeObserver.disconnect();
+  }, [fillContainer]);
+
+  // Calculate scale and dimensions
+  let computedWidth: number;
+  let computedHeight: number;
+  let computedScale: number;
+
+  if (fillContainer && containerSize) {
+    // Fill container width, height follows 16:9 ratio
+    computedWidth = containerSize.width;
+    computedScale = computedWidth / SLIDE_WIDTH;
+    computedHeight = SLIDE_HEIGHT * computedScale;
+  } else {
+    // Fixed maxWidth mode
+    computedWidth = maxWidth;
+    computedScale = maxWidth / SLIDE_WIDTH;
+    computedHeight = SLIDE_HEIGHT * computedScale;
+  }
 
   // Apply CSS variables directly to the element when theme/vibe changes
   useEffect(() => {
@@ -76,43 +114,54 @@ export function SlidePreview({
 
   return (
     <div 
+      ref={containerRef}
       className="slide-preview-container"
       style={{
-        width: `${maxWidth}px`,
-        height: `${scaledHeight}px`,
-        overflow: 'hidden',
+        width: fillContainer ? '100%' : `${computedWidth}px`,
+        height: fillContainer ? 'auto' : `${computedHeight}px`,
+        overflow: 'visible',
         position: 'relative',
-        borderRadius: '4px',
-        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
       }}
     >
-      {/* The actual slide at 1920×1080, scaled down */}
+      {/* Inner wrapper for the scaled slide */}
       <div
-        ref={slideRef}
-        className={`slide-preview ${showBounds ? 'debug-bounds' : ''}`}
         style={{
-          width: `${SLIDE_WIDTH}px`,
-          height: `${SLIDE_HEIGHT}px`,
-          transform: `scale(${scale})`,
-          transformOrigin: 'top left',
+          width: `${computedWidth}px`,
+          height: `${computedHeight}px`,
+          position: 'relative',
+          borderRadius: '4px',
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
+          overflow: 'hidden',
         }}
-        data-theme={theme}
-        data-vibe={vibe}
       >
-        {/* Slide inner content */}
-        <div 
-          className="slide-preview-content"
+        {/* The actual slide at 1920×1080, scaled down */}
+        <div
+          ref={slideRef}
+          className={`slide-preview ${showBounds ? 'debug-bounds' : ''}`}
           style={{
-            width: '100%',
-            height: '100%',
-            backgroundColor: 'var(--theme-bg)',
-            color: 'var(--theme-text)',
-            fontFamily: 'var(--theme-font-body)',
-            position: 'relative',
-            overflow: 'hidden',
+            width: `${SLIDE_WIDTH}px`,
+            height: `${SLIDE_HEIGHT}px`,
+            transform: `scale(${computedScale})`,
+            transformOrigin: 'top left',
           }}
+          data-theme={theme}
+          data-vibe={vibe}
         >
-          {children}
+          {/* Slide inner content */}
+          <div 
+            className="slide-preview-content"
+            style={{
+              width: '100%',
+              height: '100%',
+              backgroundColor: 'var(--theme-bg)',
+              color: 'var(--theme-text)',
+              fontFamily: 'var(--theme-font-body)',
+              position: 'relative',
+              overflow: 'hidden',
+            }}
+          >
+            {children}
+          </div>
         </div>
       </div>
 
