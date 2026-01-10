@@ -42,6 +42,21 @@ We are moving towards a **Schema-Driven**, deterministic architecture where visu
 *   **Responsibility**: CSS Grid Areas, Global Padding, Backgrounds.
 *   **Interface**: Props are explicit semantic slots (e.g., `header`, `sidebar`), not generic `children`.
 
+**⚠️ CRITICAL RULE: Template Slot Consistency**
+
+All templates MUST use the same CSS variables for spacing to ensure the generation engine can reliably calculate available space:
+
+| Property | CSS Variable | Default Value | Purpose |
+|----------|--------------|---------------|----------|
+| Outer padding | `--theme-spacing-padding` | `64px 80px` | Slide edge margins |
+| Section gap | `--theme-spacing-margin` | `24px` | Gap between header/body/footer |
+| Column gap | `--theme-spacing-gap` | `40px` | Gap between columns/slots |
+
+**Slot styling rules:**
+1. All slots within a template MUST have identical structural styling (no extra padding/margin on specific slots)
+2. Visual styling (backgrounds, borders, border-radius) MUST NOT be applied to slots directly—use SlotLayout or wrapper components inside the slot instead
+3. This ensures consistent space calculation for validation and content fitting
+
 #### 2. Slot (The Semantic Region)
 *   **Role**: The contract/interface between a Template and its content.
 *   **Responsibility**: **Validation & Constraint**. It strictly defines which **SlotLayouts** (e.g., Stack, Grid) and **Components** (e.g., Chart, Timeline) are valid for this specific region. It ensures an agent cannot attempt to fit an incompatible layout or component into a constrained slot.
@@ -105,23 +120,65 @@ We will adoption an **"Extract -> Wrap -> Expose"** strategy. We set up new para
 
 ### Workspace Setup
 *   **New Component Folders**:
-    *   `src/paged/render/react/components/slot-layouts/` -> For **SlotLayout** primitives (Phase 1).
+    *   `src/paged/render/react/components/slot-layouts/` -> For **SlotLayout** primitives (Phase 1). ✅ **COMPLETED**
     *   `src/paged/render/react/components/templates/` -> For **Template** components (Phase 2).
 *   **New Design System Page**:
     *   `src/paged/render/react/app/design-system/v2/page.tsx` -> Sandbox for testing the 4-layer assembly.
 
-### Phase 1: Extract Structure Primitives (SlotLayouts)
+### Phase 1: Extract Structure Primitives (SlotLayouts) ✅ **COMPLETED**
 **Goal**: Decouple "Stacking/Grid" logic from business logic.
 1.  **Create Primitives**: Build pure layout components in `/slot-layouts`:
-    *   `SlotLayoutStack`: Flex-col with `gap`.
-    *   `SlotLayoutGrid`: CSS Grid with `cols`.
-    *   `SlotLayoutFit`: Box that ensures child covers container (object-fit).
+    *   `SlotLayoutStack`: Flex-col with `gap`. ✅
+    *   `SlotLayoutGrid`: CSS Grid with `cols`. ✅
+    *   `SlotLayoutFit`: Box that ensures child covers container (object-fit). ✅
 2.  **Refactor Legacy**: Update existing `LayoutStacked` etc. to use these primitives internally, verifying they work exactly as before.
 
-### Phase 2: Define Semantic Templates
+#### SlotLayout API Reference (Implemented)
+
+```typescript
+// SlotLayoutStack - Vertical flex stacking
+interface SlotLayoutStackProps {
+  children: ReactNode;
+  gap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl';  // default: 'md'
+  align?: 'start' | 'center' | 'end' | 'stretch';    // default: 'stretch'
+  justify?: 'start' | 'center' | 'end' | 'between';  // default: 'start'
+  className?: string;
+}
+
+// SlotLayoutGrid - CSS Grid columns
+interface SlotLayoutGridProps {
+  children: ReactNode;
+  cols?: 1 | 2 | 3 | 4;           // default: 2
+  gap?: 'sm' | 'md' | 'lg';       // default: 'md'
+  className?: string;
+}
+
+// SlotLayoutFit - Fill container (for visuals)
+interface SlotLayoutFitProps {
+  children: ReactNode;
+  mode?: 'cover' | 'contain' | 'fill';  // default: 'cover'
+  align?: 'start' | 'center' | 'end';   // default: 'center'
+  valign?: 'start' | 'center' | 'end';  // default: 'center'
+  className?: string;
+}
+```
+
+### Phase 2: Define Semantic Templates ✅ **COMPLETED**
 **Goal**: Create the top-level Skeletons.
-1.  **Create Templates**: Build strict templates in `/templates` (e.g., `TemplateTwoColumn.tsx`, `TemplateDashboard.tsx`).
-2.  **Define Props**: Use explicit interfaces (`interface TwoColProps { left: ReactNode; right: ReactNode }`) instead of `children` arrays.
+1.  **Create Templates**: Build strict templates in `/templates` (e.g., `TemplateTwoColumn.tsx`, `TemplateDashboard.tsx`). ✅
+2.  **Define Props**: Use explicit interfaces (`interface TwoColProps { left: ReactNode; right: ReactNode }`) instead of `children` arrays. ✅
+
+#### Template Summary (Implemented)
+
+| Template | Slots | Variants/Options | Use Case |
+|----------|-------|------------------|----------|
+| `TemplateSingleColumn` | `header?`, `body`, `footer?` | `align`: left, center | Standard content slides |
+| `TemplateTwoColumn` | `header?`, `left`, `right`, `footer?` | `ratio`: 1:1, 2:1, 1:2, 3:1, 1:3 | Comparison, side-by-side layouts |
+| `TemplateDashboard` | `header?`, `main`, `sidebar`, `footer?` | `variant`: default, wide-main, sidebar-focus | KPI displays, metrics dashboards |
+| `TemplateCover` | `title`, `subtitle?`, `meta?`, `background?` | `align`: center, left, right | Title/cover slides |
+| `TemplateFullBleed` | `media`, `overlay` | `overlayPosition`: 9 positions, `overlayOpacity` | Hero slides, section dividers |
+
+All templates follow the design principle of explicit named slots (no `children` arrays) and support `theme` and `vibe` props for styling overrides.
 
 ### Phase 3: The Bridge (Middleware & Schema)
 **Goal**: Enable Python Renderer to "speak" the new Architecture.
