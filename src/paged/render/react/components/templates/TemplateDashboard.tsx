@@ -28,6 +28,7 @@
 
 import React, { type ReactNode } from 'react';
 import type { ThemeName, VibeLevel } from '@/utils/types';
+import type { TemplateManifest } from '@/utils/manifest-types';
 
 // =============================================================================
 // Types
@@ -121,5 +122,62 @@ export function TemplateDashboard({
     </div>
   );
 }
+
+// =============================================================================
+// Manifest (Single Source of Truth for Template Rules)
+// =============================================================================
+
+/**
+ * TemplateDashboard Manifest
+ * 
+ * Defines the slot constraints and allowed components for the Dashboard template.
+ * This serves as the Single Source of Truth for both the React renderer
+ * and the Python generation layer.
+ */
+export const DashboardManifest: TemplateManifest = {
+  id: 'TemplateDashboard',
+  category: 'data',
+  description: 'Use for data-dense KPI displays, performance summaries, and status reports. Optimized for charts and metrics.',
+  slots: {
+    header: {
+      description: 'Top area spanning full width. Use for clean slide titles only.',
+      allowedComponents: ['Heading', 'Text'],
+      maxElements: 2,
+      bannedComponents: ['ChartBar', 'ChartLine', 'ChartPie', 'SmartList', 'ProcessStrip', 'Timeline']
+    },
+    main: {
+      description: 'Large central area for primary data visualization. Landscape-oriented for wide charts.',
+      orientation: 'landscape',
+      allowedComponents: [
+        'ChartBar', 'ChartLine', 'ChartPie',
+        'TableData', 'NetworkGraph',
+        'BigNum', 'MetricGroup', 'MetricStrip'
+      ],
+      bannedComponents: ['SmartList', 'ProcessStrip', 'Timeline', 'StepList'],
+      allowedLayouts: ['SlotLayoutFit', 'SlotLayoutGrid'],
+      maxElements: 4
+    },
+    sidebar: {
+      description: 'Narrow vertical column for supporting metrics and context. Portrait-oriented.',
+      orientation: 'portrait',
+      allowedComponents: [
+        'BigNum', 'MetricCard', 'MetricGroup', 'MetricBadges',
+        'SmartList', 'Text', 'Callout'
+      ],
+      bannedComponents: ['ChartBar', 'ChartLine', 'ChartPie', 'Timeline', 'ProcessStrip', 'NetworkGraph', 'TableData'],
+      allowedLayouts: ['SlotLayoutStack'],
+      maxElements: 5
+    },
+    footer: {
+      description: 'Bottom area spanning full width for notes or citations.',
+      allowedComponents: ['Text', 'Callout'],
+      maxElements: 1
+    }
+  },
+  metadata: {
+    tags: ['data', 'metrics', 'dashboard', 'kpi', 'chart'],
+    version: '1.0.0'
+  }
+} as const;
 
 export default TemplateDashboard;

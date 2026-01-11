@@ -28,6 +28,7 @@
 
 import React, { type ReactNode } from 'react';
 import type { ThemeName, VibeLevel } from '@/utils/types';
+import type { TemplateManifest } from '@/utils/manifest-types';
 
 // =============================================================================
 // Types
@@ -123,5 +124,60 @@ export function TemplateTwoColumn({
     </div>
   );
 }
+
+// =============================================================================
+// Manifest
+// =============================================================================
+
+/**
+ * TemplateTwoColumn Manifest
+ * 
+ * Defines constraints for a balanced two-column comparison/split layout.
+ */
+export const TwoColumnManifest: TemplateManifest = {
+  id: 'TemplateTwoColumn',
+  category: 'comparison',
+  description: 'Use for side-by-side comparisons, contrasts, or split content. Both columns have equal visual weight.',
+  slots: {
+    header: {
+      description: 'Optional header spanning both columns for slide title.',
+      allowedComponents: ['Heading', 'Text'],
+      maxElements: 2
+    },
+    left: {
+      description: 'Left column for first content block. Accepts mixed content types.',
+      allowedComponents: [
+        'Heading', 'Text', 'Callout',
+        'SmartList', 'StepList',
+        'ChartBar', 'ChartLine', 'ChartPie',
+        'MetricGroup', 'BigNum',
+        'ImageBlock', 'QuoteBlock'
+      ],
+      allowedLayouts: ['SlotLayoutStack', 'SlotLayoutFit'],
+      maxElements: 5
+    },
+    right: {
+      description: 'Right column for second content block. Mirrors left column capabilities.',
+      allowedComponents: [
+        'Heading', 'Text', 'Callout',
+        'SmartList', 'StepList',
+        'ChartBar', 'ChartLine', 'ChartPie',
+        'MetricGroup', 'BigNum',
+        'ImageBlock', 'QuoteBlock'
+      ],
+      allowedLayouts: ['SlotLayoutStack', 'SlotLayoutFit'],
+      maxElements: 5
+    },
+    footer: {
+      description: 'Optional footer spanning both columns.',
+      allowedComponents: ['Text', 'Callout'],
+      maxElements: 1
+    }
+  },
+  metadata: {
+    tags: ['comparison', 'split', 'dual', 'side-by-side'],
+    version: '1.0.0'
+  }
+} as const;
 
 export default TemplateTwoColumn;

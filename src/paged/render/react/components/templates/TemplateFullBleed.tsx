@@ -24,6 +24,7 @@
 
 import React, { type ReactNode } from 'react';
 import type { ThemeName, VibeLevel } from '@/utils/types';
+import type { TemplateManifest } from '@/utils/manifest-types';
 
 // =============================================================================
 // Types
@@ -124,5 +125,41 @@ export function TemplateFullBleed({
     </div>
   );
 }
+
+// =============================================================================
+// Manifest
+// =============================================================================
+
+/**
+ * TemplateFullBleed Manifest
+ * 
+ * Defines constraints for hero/full-bleed visual slides with overlaid content.
+ */
+export const FullBleedManifest: TemplateManifest = {
+  id: 'TemplateFullBleed',
+  category: 'visual',
+  description: 'Use for hero slides, impactful statements, and section dividers with strong visual presence.',
+  slots: {
+    media: {
+      description: 'Background media that fills the entire slide canvas.',
+      allowedComponents: ['ImageBlock'],
+      minElements: 1,
+      maxElements: 1
+    },
+    overlay: {
+      description: 'Content overlaid on the media. Keep minimal for maximum impact.',
+      allowedComponents: [
+        'Heading', 'Text', 'Callout',
+        'BigNum', 'QuoteBlock'
+      ],
+      allowedLayouts: ['SlotLayoutStack'],
+      maxElements: 3
+    }
+  },
+  metadata: {
+    tags: ['hero', 'visual', 'fullbleed', 'impactful', 'divider'],
+    version: '1.0.0'
+  }
+} as const;
 
 export default TemplateFullBleed;

@@ -19,6 +19,7 @@
 
 import React, { type ReactNode } from 'react';
 import type { ThemeName, VibeLevel } from '@/utils/types';
+import type { TemplateManifest } from '@/utils/manifest-types';
 
 // =============================================================================
 // Types
@@ -104,5 +105,47 @@ export function TemplateCover({
     </div>
   );
 }
+
+// =============================================================================
+// Manifest
+// =============================================================================
+
+/**
+ * TemplateCover Manifest
+ * 
+ * Defines constraints for title/cover slides with minimal content.
+ */
+export const CoverManifest: TemplateManifest = {
+  id: 'TemplateCover',
+  category: 'visual',
+  description: 'Use for title slides, section dividers, and cover pages. Minimal text, maximum impact.',
+  slots: {
+    title: {
+      description: 'Primary title/headline. Should be short and impactful.',
+      allowedComponents: ['Heading'],
+      minElements: 1,
+      maxElements: 1
+    },
+    subtitle: {
+      description: 'Optional subtitle or tagline for additional context.',
+      allowedComponents: ['Text', 'Heading'],
+      maxElements: 1
+    },
+    meta: {
+      description: 'Optional metadata like author, date, company name.',
+      allowedComponents: ['Text'],
+      maxElements: 1
+    },
+    background: {
+      description: 'Optional background media (image, gradient, pattern).',
+      allowedComponents: ['ImageBlock'],
+      maxElements: 1
+    }
+  },
+  metadata: {
+    tags: ['cover', 'title', 'intro', 'divider'],
+    version: '1.0.0'
+  }
+} as const;
 
 export default TemplateCover;

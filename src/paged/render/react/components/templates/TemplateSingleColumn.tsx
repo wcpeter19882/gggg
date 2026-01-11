@@ -23,6 +23,7 @@
 
 import React, { type ReactNode } from 'react';
 import type { ThemeName, VibeLevel } from '@/utils/types';
+import type { TemplateManifest } from '@/utils/manifest-types';
 
 // =============================================================================
 // Types
@@ -95,5 +96,49 @@ export function TemplateSingleColumn({
     </div>
   );
 }
+
+// =============================================================================
+// Manifest
+// =============================================================================
+
+/**
+ * TemplateSingleColumn Manifest
+ * 
+ * Defines constraints for a standard narrative/content-focused single column layout.
+ */
+export const SingleColumnManifest: TemplateManifest = {
+  id: 'TemplateSingleColumn',
+  category: 'narrative',
+  description: 'Use for text-heavy content, explanations, lists, and linear storytelling. Standard presentation slide.',
+  slots: {
+    header: {
+      description: 'Optional header for slide title or section label.',
+      allowedComponents: ['Heading', 'Text'],
+      maxElements: 2
+    },
+    body: {
+      description: 'Main content area for narrative and mixed content. Highly flexible.',
+      allowedComponents: [
+        'Heading', 'Text', 'Callout', 'Highlight',
+        'SmartList', 'StepList', 'ProcessStrip',
+        'ChartBar', 'ChartLine', 'ChartPie',
+        'MetricGroup', 'MetricStrip', 'BigNum',
+        'TableData', 'QuoteBlock', 'ImageBlock',
+        'CardGroup', 'Timeline'
+      ],
+      allowedLayouts: ['SlotLayoutStack', 'SlotLayoutGrid'],
+      maxElements: 8
+    },
+    footer: {
+      description: 'Optional footer for notes or citations.',
+      allowedComponents: ['Text', 'Callout'],
+      maxElements: 1
+    }
+  },
+  metadata: {
+    tags: ['narrative', 'text', 'list', 'standard', 'content'],
+    version: '1.0.0'
+  }
+} as const;
 
 export default TemplateSingleColumn;
