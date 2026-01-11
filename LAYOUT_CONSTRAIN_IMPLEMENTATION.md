@@ -7,18 +7,18 @@ Added new `get_layout_constrain()` interface to the LayoutEngine protocol and mo
 ## Changes Made
 
 ### 1. Protocol Enhancement
-**File**: `src/layout/layout_engine_protocol.py`
+**File**: `src/paged/layout/layout_engine_protocol.py`
 - Added `get_layout_constrain(cls) -> str` method to LayoutEngine protocol
 - Returns layout-specific widget-layout compatibility constraints
 - Includes widget space requirements, slot constraints, and compatibility rules
 
 ### 2. Dummy Engine Implementation
-**File**: `src/layout/dummy/layout_engine.py`
+**File**: `src/paged/layout/dummy/layout_engine.py`
 - Implemented `get_layout_constrain()` with placeholder constraints
 - Returns basic compatibility message (no actual constraints for dummy engine)
 
 ### 3. Slidev Engine Implementation
-**File**: `src/layout/slidev/layout_engine.py`
+**File**: `src/paged/layout/slidev/layout_engine.py`
 - Implemented comprehensive `get_layout_constrain()` with 5981 chars of constraints
 - Includes:
   - Widget space requirements (QuoteWidget, TableWidget, MetricWidget, etc.)

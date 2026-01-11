@@ -17,7 +17,7 @@ Previously, the content generation prompts in `src/generation/content/prompts.py
 We introduced a new protocol method `get_layout_documentation()` in the `LayoutEngine` protocol:
 
 ```python
-# src/layout/layout_engine_protocol.py
+# src/paged/layout/layout_engine_protocol.py
 class LayoutEngine(Protocol):
     @classmethod
     def get_layout_documentation(cls) -> str:
@@ -31,12 +31,12 @@ class LayoutEngine(Protocol):
 
 ### Implementation
 
-**1. Protocol Definition** (`src/layout/layout_engine_protocol.py`)
+**1. Protocol Definition** (`src/paged/layout/layout_engine_protocol.py`)
 - Added `get_layout_documentation()` as a required protocol method
 - Method returns formatted string describing available layouts
 - Includes strategy names, slot roles, sizes, and content guidance
 
-**2. Dummy Implementation** (`src/layout/dummy/layout_engine.py`)
+**2. Dummy Implementation** (`src/paged/layout/dummy/layout_engine.py`)
 - Implemented `get_layout_documentation()` in `LayoutEngine` class
 - Queries `AssetManager` for strategy metadata
 - Formats with family descriptions and slot details
@@ -68,7 +68,7 @@ class NewLayoutEngine:
 
 Then update the import in `prompts.py`:
 ```python
-from src.layout.new.layout_engine import NewLayoutEngine as LayoutEngine
+from src.paged.layout.new.layout_engine import NewLayoutEngine as LayoutEngine
 ```
 
 Content generation automatically uses the new layout documentation!
