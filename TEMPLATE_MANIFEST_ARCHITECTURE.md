@@ -108,14 +108,24 @@ export function TemplateDashboard(props: Props) {
 }
 ```
 
-### B. The Generation Layer (Python)
-The `ReactLayoutEngine` no longer contains hardcoded prompt strings. It consumes the manifests (which can be synced/scraped during build or imported via a shared definition file).
+### B. The Generation Layer (Python - V2 Dual Stack)
+To avoid breaking the existing V1 flow, we will implement a **Parallel V2 System** rather than a direct replacement.
 
-**Concept**:
-1.  Engine loads all known Manifests.
-2.  Engine dynamically constructs the System Prompt.
+**1. Bootstrapping Manifests from V1 Prompts**
+The initial `TemplateManifest` definitions must be populated by extracting the rules currently hardcoded in `layout_engine.py` (specifically `get_layout_prompt` and `get_chart_prompt`).
+*   **Source**: `layout_engine.py` (e.g., "BANNED: SmartList, ProcessStrip")
+*   **Destination**: `TemplateDashboard.tsx` (e.g., `bannedComponents: ["SmartList", "ProcessStrip"]`)
+This ensures V2 logic starts as a faithful replica of V1 knowledge.
 
-**Generated Prompt Output**:
+**2. Separate Entry Point**
+The `ReactLayoutEngine` will support both methods side-by-side:
+*   **V1 (Current)**: `get_layout_prompt()` → Returns the existing static string.
+*   **V2 (New)**: `get_v2_system_prompt(manifest_registry)` → Generates the system prompt dynamically from the ingested manifests.
+
+**3. Switching Mechanism**
+The pipeline will invoke the V2 engine only when explicitly requested (e.g., via a feature flag config), allowing us to test V2 while keeping V1 stable as the default.
+
+**Generated Prompt Output (V2)**:
 ```markdown
 # LAYOUT RULES: TemplateDashboard
 Use for data-dense KPI displays, performance summaries, and status reports.
@@ -164,6 +174,7 @@ def validate_slide(slide_json, manifest):
 
 ## 5. Next Steps
 1.  Define the `TemplateManifest` TypeScript interface in `types.ts`.
-2.  Update `TemplateDashboard.tsx` to export its manifest.
-3.  Write a script to extract manifests to a JSON registry for Python to consume.
-4.  Update `mdx_renderer.py` to use the registry for prompt generation.
+2.  **Migration Task**: Map all rules from `layout_engine.py` strings into their respective React Component manifests (V1 -> V2 port).
+3.  Update `TemplateDashboard.tsx` (and others) to export these manifests.
+4.  Write a script to extract manifests to a JSON registry.
+5.  Implement `ReactLayoutEngine.get_v2_system_prompt()` to consume the registry, keeping the original `get_layout_prompt()` intact.
