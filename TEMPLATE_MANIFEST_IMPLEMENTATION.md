@@ -6,7 +6,7 @@
 ## What Was Implemented
 
 ### 1. Core Type System
-- **File**: `utils/manifest-types.ts`
+- **File**: `src/paged/render/react/utils/manifest-types.ts`
 - **Exports**: 
   - `ComponentType` (20+ component types)
   - `LayoutType` (Stack, Grid, Fit)
@@ -16,7 +16,7 @@
   - Validation result types
 
 ### 2. Manifest Registry
-- **File**: `utils/manifest-registry.ts`
+- **File**: `src/paged/render/react/utils/manifest-registry.ts`
 - **Features**:
   - Central collection of all manifests
   - `getManifestRegistry()` - Full registry with metadata
@@ -26,11 +26,11 @@
 
 ### 3. Template Manifests
 All 5 V2 templates now export manifests:
-- ✅ `TemplateDashboard` - DashboardManifest
-- ✅ `TemplateTwoColumn` - TwoColumnManifest
-- ✅ `TemplateSingleColumn` - SingleColumnManifest
-- ✅ `TemplateCover` - CoverManifest
-- ✅ `TemplateFullBleed` - FullBleedManifest
+- ✅ `TemplateDashboard` - `src/paged/render/react/components/templates/TemplateDashboard.tsx`
+- ✅ `TemplateTwoColumn` - `src/paged/render/react/components/templates/TemplateTwoColumn.tsx`
+- ✅ `TemplateSingleColumn` - `src/paged/render/react/components/templates/TemplateSingleColumn.tsx`
+- ✅ `TemplateCover` - `src/paged/render/react/components/templates/TemplateCover.tsx`
+- ✅ `TemplateFullBleed` - `src/paged/render/react/components/templates/TemplateFullBleed.tsx`
 
 Each manifest defines:
 - Slot descriptions
@@ -40,7 +40,7 @@ Each manifest defines:
 - Element limits
 
 ### 4. Mock Content System
-- **File**: `utils/mock-content-registry.tsx`
+- **File**: `src/paged/render/react/utils/mock-content-registry.tsx`
 - **Functions**:
   - `generateMockContent()` - Create test content for any component type
   - `generateMockContentBatch()` - Batch generation
@@ -50,20 +50,20 @@ Each manifest defines:
 ### 5. Playground Tool
 Interactive testing environment with 4 main components:
 
-#### a. TemplateExperiment (`app/design-system/v2/playground/TemplateExperiment.tsx`)
+#### a. TemplateExperiment (`src/paged/render/react/app/design-system/v2/playground/TemplateExperiment.tsx`)
 - State management wrapper
 - Shadow manifest editing
 - Content injection orchestration
 - Export functionality
 
-#### b. ManifestConfigurator (`ManifestConfigurator.tsx`)
+#### b. ManifestConfigurator (`src/paged/render/react/app/design-system/v2/playground/ManifestConfigurator.tsx`)
 - Left panel UI
 - Collapsible slot configurations
 - Component allow/ban toggles
 - Layout type toggles
 - Visual indicators for orientation/limits
 
-#### c. ContentInjector (`ContentInjector.tsx`)
+#### c. ContentInjector (`src/paged/render/react/app/design-system/v2/playground/ContentInjector.tsx`)
 - Right panel UI
 - Slot selector dropdown
 - Content size selector
@@ -71,7 +71,7 @@ Interactive testing environment with 4 main components:
 - Force-test buttons for banned components
 - Clear actions
 
-#### d. PlaygroundPage (`page.tsx`)
+#### d. PlaygroundPage (`src/paged/render/react/app/design-system/v2/playground/page.tsx`)
 - Main orchestrator
 - Template selector
 - Visual debug toggle
@@ -79,14 +79,14 @@ Interactive testing environment with 4 main components:
 - Reset and Export actions
 
 ### 6. Export Script
-- **File**: `scripts/export-manifests.ts`
-- **Usage**: `npx tsx scripts/export-manifests.ts`
+- **File**: `src/paged/render/react/scripts/export-manifests.ts`
+- **Usage**: `npx tsx src/paged/render/react/scripts/export-manifests.ts`
 - **Outputs**:
   - `output/template-manifests.json` - Full registry
   - `output/template-prompts.json` - System prompts
 
 ### 7. Documentation
-- **File**: `TEMPLATE_MANIFEST_README.md`
+- **File**: `src/paged/render/react/TEMPLATE_MANIFEST_README.md`
 - Comprehensive guide covering:
   - System architecture
   - Usage workflows

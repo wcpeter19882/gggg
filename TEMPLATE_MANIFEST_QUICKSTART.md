@@ -24,8 +24,8 @@ npm run dev
 ## 📊 Export Manifests for Python
 
 ```bash
-# From: src/paged/render/react/
-npx tsx scripts/export-manifests.ts
+# From root directory:
+npx tsx src/paged/render/react/scripts/export-manifests.ts
 
 # Creates:
 # - output/template-manifests.json
@@ -82,8 +82,8 @@ JSON Files → Python Generation Layer
 
 1. Create template component with props interface
 2. Export `TemplateManifest` constant alongside component
-3. Add to `TEMPLATE_MANIFESTS` in `utils/manifest-registry.ts`
-4. Add to `TEMPLATE_REGISTRY` in `app/design-system/v2/playground/page.tsx`
+3. Add to `TEMPLATE_MANIFESTS` in `src/paged/render/react/utils/manifest-registry.ts`
+4. Add to `TEMPLATE_REGISTRY` in `src/paged/render/react/app/design-system/v2/playground/page.tsx`
 5. Run export script
 6. Test in playground
 

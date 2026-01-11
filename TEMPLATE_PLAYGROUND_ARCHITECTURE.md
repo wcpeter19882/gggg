@@ -27,7 +27,7 @@ A specialized "meta-component" in the Design System V2 that wraps a Template in 
 We introduce a new container component that sits between the Page and the Template.
 
 ### Component Structure
-`src/paged/render/react/app/design-system/v2/components/TemplateExperiment.tsx`
+`src/paged/render/react/app/design-system/v2/playground/TemplateExperiment.tsx`
 
 ```tsx
 interface TemplateExperimentProps {
