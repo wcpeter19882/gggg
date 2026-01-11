@@ -1,9 +1,9 @@
 import React from 'react';
 
 const SECTIONS = [
-  { id: 'templates', label: 'Templates' },
-  { id: 'layouts', label: 'Layouts' },
-  { id: 'widgets', label: 'Widgets' },
+  { id: 'layouts', label: 'Layouts (L1)' },
+  { id: 'widgets', label: 'Blocks (L2)' },
+  { id: 'templates', label: 'Atoms (L3)' },
 ];
 
 export function NavSidebar() {
@@ -15,20 +15,20 @@ export function NavSidebar() {
   };
 
   return (
-    <nav className="w-64 h-screen sticky top-0 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 p-6 flex flex-col hidden lg:flex">
-      <div className="mb-8">
-        <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+    <nav className="w-56 h-screen sticky top-0 bg-white border-r border-neutral-200 p-4 flex flex-col hidden lg:flex">
+      <div className="mb-6">
+        <h1 className="text-lg font-bold text-neutral-900">
           Design System
         </h1>
-        <p className="text-sm text-gray-500 mt-2">Slide Rendering Components</p>
+        <p className="text-xs text-neutral-500 mt-1">Component Library</p>
       </div>
 
-      <ul className="space-y-1">
+      <ul className="space-y-0.5">
         {SECTIONS.map((section) => (
           <li key={section.id}>
             <button
               onClick={() => scrollToSection(section.id)}
-              className="w-full text-left px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 dark:text-gray-300 dark:hover:bg-gray-800 transition-colors"
+              className="w-full text-left px-3 py-2 rounded text-sm font-medium text-neutral-600 hover:text-blue-600 hover:bg-blue-50 transition-colors"
             >
               {section.label}
             </button>
@@ -36,9 +36,9 @@ export function NavSidebar() {
         ))}
       </ul>
 
-      <div className="mt-auto pt-6 border-t border-gray-200 dark:border-gray-700">
-         <p className="text-xs text-gray-400">
-            Use these components to build consistant slide decks.
+      <div className="mt-auto pt-4 border-t border-neutral-200">
+         <p className="text-xs text-neutral-400">
+            Slide: 1920×1080
          </p>
       </div>
     </nav>

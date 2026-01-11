@@ -32,12 +32,12 @@ export function PropControl({ config, value, onChange }: PropControlProps) {
 
   return (
     <div className="flex flex-col gap-1 mb-3">
-      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+      <label className="text-sm font-medium text-neutral-700">
         {config.label || config.name}
       </label>
 
       {config.description && (
-        <p className="text-xs text-gray-500 mb-1">{config.description}</p>
+        <p className="text-xs text-neutral-500 mb-1">{config.description}</p>
       )}
 
       {config.type === 'boolean' ? (
@@ -46,15 +46,15 @@ export function PropControl({ config, value, onChange }: PropControlProps) {
               type="checkbox"
               checked={!!value}
               onChange={handleChange}
-              className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+              className="h-4 w-4 text-blue-600 rounded border-neutral-300 focus:ring-blue-500"
             />
-            <span className="ml-2 text-sm text-gray-600">{value ? 'True' : 'False'}</span>
+            <span className="ml-2 text-sm text-neutral-600">{value ? 'True' : 'False'}</span>
          </div>
       ) : config.type === 'select' ? (
         <select
           value={value}
           onChange={handleChange}
-          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border bg-white dark:bg-gray-800 dark:border-gray-700"
+          className="block w-full rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border border-neutral-300 bg-white text-neutral-900"
         >
           {config.options?.map((opt) => (
             <option key={opt} value={opt}>
@@ -75,14 +75,14 @@ export function PropControl({ config, value, onChange }: PropControlProps) {
                     onChange(e.target.value);
                 }
             }}
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border font-mono text-xs h-24 bg-white dark:bg-gray-800 dark:border-gray-700"
+            className="block w-full rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border border-neutral-300 font-mono text-xs h-24 bg-white text-neutral-900"
           />
       ) : (
         <input
           type={config.type === 'number' ? 'number' : 'text'}
           value={value}
           onChange={handleChange}
-          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border bg-white dark:bg-gray-800 dark:border-gray-700"
+          className="block w-full rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border border-neutral-300 bg-white text-neutral-900"
         />
       )}
     </div>

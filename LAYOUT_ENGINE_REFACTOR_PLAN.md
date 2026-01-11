@@ -18,7 +18,7 @@ The current implementation is **fundamentally broken** - it delegates layout cal
 ### 1. Widget Measurement (NEW)
 
 **File:** `src/common/measurement.py` ✅ CREATED
-**File:** `src/widgets/base.py` ✅ UPDATED
+**File:** `src/paged/widgets/base.py` ✅ UPDATED
 
 Every widget must implement:
 ```python
@@ -38,7 +38,7 @@ def measure(self, style: Dict[str, Any], max_width: float, max_height: float) ->
 
 ### 2. Layout Protocol (NEW)
 
-**File:** `src/layout/layout_protocol.py` ✅ CREATED
+**File:** `src/paged/layout/layout_protocol.py` ✅ CREATED
 
 Every layout strategy must implement:
 ```python
@@ -57,7 +57,7 @@ def calculate_layout(
 
 ### 3. Layout Strategies (UPDATE)
 
-**Files:** `src/layout/strategies/*.py`
+**Files:** `src/paged/layout/dummy/strategies/*.py`
 
 Must implement `calculate_layout()` for:
 - [x] BentoStandardStrategy - 3x2 fixed grid ✅ IMPLEMENTED

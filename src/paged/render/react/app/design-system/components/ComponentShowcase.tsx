@@ -1,15 +1,60 @@
+'use client';
 
-import React, { useState } from 'react';
-import { PropControl, PropConfig } from './PropControl';
+/**
+ * ComponentShowcase
+ * 
+ * A unified showcase component for displaying slide components in the design system.
+ * Each showcase renders the component inside a scaled 1920×1080 slide with:
+ * - Isolated theme (from ShowcaseContext)
+ * - Optional layout wrapper for block components
+ * - Collapsible bottom props panel
+ * - Debug bounds toggle
+ * 
+ * Architecture:
+ *   ComponentShowcase
+ *     └── SlidePreview (scaled 1920×1080)
+ *           └── Layout (optional wrapper)
+ *                 └── Component
+ */
 
-interface ComponentShowcaseProps {
+import React, { useState, useCallback, type ReactNode } from 'react';
+import { SlidePreview } from './SlidePreview';
+import { PropControl, type PropConfig } from './PropControl';
+import { useShowcase } from './ShowcaseContext';
+
+// Default layout wrapper for block components
+import { LayoutStacked } from '@/components/layouts/LayoutStacked';
+
+// =============================================================================
+// Types
+// =============================================================================
+
+type ComponentLevel = 'layout' | 'block' | 'atom';
+
+export interface ComponentShowcaseProps {
+  /** Display name */
   title: string;
+  /** Brief description */
   description?: string;
+  /** The component to showcase */
   component: React.ComponentType<any>;
+  /** Default props for the component */
   defaultProps?: Record<string, any>;
+  /** Prop configurations for the control panel */
   propConfigs?: PropConfig[];
-  children?: React.ReactNode;
+  /** Children to pass to the component */
+  children?: ReactNode;
+  /** Component level: 'layout' renders directly, 'block'/'atom' wrapped in LayoutStacked */
+  level?: ComponentLevel;
+  /** Custom layout wrapper (overrides default LayoutStacked for blocks) */
+  layoutWrapper?: React.ComponentType<{ children: ReactNode }>;
+  /** Preview container max width */
+  maxWidth?: number;
 }
+
+// =============================================================================
+// Component
+// =============================================================================
 
 export function ComponentShowcase({
   title,
@@ -17,81 +62,147 @@ export function ComponentShowcase({
   component: Component,
   defaultProps = {},
   propConfigs = [],
-  children
-}: ComponentShowcaseProps) {
+  children,
+  level = 'block',
+  layoutWrapper: CustomLayout,
+  maxWidth = 1280,
+}: ComponentShowcaseProps): JSX.Element {
+  const { theme, vibe, showBounds } = useShowcase();
+  
+  // Props state
   const [props, setProps] = useState(() => {
-    // Start with defaultValue from propConfigs
     const configDefaults = propConfigs.reduce((acc, config) => {
       if (config.defaultValue !== undefined) {
         acc[config.name] = config.defaultValue;
       }
       return acc;
     }, {} as Record<string, any>);
-
-    // Override with explicit defaultProps
     return { ...configDefaults, ...defaultProps };
   });
+
+  // Panel states - props expanded by default if there are props
   const [showCode, setShowCode] = useState(false);
 
-  const handlePropChange = (name: string, value: any) => {
+  const handlePropChange = useCallback((name: string, value: any) => {
     setProps((prev) => ({ ...prev, [name]: value }));
-  };
+  }, []);
 
+  // Generate code snippet
   const codeSnippet = `<${Component.displayName || Component.name || 'Component'}
 ${Object.entries(props)
-  .map(([key, value]) => `  ${key}={${JSON.stringify(value)}}`)
-  .join('\n')}
-/>`;
+    .filter(([, value]) => value !== undefined && value !== '')
+    .map(([key, value]) => `  ${key}={${JSON.stringify(value)}}`)
+    .join('\n')}
+${children ? '>\n  {children}\n</' + (Component.displayName || Component.name || 'Component') + '>' : '/>'}`;
+
+  // Determine wrapper
+  const LayoutWrapper = level === 'layout' 
+    ? React.Fragment 
+    : (CustomLayout || LayoutStacked);
+
+  // Render the component with optional layout wrapper
+  const renderContent = () => {
+    const componentElement = (
+      <Component {...props}>
+        {children}
+      </Component>
+    );
+
+    if (level === 'layout') {
+      return componentElement;
+    }
+
+    // Wrap blocks/atoms in a layout
+    return (
+      <LayoutWrapper>
+        {componentElement}
+      </LayoutWrapper>
+    );
+  };
 
   return (
-    <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-gray-900 mb-8 shadow-sm">
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex justify-between items-center">
+    <div className="showcase-container bg-white border border-neutral-200 rounded-lg overflow-hidden mb-8 shadow-sm">
+      {/* Header */}
+      <div className="showcase-header flex items-center justify-between px-4 py-3 bg-neutral-50 border-b border-neutral-200">
         <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{title}</h3>
-            {description && <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{description}</p>}
+          <h3 className="text-base font-semibold text-neutral-900">{title}</h3>
+          {description && (
+            <p className="text-sm text-neutral-500 mt-0.5">{description}</p>
+          )}
         </div>
-        <button
-            onClick={() => setShowCode(!showCode)}
-            className="text-xs px-3 py-1 bg-gray-200 dark:bg-gray-700 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-        >
-            {showCode ? 'Hide Code' : 'Show Code'}
-        </button>
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-neutral-400">
+            {theme} · {vibe}
+          </span>
+          <span className="text-xs px-2 py-0.5 bg-neutral-200 text-neutral-600 rounded">
+            {level}
+          </span>
+        </div>
       </div>
 
-      <div className="flex flex-col md:flex-row">
-        {/* Preview Area */}
-        <div className="flex-1 p-6 flex items-center justify-center min-h-[300px] overflow-auto" style={{ backgroundColor: 'var(--theme-bg)' }}>
-            <div className="w-full max-w-4xl">
-                 <Component {...props}>
-                    {children}
-                 </Component>
-            </div>
+      {/* Main content: Preview + Props side by side */}
+      <div className="flex">
+        {/* Slide Preview */}
+        <div className="showcase-preview flex-1 flex items-center justify-center p-4 bg-neutral-100">
+          <SlidePreview
+            theme={theme}
+            vibe={vibe}
+            showBounds={showBounds}
+            maxWidth={maxWidth}
+          >
+            {renderContent()}
+          </SlidePreview>
         </div>
 
-        {/* Controls Area */}
+        {/* Props Panel - beside preview */}
         {propConfigs.length > 0 && (
-          <div className="w-full md:w-80 border-t md:border-t-0 md:border-l border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-900">
-            <h4 className="text-sm font-bold uppercase tracking-wider text-gray-500 mb-4">Properties</h4>
-            {propConfigs.map((config) => (
-              <PropControl
-                key={config.name}
-                config={config}
-                value={props[config.name]}
-                onChange={(val) => handlePropChange(config.name, val)}
-              />
-            ))}
+          <div className="showcase-props w-72 border-l border-neutral-200 bg-white p-4 overflow-y-auto max-h-[540px]">
+            <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-3">Properties</h4>
+            <div className="space-y-1">
+              {propConfigs.map((config) => (
+                <PropControl
+                  key={config.name}
+                  config={config}
+                  value={props[config.name]}
+                  onChange={(val) => handlePropChange(config.name, val)}
+                />
+              ))}
+            </div>
           </div>
         )}
       </div>
 
-      {/* Code Snippet */}
-        {showCode && (
-            <div className="bg-gray-800 p-4 overflow-x-auto">
-                <pre className="text-xs text-gray-100 font-mono">
-                    {codeSnippet}
-                </pre>
-            </div>
-        )}
+      {/* Bottom toolbar */}
+      <div className="showcase-toolbar flex items-center justify-between px-4 py-2 bg-neutral-50 border-t border-neutral-200">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowCode(!showCode)}
+            className={`text-xs px-3 py-1.5 rounded transition-colors ${
+              showCode 
+                ? 'bg-blue-100 text-blue-700' 
+                : 'bg-neutral-200 text-neutral-600 hover:bg-neutral-300'
+            }`}
+          >
+            {showCode ? '▼ Code' : '▶ Code'}
+          </button>
+        </div>
+      </div>
+
+      {/* Code Panel - at bottom */}
+      {showCode && (
+        <div className="showcase-code bg-neutral-900 px-4 py-3 overflow-x-auto border-t border-neutral-200">
+          <pre className="text-xs text-neutral-100 font-mono whitespace-pre-wrap">
+            {codeSnippet}
+          </pre>
+        </div>
+      )}
     </div>
   );
 }
+
+// =============================================================================
+// Exports
+// =============================================================================
+
+export default ComponentShowcase;
+export type { PropConfig };

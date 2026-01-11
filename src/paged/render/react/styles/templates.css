@@ -1,0 +1,405 @@
+/* =============================================================================
+ * V2 Template Styles
+ * 
+ * Styles for the new 4-layer architecture templates.
+ * Templates define the macro grid; SlotLayouts handle internal arrangement.
+ * ============================================================================= */
+
+/* =============================================================================
+ * Shared Slot Styles
+ * ============================================================================= */
+
+.template-slot {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.template-slot--header {
+  flex-shrink: 0;
+}
+
+.template-slot--footer {
+  flex-shrink: 0;
+}
+
+.template-slot--body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* =============================================================================
+ * TemplateSingleColumn
+ * ============================================================================= */
+
+.template-single-column {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: var(--theme-spacing-padding, 64px 80px);
+  gap: var(--theme-spacing-margin, 24px);
+}
+
+.template-single-column[data-align="center"] {
+  align-items: center;
+  text-align: center;
+}
+
+.template-single-column[data-align="left"] {
+  align-items: flex-start;
+  text-align: left;
+}
+
+.template-single-column .template-slot--header {
+  width: 100%;
+}
+
+.template-single-column .template-slot--body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 100%;
+}
+
+.template-single-column .template-slot--footer {
+  width: 100%;
+}
+
+/* =============================================================================
+ * TemplateTwoColumn
+ * ============================================================================= */
+
+.template-two-column {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: var(--theme-spacing-padding, 64px 80px);
+  gap: var(--theme-spacing-margin, 24px);
+}
+
+.template-two-column .template-slot--header {
+  width: 100%;
+}
+
+.template-two-column .template-columns {
+  display: grid;
+  flex: 1;
+  gap: var(--theme-spacing-gap, 40px);
+  align-items: center;
+  min-height: 0;
+}
+
+.template-two-column .template-slot--left,
+.template-two-column .template-slot--right {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100%;
+  min-height: 0;
+}
+
+.template-two-column .template-slot--footer {
+  width: 100%;
+}
+
+/* Ratio variants */
+.template-two-column--ratio-1-1 .template-columns {
+  grid-template-columns: 1fr 1fr;
+}
+
+.template-two-column--ratio-2-1 .template-columns {
+  grid-template-columns: 2fr 1fr;
+}
+
+.template-two-column--ratio-1-2 .template-columns {
+  grid-template-columns: 1fr 2fr;
+}
+
+.template-two-column--ratio-3-1 .template-columns {
+  grid-template-columns: 3fr 1fr;
+}
+
+.template-two-column--ratio-1-3 .template-columns {
+  grid-template-columns: 1fr 3fr;
+}
+
+/* =============================================================================
+ * TemplateDashboard
+ * ============================================================================= */
+
+.template-dashboard {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: var(--theme-spacing-padding, 64px 80px);
+  gap: var(--theme-spacing-margin, 24px);
+  overflow: hidden;
+}
+
+.template-dashboard .template-slot--header {
+  width: 100%;
+}
+
+.template-dashboard-content {
+  display: grid;
+  flex: 1;
+  gap: var(--theme-spacing-gap, 40px);
+  min-height: 0;
+  align-items: center;
+}
+
+.template-dashboard .template-slot--main {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100%;
+  min-height: 0;
+}
+
+.template-dashboard .template-slot--sidebar {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100%;
+  min-height: 0;
+}
+
+.template-dashboard .template-slot--footer {
+  width: 100%;
+}
+
+/* Dashboard variants */
+.template-dashboard--default .template-dashboard-content {
+  grid-template-columns: 1fr 1fr;
+}
+
+.template-dashboard--wide-main .template-dashboard-content {
+  grid-template-columns: 1fr minmax(320px, 400px);
+}
+
+.template-dashboard--sidebar-focus .template-dashboard-content {
+  grid-template-columns: minmax(320px, 400px) 1fr;
+}
+
+.template-dashboard--sidebar-focus .template-slot--main {
+  order: 2;
+}
+
+.template-dashboard--sidebar-focus .template-slot--sidebar {
+  order: 1;
+}
+
+/* =============================================================================
+ * TemplateCover
+ * ============================================================================= */
+
+.template-cover {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: var(--theme-spacing-padding, 64px 80px);
+  text-align: center;
+  gap: var(--theme-spacing-gap, 24px);
+  background: linear-gradient(
+    180deg, 
+    var(--theme-bg) 0%, 
+    color-mix(in srgb, var(--theme-bg) 96%, var(--theme-primary) 4%) 100%
+  );
+}
+
+.template-cover[data-align="left"] {
+  align-items: flex-start;
+  text-align: left;
+}
+
+.template-cover[data-align="right"] {
+  align-items: flex-end;
+  text-align: right;
+}
+
+.template-cover__background {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.template-cover__background > * {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.template-cover__content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: inherit;
+  gap: var(--theme-spacing-gap, 24px);
+  max-width: 1400px;
+}
+
+.template-cover .template-slot--title {
+  /* Title styling handled by components inside */
+}
+
+.template-cover .template-slot--subtitle {
+  max-width: 1000px;
+}
+
+.template-cover .template-slot--meta {
+  margin-top: auto;
+}
+
+/* =============================================================================
+ * TemplateFullBleed
+ * ============================================================================= */
+
+.template-fullbleed {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+}
+
+.template-fullbleed__media {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.template-fullbleed__media > * {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.template-fullbleed__scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.2) 0%,
+    rgba(0, 0, 0, 0.6) 100%
+  );
+  pointer-events: none;
+}
+
+.template-fullbleed__overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  padding: var(--theme-spacing-padding, 64px 80px);
+}
+
+.template-fullbleed .template-slot--overlay {
+  display: flex;
+  flex-direction: column;
+  max-width: 900px;
+}
+
+/* Overlay position variants */
+.template-fullbleed__overlay--center {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.template-fullbleed__overlay--top {
+  align-items: center;
+  justify-content: flex-start;
+  text-align: center;
+}
+
+.template-fullbleed__overlay--bottom {
+  align-items: center;
+  justify-content: flex-end;
+  text-align: center;
+}
+
+.template-fullbleed__overlay--left {
+  align-items: flex-start;
+  justify-content: center;
+  text-align: left;
+}
+
+.template-fullbleed__overlay--right {
+  align-items: flex-end;
+  justify-content: center;
+  text-align: right;
+}
+
+.template-fullbleed__overlay--top-left {
+  align-items: flex-start;
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.template-fullbleed__overlay--top-right {
+  align-items: flex-end;
+  justify-content: flex-start;
+  text-align: right;
+}
+
+.template-fullbleed__overlay--bottom-left {
+  align-items: flex-start;
+  justify-content: flex-end;
+  text-align: left;
+}
+
+.template-fullbleed__overlay--bottom-right {
+  align-items: flex-end;
+  justify-content: flex-end;
+  text-align: right;
+}
+
+/* =============================================================================
+ * Debug Bounds (for design system)
+ * ============================================================================= */
+
+[data-show-bounds="true"] .template-slot {
+  outline: 2px dashed rgba(59, 130, 246, 0.5);
+  outline-offset: -2px;
+  background: rgba(59, 130, 246, 0.05);
+}
+
+[data-show-bounds="true"] .template-slot--header {
+  outline-color: rgba(59, 130, 246, 0.6);
+  background: rgba(59, 130, 246, 0.08);
+}
+
+[data-show-bounds="true"] .template-slot--body {
+  outline-color: rgba(34, 197, 94, 0.6);
+  background: rgba(34, 197, 94, 0.08);
+}
+
+[data-show-bounds="true"] .template-slot--footer {
+  outline-color: rgba(245, 158, 11, 0.6);
+  background: rgba(245, 158, 11, 0.08);
+}
+
+[data-show-bounds="true"] .template-slot--left {
+  outline-color: rgba(99, 102, 241, 0.6);
+  background: rgba(99, 102, 241, 0.08);
+}
+
+[data-show-bounds="true"] .template-slot--right {
+  outline-color: rgba(244, 63, 94, 0.6);
+  background: rgba(244, 63, 94, 0.08);
+}
+
+[data-show-bounds="true"] .template-slot--main {
+  outline-color: rgba(16, 185, 129, 0.6);
+  background: rgba(16, 185, 129, 0.08);
+}
+
+[data-show-bounds="true"] .template-slot--sidebar {
+  outline-color: rgba(6, 182, 212, 0.6);
+  background: rgba(6, 182, 212, 0.08);
+}

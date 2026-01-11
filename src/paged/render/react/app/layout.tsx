@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { ThemeProvider, MDXProvider } from '@/components';
+import { ThemeProvider } from '@/components/core/ThemeContext';
 import '@/styles/globals.css';
 
 export const metadata: Metadata = {
@@ -16,9 +16,7 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <ThemeProvider theme="business" vibe="balanced">
-          <MDXProvider>
-            {children}
-          </MDXProvider>
+          {children}
         </ThemeProvider>
       </body>
     </html>

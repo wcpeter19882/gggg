@@ -5,6 +5,7 @@
 /* Import shared component styles */
 @import './components.css';
 @import './chart-theme.css';
+@import './templates.css';
 
 /* =============================================================================
  * CSS Custom Properties (Theme Variables)
