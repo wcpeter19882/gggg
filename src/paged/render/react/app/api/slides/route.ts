@@ -10,6 +10,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { serialize } from 'next-mdx-remote/serialize';
 import he from 'he';
+import { state } from 'mermaid/dist/rendering-util/rendering-elements/shapes/state.js';
 
 // Look for state.json in these locations
 const STATE_JSON_PATHS = [
@@ -80,13 +81,15 @@ export async function GET(request: Request) {
     // Get path parameter from query string
     const { searchParams } = new URL(request.url);
     const outputPath = searchParams.get('path') || 'golden_set_mdx';
+    const statePath = searchParams.get('state') || 'state';
     
     // Build paths to check based on the requested output directory
     const pathsToCheck = [
-      // Relative paths
+      // Direct file: state2.json, state.json etc.
+      path.join(process.cwd(), `../../../../output/${outputPath}/${statePath}.json`),
+      path.join(process.cwd(), `../../../../${outputPath}.json`),
       path.join(process.cwd(), `../../../../output/${outputPath}/state.json`),
-      // Absolute path
-      `C:/Users/yidansun/newProject/gggg/output/${outputPath}/state.json`,
+      // Folder with state.json inside
     ];
     
     // Find state.json
