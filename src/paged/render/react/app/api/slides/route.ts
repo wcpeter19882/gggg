@@ -10,7 +10,6 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { serialize } from 'next-mdx-remote/serialize';
 import he from 'he';
-import { state } from 'mermaid/dist/rendering-util/rendering-elements/shapes/state.js';
 
 // Look for state.json in these locations
 const STATE_JSON_PATHS = [
