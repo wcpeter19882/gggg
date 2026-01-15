@@ -23,16 +23,16 @@ def get_slide_generation_config(project: str = "slidev") -> GenerationConfig:
 def _build_system_prompt(project: str = "slidev") -> str:
     """Build system prompt with layout docs from engine."""
     from src.paged.layout.engine_registry import LayoutEngineRegistry
-    
+
     engine_name = "react" if project in ("react-mdx", "react") else "slidev"
     try:
         engine = LayoutEngineRegistry.get_engine(engine_name)
     except KeyError:
         engine = LayoutEngineRegistry.get_active_engine()
-    
+
     layout_docs = engine.get_layout_prompt()
     layout_constraints = engine.get_layout_constrain()
-    
+
     # Get chart documentation if available (React engine has it)
     chart_docs = ""
     if hasattr(engine, 'get_chart_prompt'):
@@ -57,7 +57,15 @@ Numbers must represent **performance metrics**, not **document structure**.
     - Indices (e.g., "01", "02") <--- Use StepList.
 - **Categorical Enumerations Forbidden**: NEVER use `BigNum`, `Metric`, or `MetricGroup` to visualize categorical indices or ordinal numbers.
 - **Value-Add Metrics**: Use numbers that add *new* information not visible in the structure itself.
-- **Single Source of Truth**: A specific data point should appear once. Do not duplicate a number from a Chart or Table into a separate BigNum/Metric unless it is the core "Hero" stat of the story.
+- **STRICTLY NO DUPLICATION**: A specific data point should appear **EXACTLY ONCE** on the slide.
+    - If a number is in a Chart, Table, or Text list, **do NOT** repeat it in a BigNum or MetricGroup.
+    - If a number is in a BigNum, **do NOT** repeat it in key text or lists.
+    - Components must be complementary.
+- **STRICTLY NO HALLUCINATION**:
+    - **Source-Based Data Only**: Use numbers explicitly provided in the text or mathematically available (e.g., calculating differences, sums, or ratios from given numbers is ALLOWED).
+    - **No Arbitrary Inventions**: Do not invent missing variables to solve an equation. (e.g., if input only says "Sales up 15%", you do not know the total volume. Do not invent "$100M" as a baseline).
+    - **No Assumed Complements**: Do not assume "remainder" values exist unless the category is binary/closed (e.g., "30% Market Share" does not imply who owns the other 70%).
+    - **No Qualitative-to-Quantitative**: Do NOT assign arbitrary numbers to qualitative states (e.g. do not chart "In Progress" as 50%).
 - **Visual**: If you have 3+ data points, use a Chart, not a list of metrics.
 
 ## 4. Visual Metaphor (The "Flashpoint" Rule)
@@ -71,11 +79,19 @@ Don't just list facts; visualize relationships.
 - **Dates are NOT Quantities**: NEVER put years (2025, 2026) or dates (20260331) as the `value` in a Bar/Line chart. That makes no sense. Use `LayoutTimeline` or a simple List for dates.
 - **Pie vs Bar**: Use `ChartPie` ONLY for "Part-to-Whole" relationships (e.g., Budget Split, Market Share) where values must sum to 100%. Use `ChartBar` for "Independent Comparisons" (e.g., Completion % of 3 different projects, CSAT scores of 4 regions).
 - **Single Data Point**: Do NOT make a Chart for 1 number. Use `BigNum`.
+- **No Relative Inventions**: If input has **relative change ONLY** ("delta is ZZ"), do NOT invent "before=XX, after=YY". This applies to **Charts and Tables**. inventing baseline data is FALSE DATA.
+- **No "Filler" Data**: For `ChartBar` or `ChartLine`, if you have sparse data (e.g., only 2 years), plot exactly those 2 years. **Do NOT invent** intermediate years or extra categories to "fill out" the chart.
 
 ## 6. Table Discipline
 - **Data over Text**: Tables are for *data* (metrics, status, prices), not long paragraphs of text.
+- **No Mock Data**: **NEVER** invent example rows (e.g. "Contoso", "Fabrikam", "John Doe") just to show what the table *could* look like. If the input text does not contain specific data rows, **do NOT** use a Table. Use a descriptive Text or List instead.
 - **Refactor to Cards**: If a table is just a list of "Item Name" and "Description" (2 columns), it is a List, not a Table. Use `CardGroup` or `StepList` instead, as they handle text wrapping better than tables. Only use `TableData` for dense, structured matrices (3+ columns of short data).
 - **Layout Choice**: **NEVER** use `LayoutDashboard` for slides with `TableData`. Sidebar is too narrow, and Main should be for Charts. Use `LayoutSplit` (Table on one side) or `LayoutStacked` (Table full width) instead.
+
+## 7. Component Polish (Icons & Visuals)
+- **CardGroup Icons**: When using `CardGroup`, **ALWAYS** provide a relevant semantic emoji or icon for the `icon="..."` prop. e.g. `<Card ... icon="🚀"/>` for Speed, `<Card ... icon="💰"/>` for Finance.
+- **Process Visuals**: For `ProcessStrip` or steps, ensure the labels are concise.
+
 
 # LAYOUT STRATEGY (HOW TO CHOOSE)
 
@@ -190,7 +206,7 @@ def render_slide_generation_prompt(
     use_content_field: bool = False
 ) -> str:
     """Render user prompt for slide generation.
-    
+
     Args:
         atoms: AtomCollection (required unless use_content_field=True)
         user_instruction: User's instruction
@@ -199,26 +215,26 @@ def render_slide_generation_prompt(
         use_content_field: If True, slide attributes use 'content' instead of 'atoms'
     """
     prompt = ""
-    
+
     if atoms:
         atoms_json = atoms.to_json(indent=2)
         prompt = f"**Atoms**: {atoms_json}\n"
-    
+
     prompt += f"**Instructions**: {user_instruction}\n"
-    
+
     if intent_guidance:
         prompt += f"**Guidance**: {intent_guidance}\n"
-    
+
     if themes:
         theme_ids = [t.get("id", "default") for t in themes]
         prompt += f"**Themes**: {', '.join(theme_ids)}\n"
-    
+
     # Rule 6 changes based on whether using atoms or content field
     if use_content_field:
         rule_6 = "6. Each <Slide> has id, rank, story, content attributes. Use content.sections as REFERENCE for slide content—you may refactor, condense, or omit details to fit the layout beautifully. Prioritize visual balance over exhaustive coverage. Also consider content.headline, content.subtitle, content.category, and content.speaker_intent if present"
     else:
         rule_6 = "6. Each <Slide> has id, rank, story, atoms attributes"
-    
+
     prompt += f"""
 **RULES**:
 1. Follow each slide's `visual_design` field for layout and content approach
@@ -233,7 +249,7 @@ def render_slide_generation_prompt(
 10. **NO TEXT-ONLY SLIDES**: Every slide must have a visual anchor (Chart, BigNum, MetricGroup, ProcessStrip, StepList, or CardGroup). Pure text slides (Heading + Text + List) are forbidden.
 
 Generate MDX slides wrapped in <Slide> elements."""
-    
+
     return prompt
 
 
@@ -253,10 +269,10 @@ def render_refinement_prompt(
         slides_mdx.append(f"""<Slide id="{slide_dict['id']}" rank={{{slide_dict['rank']}}} story="{slide_dict.get('story', '')}">
 {mdx_content}
 </Slide>""")
-    
+
     current_mdx = "\n\n".join(slides_mdx)
     atoms_json = atoms.to_json(indent=2)
-    
+
     prompt = f"""Current Slides (MDX):
 ```mdx
 {current_mdx}
@@ -269,7 +285,7 @@ Instructions: {user_instruction}
 """
     if intent_guidance:
         prompt += f"Guidance: {intent_guidance}\n"
-    
+
     prompt += f"""
 ---
 Validation Issues:
@@ -284,7 +300,7 @@ Fix issues by outputting <Patch> elements. Each patch targets an element by id:
 ```
 
 Output ONLY <Patch> elements for changes needed."""
-    
+
     return prompt
 
 
@@ -303,10 +319,10 @@ def render_user_refinement_prompt(
         slides_mdx.append(f"""<Slide id="{slide_dict['id']}" rank={{{slide_dict['rank']}}} story="{slide_dict.get('story', '')}">
 {mdx_content}
 </Slide>""")
-    
+
     current_mdx = "\n\n".join(slides_mdx)
     atoms_json = atoms.to_json(indent=2)
-    
+
     prompt = f"""Current Slides (MDX):
 ```mdx
 {current_mdx}
@@ -319,7 +335,7 @@ Request: {refinement_instruction}
 """
     if intent_guidance:
         prompt += f"Guidance: {intent_guidance}\n"
-    
+
     prompt += """
 ---
 Output <Patch> elements to modify specific widgets by id:
@@ -331,7 +347,7 @@ Output <Patch> elements to modify specific widgets by id:
 ```
 
 Only output patches for elements that need to change."""
-    
+
     return prompt
 
 
@@ -349,18 +365,18 @@ def render_slide_refinement_prompt(
         "layout": s.get("layout"),
         "slots": list(s.get("widgets", {}).keys()),
     } for s in existing_slides]
-    
+
     prompt = f"""Slides: {json.dumps(slides_summary)}
 
 Instruction: {user_instruction}
 """
     if intent_guidance:
         prompt += f"Rules: {intent_guidance}\n"
-    
+
     prompt += f"""
 Full data:
 {json.dumps(existing_slides, indent=2)}
 
 Return JSON array: replace/remove operations only."""
-    
+
     return prompt

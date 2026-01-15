@@ -1744,7 +1744,7 @@
       "state": "draft",
       "story": "Answer: Prove the effectiveness of the Enricher tool with data",
       "density": "dense",
-      "visual_design": "Comparison table with baseline vs. post-enricher metrics and a highlighted 'Improvement' column.",
+      "visual_design": "Comparison with baseline vs. post-enricher metrics and a highlighted 'Improvement'",
       "content": {
         "headline": "Enricher impact: Performance vs. Baseline",
         "category": "Answer",
@@ -1840,7 +1840,7 @@
       "state": "draft",
       "story": "Answer: Detail the administrative and governance strategy",
       "density": "moderate",
-      "visual_design": "Split screen: left side text/bullets; right side dark-themed dashboard visualization.",
+      "visual_design": " a simple three-step flow visual that summarizes the admin deliverables as sequential building blocks leading to deployable governance.",
       "content": {
         "headline": "Governance makes speech deployable",
         "category": "Answer",

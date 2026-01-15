@@ -43,7 +43,7 @@
 
   /* Spacing - generous for presentations */
   --theme-spacing-gap: 36px;
-  --theme-spacing-padding: 80px;
+  --theme-spacing-padding: 160px;
   --theme-spacing-margin: 32px;
 
   /* Visuals */
@@ -423,8 +423,30 @@ body {
   background: var(--theme-surface, #f8fafc);
   border-radius: 1rem;
   padding: 1.25rem;
-  justify-content: center; /* Center by default */
+  justify-content: flex-start;
   width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Make children share space proportionally */
+.dashboard-sidebar-inner > * {
+  flex-shrink: 1;
+  min-height: 0;
+}
+
+/* Charts take flexible space but respect siblings */
+.dashboard-sidebar-inner > .chart-block {
+  flex: 1 1 auto;
+  min-height: 150px;
+  max-height: 60%;
+}
+
+/* Other content items take only what they need */
+.dashboard-sidebar-inner > .callout,
+.dashboard-sidebar-inner > .smart-list,
+.dashboard-sidebar-inner > .metric-group {
+  flex: 0 0 auto;
 }
 
 /* When sidebar has heading, top-align and remove top padding */
@@ -477,7 +499,7 @@ body {
   min-height: 0;
 }
 
-/* NoSync mode - traditional layout */
+/* NoSync mode - center-aligned layout for visual-heavy sidebars */
 .layout-dashboard-nosync .dashboard-body {
   display: grid;
   grid-template-columns: 1fr minmax(400px, 480px);
@@ -485,7 +507,7 @@ body {
   flex: 1;
   min-height: 0;
   overflow: hidden;
-  align-items: start;
+  align-items: center;
 }
 
 /* Fallback: when slots are used as direct children (standalone components) */

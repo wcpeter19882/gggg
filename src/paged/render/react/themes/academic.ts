@@ -36,8 +36,8 @@ export const academicTheme: ThemeDefinition = {
     letterSpacing: '0em',
   },
   spacing: {
-    gap: '1.5rem',
-    padding: '2.5rem',
+    gap: '3rem',
+    padding: '5rem',
     margin: '1.25rem',
   },
   visuals: {

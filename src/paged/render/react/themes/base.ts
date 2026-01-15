@@ -36,8 +36,8 @@ export const baseTheme: ThemeDefinition = {
     letterSpacing: '-0.02em',
   },
   spacing: {
-    gap: '36px',
-    padding: '80px',
+    gap: '72px',
+    padding: '160px',
     margin: '32px',
   },
   visuals: {

@@ -20,6 +20,19 @@ class ReactLayoutEngine:
 4. **Unrelated metrics** → USE BigNum/MetricGroup, NOT charts
 5. **Custom charts** → ONLY when user explicitly requests (e.g., "use rose chart")
 
+**🚫 NO DATA HALLUCINATION (CRITICAL)**:
+- **Source-Based Data Only**: Use numbers explicitly provided in the text or mathematically available (e.g., calculating differences, sums, or ratios from given numbers is ALLOWED).
+- **No Arbitrary Inventions**: Do not invent missing variables to solve an equation. (e.g., if input only says "Sales up 15%", you do not know the total volume. Do not invent "$100M" as a baseline).
+- **No Assumed Complements**: Do not assume "remainder" values exist unless the category is binary/closed (e.g., "30% Market Share" does not imply who owns the other 70%).
+- **Fallback Rule**: If you lack the necessary data points for a specific Chart or Table, use a **Text**, **BigNum**, or **List** component instead. Never make up data just to use a Chart or Table (like `TableData`).
+- **No Qualitative-to-Quantitative**: Do NOT assign arbitrary numbers to qualitative states.
+    - "In Progress" != 50%. "Complete" != 100%. "Priority" != 80%.
+    - If the text says "Project A is finishing", do NOT chart it as 90%. Use a List or Status Indicator instead.
+- **ChartBar/Line Strictness**: For `ChartBar` and `ChartLine`, **NEVER** invent "filler" data points to make the chart look full or smooth.
+    - If input has data for 2023 and 2025, plot ONLY 2023 and 2025. Do NOT invent 2024.
+    - If input has **relative change ONLY** ("delta is ZZ"), do NOT invent "before=XX, after=YY". This is FALSE DATA.
+    - If input has data for "Item A", do NOT invent "Item B" just to have a comparison.
+
 **Examples:**
 - ✅ "Q1: $100K, Q2: $150K, Q3: $200K" → ChartBar/ChartLine (related time-series)
 - ✅ "Market share: A 45%, B 30%, C 25%" → ChartPie (related percentages)
@@ -200,8 +213,9 @@ You are designing slides as MDX markup. Match layout to the visual_design intent
 - **Main slot (Left, 1/3 width)**: Narrow context column. Best for Vertical Lists (SmartList, StepList), Key Takeaways (Callout), or Summary Text.
 - **Sidebar slot (Right, 2/3 width)**: Wide visual column. Best for Hero Charts, ProcessStrips, MetricGroups.
 - **CRITICAL**: Put visual anchors (Charts/Process) in **Sidebar** (Wide). Put text/lists in **Main** (Narrow).
-- **NOTE**: Dashboard body (Main + Sidebar) is vertically centered; Header stays at top
-- **NOTE**: Dashboard body (Main + Sidebar) is vertically centered; Header stays at top
+- **SYNC MODES** (prop: `nosync`, boolean, default: `false`):
+  - **sync mode (`nosync={false}`, default)**: Main and Sidebar content is row-aligned (top-aligned). Use for text/metrics matching.
+  - **nosync mode (`nosync={true}`)**: Main and Sidebar are vertically center-aligned. **Use `nosync={true}` when Sidebar contains a visual (Chart, Diagram, ProcessStrip)**.
 
 **LayoutTimeline** — Use for chronological milestones with rich content per event.
 - Best: company history, project milestones, annual roadmap with details
@@ -256,6 +270,13 @@ Use when context is needed to INTERPRET the data:
 - BAD: Left side uses BigNum for "Revenue", Right side uses Text for "Profit" → visual mismatch confuses readers
 - GOOD: Both use BigNum, or both use Metric inside MetricGroup
 - This applies to: metrics, lists, process steps, cards - keep parallel concepts visually parallel
+
+**🚫 NO REDUNDANCY / DUPLICATION (CRITICAL)**:
+- **NEVER show the same data point twice** on the same slide.
+- **Visuals must be COMPLEMENTARY, not repetitive.**
+- **BAD**: A Table showing "Error reduction: 37%" AND a BigNum showing "37% Error reduction". (Duplicated info).
+- **GOOD**: A Table showing detailed breakdown (metrics A, B, C) and a BigNum showing the *aggregate* result that is NOT in the table.
+- Use distinct components for distinct data.
 
 **Metrics**: BigNum (hero stat with trend), MetricGroup (3-4 KPIs), MetricStrip (inline row)
 **Content**: SmartList (bullet points), CardGroup (feature cards), QuoteBlock, TableData
@@ -363,6 +384,7 @@ Each slide wrapped in `<Slide>` with metadata:
 
 // Content (must have id)
 <SmartList id="list_001" items={["Item 1", "Item 2"]} ordered={false}/>
+// CardGroup: Grid of information cards. ALWAYS include a semantic 'icon' (e.g., 🚀, 💡, 💰, ⚠️) for visual impact.
 <CardGroup id="cards_001" columns={3}>
   <Card title="Speed" description="10x faster" icon="🚀"/>
 </CardGroup>
@@ -568,9 +590,15 @@ If you don't have enough content for 4+ elements per side, use LayoutStacked ins
 - Numbers → BigNum/MetricGroup (not in text)
 - ≥3 slides with data components
 - Lists max 4 items, body max 25 words
+- Keep parallel concepts visually parallel
 - Split layouts: BOTH sides need visual blocks, not just text
 - **NO GAPS**: content should fill the page, not leave holes
-- **NO REDUNDANCY**: Never show same data twice (e.g., MetricGroup + BigNum with same numbers)
+- **NO INFORMATION REDUNDANCY**: All components on a slide must be complementary; do NOT repeat the same fact/claim in multiple places (even paraphrased).
+  - If a number is in MetricGroup/BigNum/Chart/Table, do NOT repeat the same number in Text/SmartList/Card descriptions.
+  - If CardGroup lists capabilities, SmartList must NOT re-list those capabilities; use SmartList for actions/implications/risks.
+  - Avoid 1-to-1 mapping duplicates like: Card("9 languages") + Metric("9 preview languages"). Prefer: Card(qualitative progress) + Metric(quantitative KPI).
+  - Example BAD: MetricGroup(71%, 80%) + BigNum(80%)
+  - Example GOOD: MetricGroup(71%, 80%) + Callout(main takeaway)
 - **NEVER NEST LAYOUTS**: LayoutDashboard, LayoutGrid, LayoutTimeline, LayoutCover, LayoutFullBleed are TOP-LEVEL ONLY. Never place inside <Left>, <Right>, <Main>, <Sidebar>, or any slot. Only components (Heading, BigNum, SmartList, etc.) go inside slots.
 - **NO DUPLICATE PROCESS VISUALS**: Never use both ProcessStrip AND StepList on same slide - they serve same purpose. Pick ONE."""
 

@@ -475,7 +475,7 @@ function SyncLayout({ rows, ratio, theme, vibe, headerSlot, mirrorLeft = false }
           gridTemplateColumns: gridColumns,
           alignContent: 'center',
           alignItems: 'stretch',
-          gap: mirrorLeft ? '4rem' : 'var(--theme-spacing-gap)',
+          gap: 'var(--theme-spacing-gap)',
           height: '100%',
           minHeight: 0,
         }}

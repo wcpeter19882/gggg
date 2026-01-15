@@ -36,8 +36,8 @@ export const minimalTheme: ThemeDefinition = {
     letterSpacing: '0em',
   },
   spacing: {
-    gap: '2rem',
-    padding: '3rem',
+    gap: '4rem',
+    padding: '6rem',
     margin: '1.5rem',
   },
   visuals: {
