@@ -82,8 +82,8 @@ Don't just list facts; visualize relationships.
 | Layout | Use Case | Content Strategy |
 |--------|----------|------------------|
 | `LayoutCover` | Transitions, Titles, Closings | Minimalist. Headline + Subtitle + Quote. No heavy data. |
-| LayoutSplit | Comparisons (A vs B), Visual Proof | Context on Left, Data/Visual on Right. **SYMMETRY RULE**: In `LayoutSplit`, **BOTH** Left and Right slots **MUST** begin with a Header. **NO EXCEPTIONS**. |
-| LayoutDashboard | KPI Overview, Process Flows | **Main (Narrow/Left)**: Context/Lists. **Sidebar (Wide/Right)**: Hero Visuals (Charts, Process). **ABSOLUTELY NO TABLES**. |
+| `LayoutSplit` | Comparisons (A vs B), Visual Proof | Context on Left, Data/Visual on Right. **HEADLINE RULE**: For **Comparisons** (A vs B), use **BOTH** headers. For **Visual Proof** (Text + Visual), use **ONLY Left** header (Right has NO header). |
+| `LayoutDashboard` | KPI Overview, Process Flows | **Main (Narrow/Left)**: Context/Lists. **Sidebar (Wide/Right)**: Hero Visuals (Charts, Process). **ABSOLUTELY NO TABLES**. |
 | `LayoutTimeline` | History, Roadmaps | Chronological flow. Text-heavy but visually structured. |
 | `LayoutStacked` | Narrative Flow, Wide Tables | **Primary Choice for Tables**. Use when you have a large Table or CardGroup that needs full width. |
 

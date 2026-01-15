@@ -137,6 +137,15 @@ interface GridRow {
 // =============================================================================
 
 /**
+ * Header slot for LayoutSplit (Slide Title)
+ * Can be used as <Header> or <LayoutSplit.Header>
+ */
+export function Header({ children }: LayoutSplitSlotProps): JSX.Element {
+  return <div className="layout-split-header">{children}</div>;
+}
+Header.displayName = 'Header';
+
+/**
  * Left slot for LayoutSplit
  * Can be used as <Left> or <LayoutSplit.Left>
  */
@@ -394,12 +403,38 @@ interface SyncLayoutProps {
   ratio: SplitRatio;
   theme?: ThemeName;
   vibe?: VibeLevel;
-  timelineHeader?: { headline: string; subtitle?: string | null } | null;
+  headerSlot?: React.ReactNode;
   mirrorLeft?: boolean;
 }
 
-function SyncLayout({ rows, ratio, theme, vibe, timelineHeader, mirrorLeft = false }: SyncLayoutProps): JSX.Element {
+function SyncLayout({ rows, ratio, theme, vibe, headerSlot, mirrorLeft = false }: SyncLayoutProps): JSX.Element {
   const gridColumns = ratioGridMap[ratio] || ratioGridMap['1:1'];
+
+  // Resolve header content if present
+  let resolvedHeader = headerSlot;
+  if (headerSlot && isValidElement(headerSlot)) {
+    const headerChildren = Children.toArray((headerSlot.props as { children?: ReactNode }).children);
+    let headlineText = '';
+    let subtitleText = '';
+
+    // Simple heuristic: find first Heading for headline, first Text (lead) for subtitle
+    for (const child of headerChildren) {
+      if (isValidElement(child)) {
+        const type = getComponentType(child);
+        const props = child.props as { level?: number; variant?: string; children?: ReactNode }; // eslint-disable-line @typescript-eslint/no-explicit-any
+        
+        if (!headlineText && (type.includes('Heading') || props.level === 1 || props.level === 2)) {
+          headlineText = nodeToText(props.children);
+        } else if (!subtitleText && (type === 'Text' || props.variant === 'lead')) {
+          subtitleText = nodeToText(props.children);
+        }
+      }
+    }
+
+    if (headlineText) {
+      resolvedHeader = <TimelineStyleHeader headline={headlineText} subtitle={subtitleText || null} />;
+    }
+  }
 
   return (
     <div
@@ -411,30 +446,31 @@ function SyncLayout({ rows, ratio, theme, vibe, timelineHeader, mirrorLeft = fal
       data-vibe={vibe}
       style={{
         display: 'grid',
-        gridTemplateRows: timelineHeader ? 'auto 1fr' : '1fr',
+        gridTemplateRows: headerSlot ? 'auto 1fr' : '1fr',
         alignItems: 'stretch',
         gap: 'var(--theme-spacing-gap)',
-        paddingTop: timelineHeader ? '40px' : 'var(--theme-spacing-padding)',
+        paddingTop: headerSlot ? '0' : 'var(--theme-spacing-padding)', // Header usually brings its own padding/margin
         paddingLeft: 'var(--theme-spacing-padding)',
         paddingRight: 'var(--theme-spacing-padding)',
         paddingBottom: 'var(--theme-spacing-padding)',
         height: '100%',
       }}
     >
-      {timelineHeader && (
+      {resolvedHeader && (
         <div
           style={{
             gridRow: '1',
-            marginLeft: 'calc(-1 * (var(--theme-spacing-padding) - 56px))',
-            marginRight: 'calc(-1 * (var(--theme-spacing-padding) - 56px))',
+            gridColumn: '1 / -1', // Span all columns
+            marginBottom: 'var(--theme-spacing-gap)',
           }}
         >
-          <TimelineStyleHeader headline={timelineHeader.headline} subtitle={timelineHeader.subtitle} />
+          {resolvedHeader}
         </div>
       )}
       <div
         style={{
-          gridRow: timelineHeader ? '2' : '1',
+          gridRow: headerSlot ? '2' : '1',
+          gridColumn: '1 / -1', // Ensure inner grid spans full width
           display: 'grid',
           gridTemplateColumns: gridColumns,
           alignContent: 'center',
@@ -442,7 +478,6 @@ function SyncLayout({ rows, ratio, theme, vibe, timelineHeader, mirrorLeft = fal
           gap: mirrorLeft ? '4rem' : 'var(--theme-spacing-gap)',
           height: '100%',
           minHeight: 0,
-          paddingTop: timelineHeader ? '40px' : '0px',
         }}
       >
         {rows.map((row, rowIndex) => {
@@ -452,17 +487,37 @@ function SyncLayout({ rows, ratio, theme, vibe, timelineHeader, mirrorLeft = fal
           if (row.type === 'headline-left' || row.type === 'headline-right') {
             const headline = row.left[0] || row.right[0];
             return (
-              <div
-                key={rowKey}
-                className="layout-split-row layout-split-row-headline"
-                style={{
-                  gridColumn: row.type === 'headline-left' ? '1' : '2',
-                  display: 'flex',
-                  justifyContent: 'flex-start',
-                }}
-              >
-                {headline.element}
-              </div>
+              <React.Fragment key={rowKey}>
+                {row.type === 'headline-left' ? (
+                  <>
+                    <div
+                      className="layout-split-row layout-split-row-headline"
+                      style={{
+                        gridColumn: '1',
+                        display: 'flex',
+                        justifyContent: 'flex-start',
+                      }}
+                    >
+                      {headline.element}
+                    </div>
+                    <div style={{ gridColumn: '2' }} /> {/* Empty placeholder for alignment */}
+                  </>
+                ) : (
+                  <>
+                    <div style={{ gridColumn: '1' }} /> {/* Empty placeholder for alignment */}
+                    <div
+                      className="layout-split-row layout-split-row-headline"
+                      style={{
+                        gridColumn: '2',
+                        display: 'flex',
+                        justifyContent: 'flex-start',
+                      }}
+                    >
+                      {headline.element}
+                    </div>
+                  </>
+                )}
+              </React.Fragment>
             );
           }
 
@@ -594,7 +649,8 @@ export function LayoutSplit({
   nosync = false,
   mirrorLeft = false,
 }: LayoutSplitProps): JSX.Element {
-  // Extract Left and Right slots from children
+  // Extract slots from children
+  let headerSlot: React.ReactElement | null = null;
   let leftSlot: React.ReactElement | null = null;
   let rightSlot: React.ReactElement | null = null;
 
@@ -604,10 +660,16 @@ export function LayoutSplit({
     const displayName = (child.type as { displayName?: string }).displayName;
     const componentType = child.type;
 
-    // Match both standalone (Left/Right) and compound (LayoutSplit.Left/Right) patterns
-    if (displayName === 'Left' || displayName === 'LayoutSplit.Left' || componentType === Left) {
+    // Match Header slot
+    if (displayName === 'Header' || displayName === 'LayoutSplit.Header' || componentType === Header) {
+      headerSlot = child;
+    }
+    // Match Left slot
+    else if (displayName === 'Left' || displayName === 'LayoutSplit.Left' || componentType === Left) {
       leftSlot = child;
-    } else if (displayName === 'Right' || displayName === 'LayoutSplit.Right' || componentType === Right) {
+    } 
+    // Match Right slot
+    else if (displayName === 'Right' || displayName === 'LayoutSplit.Right' || componentType === Right) {
       rightSlot = child;
     }
   });
@@ -623,9 +685,13 @@ export function LayoutSplit({
         data-ratio={ratio}
         data-theme={theme}
         data-vibe={vibe}
+        style={{ display: 'flex', flexDirection: 'column', height: '100%' }}
       >
-        {leftSlot}
-        {rightSlot}
+        {headerSlot && <div className="layout-split-header-wrapper">{headerSlot}</div>}
+        <div className="layout-split-columns-wrapper" style={{ display: 'flex', flex: 1, minHeight: 0 }}>
+          {leftSlot}
+          {rightSlot}
+        </div>
       </div>
     );
   }
@@ -634,48 +700,8 @@ export function LayoutSplit({
   const leftChildren = (leftSlot as React.ReactElement | null)?.props?.children;
   const rightChildren = (rightSlot as React.ReactElement | null)?.props?.children;
 
-  let leftComponents = extractComponents(leftChildren);
-  let rightComponents = extractComponents(rightChildren);
-
-  // LayoutTimeline-style headline/subtitle extraction:
-  // If a side begins with <Heading level={2}> and <Text variant="lead">,
-  // render them as a single slide header (and remove from column content).
-  let timelineHeader: { headline: string; subtitle?: string | null } | null = null;
-  const tryExtractHeader = (components: ComponentInfo[]): { header: { headline: string; subtitle?: string | null } | null; rest: ComponentInfo[] } => {
-    const meaningful = components.filter((c) => !isWhitespaceNode(c.element));
-    const first = meaningful[0];
-    if (!first || !isHeadingLevel2Component(first)) return { header: null, rest: components };
-
-    const headline = nodeToText((first.element.props as { children?: ReactNode }).children).trim();
-    if (!headline) return { header: null, rest: components };
-
-    const second = meaningful[1];
-    let subtitle: string | null = null;
-    let removeCount = 1;
-    if (second && isLeadTextComponent(second)) {
-      const s = nodeToText((second.element.props as { children?: ReactNode }).children).trim();
-      if (s) subtitle = s;
-      removeCount = 2;
-    }
-
-    // Remove the first (and optional second) components by original index.
-    const indicesToRemove = new Set<number>([first.index]);
-    if (removeCount === 2 && second) indicesToRemove.add(second.index);
-    const rest = components.filter((c) => !indicesToRemove.has(c.index));
-    return { header: { headline, subtitle }, rest };
-  };
-
-  const leftExtracted = tryExtractHeader(leftComponents);
-  if (leftExtracted.header) {
-    timelineHeader = leftExtracted.header;
-    leftComponents = leftExtracted.rest;
-  } else {
-    const rightExtracted = tryExtractHeader(rightComponents);
-    if (rightExtracted.header) {
-      timelineHeader = rightExtracted.header;
-      rightComponents = rightExtracted.rest;
-    }
-  }
+  const leftComponents = extractComponents(leftChildren);
+  const rightComponents = extractComponents(rightChildren);
 
   // Build synced grid rows
   const rows = buildSyncedGridRows(leftComponents, rightComponents);
@@ -686,7 +712,7 @@ export function LayoutSplit({
       ratio={ratio}
       theme={theme}
       vibe={vibe}
-      timelineHeader={timelineHeader}
+      headerSlot={headerSlot}
       mirrorLeft={mirrorLeft}
     />
   );
@@ -696,6 +722,7 @@ export function LayoutSplit({
 // Attach Slot Components
 // =============================================================================
 
+LayoutSplit.Header = Header;
 LayoutSplit.Left = Left;
 LayoutSplit.Right = Right;
 

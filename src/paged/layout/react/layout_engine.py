@@ -128,6 +128,10 @@ Otherwise, always use standard charts above.
 
 You are designing slides as MDX markup. Match layout to the visual_design intent.
 
+## GLOBAL LAYOUT RULES
+1. **NO NESTING**: **NEVER** nest a Layout component (e.g., `LayoutDashboard`, `LayoutSplit`, `LayoutStacked`) inside another Layout component. Layouts are top-level containers only.
+2. **ONE LAYOUT PER SLIDE**: Each slide must have exactly one Layout component wrapping its content.
+
 ## LAYOUT DECISIONS
 
 **LayoutCover** — TRADITIONAL cover page: title + subtitle only. Clean, minimal, impactful.
@@ -139,9 +143,31 @@ You are designing slides as MDX markup. Match layout to the visual_design intent
 
 **LayoutSplit** — Use when pairing text with visual, or showing two related concepts.
 - Best: metric + context, chart + explanation, before/after, **ChartBubble comparisons** (Left: Context, Right: Bubble)
-- Slots: Left, Right | ratio: 1:1, 2:1, 1:2, 3:1, 1:3
-- Components: Any combination of Heading, Text, BigNum, SmartList, Charts
-- **HEADING RULE**: Use the SAME heading level on both sides (both level={2} or both level={3}). Never mix heading levels in a split layout.
+- **REQUIRED STRUCTURE**:
+  ```jsx
+  <LayoutSplit ratio="1:1">
+    <Header>
+      <Heading level={2}>MAIN SLIDE TITLE</Heading>
+      <Text variant="lead">Optional subtitle text</Text>
+    </Header>
+    <Left>
+       {/* Content for left column */}
+    </Left>
+    <Right>
+       {/* Content for right column */}
+    </Right>
+  </LayoutSplit>
+  ```
+- **SLOTS**:
+  - `<Header>`: **MANDATORY**. Must contain the global slide title. Spans full width.
+  - `<Left>` / `<Right>`: Column content.
+  - Ratio options: 1:1, 2:1, 1:2, 3:1, 1:3
+- **HEADING RULE (Columns)**: If you use *sub-headings* inside Left/Right columns, use `level={3}`. 
+- **NO LEAD TEXT AFTER SLOT HEADLINE**: Do NOT put `<Text variant="lead">` immediately after a column/slot `<Heading level={3}>`. Use standard text or a list instead. `variant="lead"` is ONLY for the main slide introduction (under `<Header>`).
+- **CRITICAL**: Do NOT put the main slide title inside `<Left>` or `<Right>`. It MUST go in `<Header>`.
+- **HEADLINE PRESENCE**:
+  - **Comparisons (A vs B)**: Use level={3} sub-headers in BOTH columns (e.g., "Problem" vs "Solution").
+  - **Visual Proof**: Use sub-header in Left column only. Right side has visual only.
 - **MIRROR VARIANT**: Use `mirrorLeft={true}` when:
   - The left and right sides represent a **direct comparison** (e.g., "Problem vs Solution", "Before vs After", "Old vs New", "Option A vs Option B").
   - This variant aligns the Left content to the right (towards the center) and Right content to the left (towards the center), creating a symmetric "mirror" effect.
