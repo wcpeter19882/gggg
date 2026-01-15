@@ -71,22 +71,10 @@ export function QuoteBlock({
     <figure 
       className={`quote-block ${sizeClass} quote-${variant}`}
       data-variant={variant}
-      style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}
     >
-      <span 
-        className="quote-icon"
-        style={{ 
-          fontSize: '3rem', 
-          lineHeight: 1,
-          flexShrink: 0,
-          opacity: 0.5,
-          color: 'var(--theme-text-muted)'
-        }}
-      >
-        "
-      </span>
-      <div style={{ flex: 1 }}>
-        <blockquote className="quote-text" style={{ margin: 0 }}>
+      <span className="quote-icon">"</span>
+      <div className="quote-content">
+        <blockquote className="quote-text">
           {children}
         </blockquote>
         

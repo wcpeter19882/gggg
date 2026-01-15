@@ -36,6 +36,7 @@
 
 import React, { type ReactNode, Children, isValidElement } from 'react';
 import type { SplitRatio, ThemeName, VibeLevel } from '@/utils/types';
+import { TimelineHeader } from './TimelineHeader';
 
 function nodeToText(node: ReactNode): string {
   if (node === null || node === undefined) return '';
@@ -60,41 +61,6 @@ function isLeadTextComponent(comp: ComponentInfo): boolean {
   if (comp.type !== 'Text') return false;
   const props = comp.element.props as { variant?: unknown };
   return props.variant === 'lead';
-}
-
-function TimelineStyleHeader({ headline, subtitle }: { headline: string; subtitle?: string | null }): JSX.Element {
-  return (
-    <div style={{ textAlign: 'left' }}>
-      <h1
-        className="heading-1"
-        style={{
-          margin: '1.0rem 1.0rem 0 1.0rem',
-          textAlign: 'left',
-          fontSize: '4rem',
-          fontWeight: 700,
-          color: 'var(--theme-text)',
-          textWrap: 'wrap',
-          width: '100%',
-          maxWidth: 'none',
-        }}
-      >
-        {headline}
-      </h1>
-      {subtitle && (
-        <p
-          style={{
-            margin: '0.5rem 1.0rem 0 1.0rem',
-            textAlign: 'left',
-            fontSize: '1.5rem',
-            fontStyle: 'italic',
-            color: 'var(--theme-text-muted)',
-          }}
-        >
-          {subtitle}
-        </p>
-      )}
-    </div>
-  );
 }
 
 // =============================================================================
@@ -432,7 +398,7 @@ function SyncLayout({ rows, ratio, theme, vibe, headerSlot, mirrorLeft = false }
     }
 
     if (headlineText) {
-      resolvedHeader = <TimelineStyleHeader headline={headlineText} subtitle={subtitleText || null} />;
+      resolvedHeader = <TimelineHeader headline={headlineText} subtitle={subtitleText || null} />;
     }
   }
 

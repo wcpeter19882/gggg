@@ -31,6 +31,7 @@
 
 import React, { type ReactNode, Children, isValidElement } from 'react';
 import type { ThemeName, VibeLevel } from '@/utils/types';
+import { TimelineHeader } from './TimelineHeader';
 
 const CHART_HEIGHT_PROP_TYPES = new Set([
   'ChartBar',
@@ -90,41 +91,6 @@ function isHeadingLevel2Element(node: ReactNode): node is React.ReactElement<{ c
   const name = t.displayName ?? t.name ?? '';
   const props = node.props as { level?: unknown };
   return (name === 'Heading' || props.level !== undefined) && props.level === 2;
-}
-
-function TimelineStyleHeader({ headline, subtitle }: { headline: string; subtitle?: string | null }): JSX.Element {
-  return (
-    <div style={{ textAlign: 'left' }}>
-      <h1
-        className="heading-1"
-        style={{
-          margin: '1.0rem 1.0rem 0 1.0rem',
-          textAlign: 'left',
-          fontSize: '4rem',
-          fontWeight: 700,
-          color: 'var(--theme-text)',
-          textWrap: 'wrap',
-          width: '100%',
-          maxWidth: 'none',
-        }}
-      >
-        {headline}
-      </h1>
-      {subtitle && (
-        <p
-          style={{
-            margin: '0.5rem 1.0rem 0 1.0rem',
-            textAlign: 'left',
-            fontSize: '1.5rem',
-            fontStyle: 'italic',
-            color: 'var(--theme-text-muted)',
-          }}
-        >
-          {subtitle}
-        </p>
-      )}
-    </div>
-  );
 }
 
 // =============================================================================
@@ -607,6 +573,71 @@ export function LayoutDashboard({
     'sidebar-focus': 'dashboard-sidebar-focus',
   }[variant];
 
+  // Extract main children for both modes (needed for subtitle detection)
+  const mainChildren = (mainSlot as React.ReactElement | null)?.props?.children;
+  const sidebarChildren = (sidebarSlot as React.ReactElement | null)?.props?.children;
+
+  let mainComponents = extractComponents(mainChildren);
+
+  // LayoutTimeline-style headline/subtitle (shared by both sync and nosync modes):
+  // We look for a Heading in the Header slot and optionally a subtitle (Lead text).
+  let renderedHeader: ReactNode = header;
+
+  if (isValidElement(header)) {
+    const headerEl = header as React.ReactElement;
+    const headerChilds = Children.toArray((headerEl.props as { children?: ReactNode }).children);
+    
+    let headline = '';
+    let subtitle: string | null = null;
+    let foundHeading = false;
+
+    // 1. Scan Header slot for headline and subtitle
+    for (const child of headerChilds) {
+       if (isValidElement(child)) {
+          const type = getComponentType(child as React.ReactElement);
+          const props = (child as React.ReactElement).props as { level?: number; variant?: string; children?: ReactNode };
+
+          const isHeading = type.includes('Heading') || ['h1', 'h2', 'h3'].includes(type) || props.level === 1 || props.level === 2;
+          const isLead = type === 'Text' || props.variant === 'lead';
+
+          if (!foundHeading && isHeading) {
+              headline = nodeToText(props.children).trim();
+              foundHeading = true;
+          } else if (subtitle === null && isLead) {
+              subtitle = nodeToText(props.children).trim() || null;
+          }
+       }
+    }
+
+    // 2. If headline found, try to find subtitle in Main if not in Header
+    if (headline) {
+        if (!subtitle) {
+          const leadCandidate = mainComponents
+            .slice(0, 3)
+            .find((c) => c.type === 'Text' && (c.element.props as { variant?: unknown }).variant === 'lead');
+
+          if (leadCandidate) {
+              subtitle = nodeToText((leadCandidate.element.props as { children?: ReactNode }).children).trim() || null;
+              // Remove found subtitle from main content to avoid duplication
+              mainComponents = mainComponents.filter((c) => c.index !== leadCandidate.index);
+          }
+        }
+
+        renderedHeader = (
+          <div
+            className="dashboard-header"
+            style={{
+              marginBottom: 'var(--theme-spacing-gap)',
+            }}
+          >
+            <TimelineHeader headline={headline} subtitle={subtitle} />
+          </div>
+        );
+    }
+  }
+
+  const hasHeader = !!renderedHeader;
+
   // NoSync mode: Use traditional layout
   if (nosync) {
     return (
@@ -617,8 +648,14 @@ export function LayoutDashboard({
         data-variant={variant}
         data-theme={theme}
         data-vibe={vibe}
+        style={{
+          paddingTop: hasHeader ? '0' : 'var(--theme-spacing-padding)',
+          paddingLeft: 'var(--theme-spacing-padding)',
+          paddingRight: 'var(--theme-spacing-padding)',
+          paddingBottom: 'var(--theme-spacing-padding)',
+        }}
       >
-        {header}
+        {renderedHeader}
         <div className="dashboard-body">
           {mainSlot}
           {sidebarSlot}
@@ -628,56 +665,8 @@ export function LayoutDashboard({
     );
   }
 
-  // Sync mode: Extract and match components
-  const mainChildren = (mainSlot as React.ReactElement | null)?.props?.children;
-  const sidebarChildren = (sidebarSlot as React.ReactElement | null)?.props?.children;
-
-  let mainComponents = extractComponents(mainChildren);
+  // Sync mode: Build grid rows and render
   const sidebarComponents = extractComponents(sidebarChildren);
-
-  // LayoutTimeline-style headline/subtitle:
-  // If Header contains ONLY a <Heading level={2}>, render it as a LayoutTimeline-style
-  // 4rem headline. If Main contains a lead Text near the top, use it as the subtitle
-  // (and remove it from Main to avoid duplication).
-  let timelineHeader: { headline: string; subtitle?: string | null } | null = null;
-  let renderedHeader: ReactNode = header;
-  if (isValidElement(header)) {
-    const headerEl = header as React.ReactElement;
-    const headerKids = Children.toArray((headerEl.props as { children?: ReactNode }).children)
-      .filter((n) => n !== null && n !== undefined)
-      .filter((n) => !isWhitespaceNode(n));
-
-    if (headerKids.length === 1 && isHeadingLevel2Element(headerKids[0])) {
-      const headline = nodeToText((headerKids[0].props as { children?: ReactNode }).children).trim();
-      if (headline) {
-        const leadCandidate = mainComponents
-          .slice(0, 3)
-          .find((c) => c.type === 'Text' && (c.element.props as { variant?: unknown }).variant === 'lead');
-
-        const subtitle = leadCandidate
-          ? (nodeToText((leadCandidate.element.props as { children?: ReactNode }).children).trim() || null)
-          : null;
-
-        timelineHeader = { headline, subtitle };
-        if (leadCandidate) {
-          mainComponents = mainComponents.filter((c) => c.index !== leadCandidate.index);
-        }
-
-        renderedHeader = (
-          <div
-            className="dashboard-header"
-            style={{
-              marginLeft: '-40px',
-              marginRight: '-40px',
-            }}
-          >
-            <TimelineStyleHeader headline={headline} subtitle={subtitle} />
-          </div>
-        );
-      }
-    }
-  }
-
   const rows = buildSyncedGridRows(mainComponents, sidebarComponents);
 
   return (
@@ -688,6 +677,12 @@ export function LayoutDashboard({
       data-variant={variant}
       data-theme={theme}
       data-vibe={vibe}
+      style={{
+        paddingTop: hasHeader ? '0' : 'var(--theme-spacing-padding)',
+        paddingLeft: 'var(--theme-spacing-padding)',
+        paddingRight: 'var(--theme-spacing-padding)',
+        paddingBottom: 'var(--theme-spacing-padding)',
+      }}
     >
       {renderedHeader}
       <SyncBody rows={rows} />

@@ -149,9 +149,11 @@ You are designing slides as MDX markup. Match layout to the visual_design intent
 
 **LayoutCover** — TRADITIONAL cover page: title + subtitle only. Clean, minimal, impactful.
 - Best: opening title slide, closing "Thank You" slide, section dividers
-- Components: Heading (level 1), Text (subtitle), optionally ONE of: QuoteBlock
-- **🚫 FORBIDDEN on LayoutCover**: BigNum, MetricGroup, SmartList, Charts, Diagrams, CardGroup, ProcessStrip, StepList
-- **MAX ELEMENTS**: 2-3 elements total (Heading + subtitle + optional quote/callout)
+- Components: Heading (level 1), Text (subtitle)
+- **PRESENTER INFO**: Use props on LayoutCover itself: `presenter="Team Name" context="Meeting Type" date="Jan 15, 2026"`
+- **CRITICAL**: DO NOT use QuoteBlock or Text for presenter info. ONLY use the `presenter` prop.
+- **🚫 FORBIDDEN on LayoutCover**: BigNum, MetricGroup, SmartList, Charts, Diagrams, CardGroup, ProcessStrip, StepList, Callout, QuoteBlock
+- **MAX ELEMENTS**: 2-3 elements total (Heading + subtitle) + optional presenter props
 - Cover pages should feel SPACIOUS and IMPACTFUL, not cramped with data
 
 **LayoutSplit** — Use when pairing text with visual, or showing two related concepts.
@@ -210,7 +212,7 @@ You are designing slides as MDX markup. Match layout to the visual_design intent
 - Best: metrics overview, performance summary, status report, **Process Flows**
 - Slots: Header, Main, Sidebar, Footer
 - **Header slot**: Heading level={2} ONLY (no Text, no lead paragraph)
-- **Main slot (Left, 1/3 width)**: Narrow context column. Best for Vertical Lists (SmartList, StepList), Key Takeaways (Callout), or Summary Text.
+- **Main slot (Left, 1/3 width)**: Narrow context column. Best for Vertical Lists (SmartList, StepList), Conclusions (Callout with label), or Summary Text.
 - **Sidebar slot (Right, 2/3 width)**: Wide visual column. Best for Hero Charts, ProcessStrips, MetricGroups.
 - **CRITICAL**: Put visual anchors (Charts/Process) in **Sidebar** (Wide). Put text/lists in **Main** (Narrow).
 - **SYNC MODES** (prop: `nosync`, boolean, default: `false`):
@@ -282,6 +284,15 @@ Use when context is needed to INTERPRET the data:
 **Content**: SmartList (bullet points), CardGroup (feature cards), QuoteBlock, TableData
 **Text**: Heading (level 1-3), Text (lead/body/caption), Highlight (inline emphasis)
 
+**📌 CALLOUT - SLIDE CONCLUSION ANCHOR**:
+- **Purpose**: The "so what?" - distill slide message into one memorable takeaway
+- **Placement**: Bottom of LayoutStacked, Main slot of Dashboard, Left side of Split
+- **Style**: Minimal (top border only, no colored backgrounds) - designed to complement, not compete
+- **Syntax**: `<Callout label="Takeaway">Key insight here.</Callout>` or just `<Callout>...</Callout>`
+- **Labels**: "Takeaway", "Implication", "Key Insight", "Bottom Line" - or omit for subtle emphasis
+- **REDUNDANCY CHECK**: If the "takeaway" is already the slide title or lead text, DO NOT use a Callout. Only use Callout if it ADDS value (synthesis, next step, hidden insight). Avoid "repeating for emphasis".
+- **NOT an alert**: Don't use for warnings/status - that's what `<Highlight>` is for inline
+
 **⭐ PROCESSSTRIP - USE THIS FOR WORKFLOWS/FLOWS** (most common visual element!):
 - **ProcessStrip**: Horizontal phases - USE FOR: any A→B→C→D flow, turn sequences, pipelines, stages
 - **StepList**: Vertical numbered steps - USE FOR: setup guides, how-to, onboarding flows
@@ -331,9 +342,9 @@ Each slide wrapped in `<Slide>` with metadata:
 
 ```mdx
 <Slide id="slide_01" rank={1} story="HOOK" atoms={["stat_001"]}>
-<LayoutCover theme="dark">
+<LayoutCover theme="dark" presenter="Product & Engineering" context="Quarterly Review" date="Jan 15, 2026">
   <Heading level={1}>The Future of AI</Heading>
-  <BigNum id="stat_001" value="10B" label="Parameters"/>
+  <Text variant="lead">Transforming how we build intelligent systems</Text>
 </LayoutCover>
 </Slide>
 
@@ -390,6 +401,16 @@ Each slide wrapped in `<Slide>` with metadata:
 </CardGroup>
 <QuoteBlock id="quote_001" author="CEO">Stay focused.</QuoteBlock>
 
+// Callout: slide conclusion/takeaway anchor (minimal, not alert-style)
+<Callout label="Takeaway">Trust is the primary blocker for enterprise adoption.</Callout>
+<Callout label="Implication" variant="accent">We're building on proven components.</Callout>
+// Note: Callout is for LOGICAL conclusions.
+
+// QuoteBlock: for distinct voices, testimonials, or emphasized mandates (Card/Box style)
+<QuoteBlock author="Satya Nadella" variant="large">This is the defining challenge of our time.</QuoteBlock>
+<QuoteBlock author="Enterprise Customer" source="Feedback">Accuracy on technical terms is a dealbreaker.</QuoteBlock>
+// Note: QuoteBlock fills space well and adds "human" element. Use it to balance empty slots.
+
 // ⭐⭐⭐ SEQUENCES - USE THESE OFTEN for any step-by-step content! ⭐⭐⭐
 // These are VISUAL BLOCKS that make pages look professional and full!
 
@@ -406,7 +427,7 @@ Each slide wrapped in `<Slide>` with metadata:
 <StepList id="steps_002" items={[{label: "Plan", description: "Define scope"}, {label: "Build", description: "Implement"}]}/>
 
 // LayoutTimeline: for chronological milestones with rich content (full page layout)
-// Use when you need richer content per milestone (heading + text + callout per item)
+// Use when you need richer content per milestone (heading + text per item)
 // ALWAYS provide `headline`; `subtitle` is optional.
 <LayoutTimeline headline="Roadmap" subtitle="Key milestones ahead (optional)">
   <LayoutTimeline.Item year="2020">
@@ -503,11 +524,17 @@ Display: 6 words | Heading: 8 | Body: 25 | List item: 10 words"""
 | Charts | ❌ | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ |
 | NetworkGraph | ❌ | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ |
 | QuoteBlock | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ | ❌ |
+| Callout | ❌ | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ |
 | CardGroup | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
 | TableData | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
 | StepList | ❌ | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ |
 | ProcessStrip | ❌ | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ |
 | Highlight | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+
+**Callout placement guidance:**
+- **LayoutStacked**: Bottom of slide as conclusion anchor
+- **LayoutSplit**: Narrow side (Left in 1:2, or either side in 1:1) as insight
+- **LayoutDashboard**: Main slot (narrow left) to summarize the data story
 
 ## SLIDE VARIETY (CRITICAL)
 **Never use the same layout + component pattern on consecutive slides.**
@@ -561,7 +588,7 @@ If you don't have enough content for 4+ elements per side, use LayoutStacked ins
 
 | Layout | Min Elements | Typical Content Mix |
 |--------|--------------|---------------------|
-| LayoutCover | 2-3 | Heading + Text(subtitle) + optional QuoteBlock — KEEP IT MINIMAL! |
+| LayoutCover | 2-3 | Heading + Text(subtitle) + optional presenter/context/date props — KEEP IT MINIMAL! |
 | LayoutStacked | 6-8 | Heading + Text + MetricGroup + SmartList + supporting text |
 | LayoutDashboard | 8-10 | Header: Heading. Main(1/3): BigNum + Text. Sidebar(2/3): MetricGroup + Chart + SmartList |
 | LayoutTimeline | 5-6 | 5-6 timeline items with Heading + Text each |
