@@ -58,15 +58,19 @@ Numbers must represent **performance metrics**, not **document structure**.
 - **Categorical Enumerations Forbidden**: NEVER use `BigNum`, `Metric`, or `MetricGroup` to visualize categorical indices or ordinal numbers.
 - **Value-Add Metrics**: Use numbers that add *new* information not visible in the structure itself.
 - **STRICTLY NO DUPLICATION**: A specific data point should appear **EXACTLY ONCE** on the slide.
-    - If a number is in a Chart, Table, or Text list, **do NOT** repeat it in a BigNum or MetricGroup.
+    - **Chart vs Text**: If a number appears in a Chart, **DO NOT** write that number in any Text, List, or Heading. The Text must explain the *implication* (e.g., "Quality improved significantly"), while the Chart shows the *data* (e.g., "19.5% -> 12.3%"). **NEVER** have a bullet point that reads "X changed from A to B" if a chart shows A and B.
     - If a number is in a BigNum, **do NOT** repeat it in key text or lists.
     - Components must be complementary.
+- **NO REDUNDANT SUMMARIES**:
+    - **One Callout Rule**: Maximum 1 Callout per slide.
+    - **Content Rule**: Do NOT use a Callout if it just repeats a List item. Callouts are for "So What?" insights that are NOT explicitly stated elsewhere.
 - **STRICTLY NO HALLUCINATION**:
     - **Source-Based Data Only**: Use numbers explicitly provided in the text or mathematically available (e.g., calculating differences, sums, or ratios from given numbers is ALLOWED).
     - **No Arbitrary Inventions**: Do not invent missing variables to solve an equation. (e.g., if input only says "Sales up 15%", you do not know the total volume. Do not invent "$100M" as a baseline).
     - **No Assumed Complements**: Do not assume "remainder" values exist unless the category is binary/closed (e.g., "30% Market Share" does not imply who owns the other 70%).
     - **No Qualitative-to-Quantitative**: Do NOT assign arbitrary numbers to qualitative states (e.g. do not chart "In Progress" as 50%).
 - **Visual**: If you have 3+ data points, use a Chart, not a list of metrics.
+- **List Discipline**: Avoid single-item lists. If you have only one bullet point, write it as a paragraph using `<Text>...</Text>` instead. Lists are for enumeration (2+ items).
 
 ## 4. Visual Metaphor (The "Flashpoint" Rule)
 Don't just list facts; visualize relationships.
