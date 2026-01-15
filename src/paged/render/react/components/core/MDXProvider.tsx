@@ -44,6 +44,7 @@ import { CardGroup, Card } from '@/components/blocks/CardGroup';
 import { NetworkGraph, Node, Edge, Group } from '@/components/blocks/NetworkGraph';
 import { StepList } from '@/components/blocks/StepList';
 import { ProcessStrip } from '@/components/blocks/ProcessStrip';
+import { ProcessStripEx } from '@/components/blocks/ProcessStripEx';
 
 // Import L3 Atom Components
 import { Heading } from '@/components/atoms/Heading';
@@ -102,6 +103,7 @@ export const mdxComponents = {
   NetworkGraph,
   StepList,
   ProcessStrip,
+  ProcessStripEx,
   
   // NetworkGraph child components (JSX syntax)
   Node,

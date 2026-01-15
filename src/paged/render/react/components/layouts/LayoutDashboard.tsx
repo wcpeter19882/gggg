@@ -476,7 +476,7 @@ function SyncBody({ rows }: SyncBodyProps): JSX.Element {
                 flexDirection: 'column',
                 gap: '1rem',
                 alignSelf: 'stretch',
-                justifyContent: shouldCenterMain ? 'center' : undefined,
+                justifyContent: 'center',
                 alignItems: shouldCenterMain ? (shouldFillMain ? 'stretch' : 'center') : undefined,
                 minHeight: shouldFillMain ? 0 : undefined,
               }}
@@ -502,6 +502,7 @@ function SyncBody({ rows }: SyncBodyProps): JSX.Element {
                 flexDirection: 'column',
                 gap: '1rem',
                 alignSelf: 'stretch',
+                justifyContent: 'center',
                 background: 'var(--theme-surface, #f8fafc)',
                 borderRadius: '1rem',
                 padding: '1.25rem',

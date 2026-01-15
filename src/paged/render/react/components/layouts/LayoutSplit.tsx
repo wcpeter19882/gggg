@@ -548,6 +548,7 @@ function SyncLayout({ rows, ratio, theme, vibe, headerSlot, mirrorLeft = false }
                 style={{
                   display: 'flex',
                   flexDirection: 'column',
+                  justifyContent: 'center',
                   gap: '1rem',
                   alignSelf: 'stretch',
                   // Mirror layout: align items to right (towards center)
@@ -570,6 +571,7 @@ function SyncLayout({ rows, ratio, theme, vibe, headerSlot, mirrorLeft = false }
                 style={{
                   display: 'flex',
                   flexDirection: 'column',
+                  justifyContent: 'center',
                   gap: '1rem',
                   alignSelf: 'stretch',
                 }}

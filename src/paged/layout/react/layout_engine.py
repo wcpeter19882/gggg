@@ -216,7 +216,7 @@ You are designing slides as MDX markup. Match layout to the visual_design intent
 - Slots: Header, Main, Sidebar, Footer
 - **Header slot**: Heading level={2} ONLY (no Text, no lead paragraph)
 - **Main slot (Left, 1/3 width)**: Narrow context column. Best for Vertical Lists (SmartList, StepList), Conclusions (Callout with label), or Summary Text.
-- **Sidebar slot (Right, 2/3 width)**: Wide visual column. Best for Hero Charts, ProcessStrips, MetricGroups.
+- **Sidebar slot (Right, 2/3 width)**: Wide visual column. Best for Hero Charts, ProcessStrips, MetricGroups. (NOTE: ProcessStripEx is TOO WIDE for Sidebar, use LayoutStacked).
 - **CRITICAL**: Put visual anchors (Charts/Process) in **Sidebar** (Wide). Put text/lists in **Main** (Narrow).
 - **SYNC MODES** (prop: `nosync`, boolean, default: `false`):
   - **sync mode (`nosync={false}`, default)**: Main and Sidebar content is row-aligned (top-aligned). Use for most cases.
@@ -311,6 +311,29 @@ Use when context is needed to INTERPRET the data:
 | LayoutDashboard Main | 4 items OK |
 
 **IF YOU HAVE 4+ STEPS IN A 1:1 SPLIT → USE StepList INSTEAD (vertical, fits narrow columns)**
+
+**⭐ PROCESSSTRIPEX - INTEGRATED CARD FLOW**
+- **Definition**: A linear flow where each step requires rich detail (Title + Description + Icon) packaged together.
+- **When to Use**:
+    - When the "Step" itself is the main content.
+    - When you want to visualize a "Quality Gate", "Review Phase", or "Rich Timeline".
+- **Contrast**:
+    - **ProcessStripEx**: Tightly coupled. Visual + Text are one unit. (Best for "Deep Dives").
+    - **ProcessStrip + SmartList**: Decoupled. Visual shows the *High Level Roadmap* (A->B->C), List shows *Detailed Implementation*. (Best for "Overview + Drill-down").
+- **Layout Usage**: `LayoutStacked` (Full Width) **ONLY**.
+- **🚫 FORBIDDEN**: Do NOT use in `LayoutSplit` or `LayoutDashboard`. It is too wide and will break the layout.
+- **Props**: `items` array of `{ title, description, icon, status }`.
+- **Status Colors**: `primary`, `active`, `success`, `warning`.
+- **Example**:
+  ```jsx
+  <ProcessStripEx
+    id="proc_ex_01"
+    items={[
+      { title: "Define", description: "Scope and requirements.", icon: "📝", status: "success" },
+      { title: "Build", description: "implementation phase.", icon: "🔨", status: "active" }
+    ]}
+  />
+  ```
 
 **⚠️⚠️⚠️ STOP! Before using NetworkGraph, ask: "Does ANY node branch to 2+ outputs?"**
 - If NO → USE ProcessStrip (linear sequence) - this is 90% of cases!
@@ -532,6 +555,7 @@ Display: 6 words | Heading: 8 | Body: 25 | List item: 10 words"""
 | TableData | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
 | StepList | ❌ | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ |
 | ProcessStrip | ❌ | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ |
+| ProcessStripEx | ❌ | ❌ | ✅ | ❌ | ✅ | ❌ | ❌ |
 | Highlight | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 **Callout placement guidance:**

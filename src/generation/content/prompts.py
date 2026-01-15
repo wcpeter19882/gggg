@@ -45,8 +45,8 @@ def _build_system_prompt(project: str = "slidev") -> str:
 ## 1. Visual-Narrative Balance
 Every slide must tell a story (Narrative) AND prove it (Visual).
 - **Narrative**: Use Heading + Text/SmartList to explain the "Why".
-- **Visual**: Use Charts, BigNum, ProcessStrip, MetricGroup, or structured lists (StepList, CardGroup) to show the "What".
-- **Rule**: **NEVER create text-only slides**. SmartList and TableData are text-heavy. Always anchor the slide with at least one true visual component (Chart, BigNum, MetricGroup, ProcessStrip, StepList, CardGroup).
+- **Visual**: Use Charts, BigNum, ProcessStrip, ProcessStripEx, MetricGroup, or structured lists (StepList, CardGroup) to show the "What".
+- **Rule**: **NEVER create text-only slides**. SmartList and TableData are text-heavy. Always anchor the slide with at least one true visual component (Chart, BigNum, MetricGroup, ProcessStrip, ProcessStripEx, StepList, CardGroup).
 
 ## 2. Data Integrity: Performance vs Structure
 Numbers must represent **performance metrics**, not **document structure**.
@@ -73,7 +73,7 @@ Don't just list facts; visualize relationships.
 - **Conceptual Comparisons**: If you are comparing two things (e.g., "SIM vs TBT", "Risk vs Scale") on dimensions like "Speed", "Quality", or "Cost", **ALWAYS use a `ChartBubble`** inside a `LayoutSplit` (Left: Context, Right: Bubble).
     - This is the "Flashpoint": showing the trade-off visually is 10x more powerful than a list.
     - Use imaginary 0-100 scales for X/Y to position the bubbles conceptually.
-- **Flow vs Structure**: Use `ProcessStrip` for linear time (`mode="linear"`) and `NetworkGraph` for complex branching.
+- **Flow vs Structure**: Use `ProcessStrip` for simple flows, `ProcessStripEx` for detailed card-based flows, and `NetworkGraph` for complex branching.
 
 ## 5. Chart Logic (No Nonsense Charts)
 - **Dates are NOT Quantities**: NEVER put years (2025, 2026) or dates (20260331) as the `value` in a Bar/Line chart. That makes no sense. Use `LayoutTimeline` or a simple List for dates.
@@ -91,6 +91,7 @@ Don't just list facts; visualize relationships.
 ## 7. Component Polish (Icons & Visuals)
 - **CardGroup Icons**: When using `CardGroup`, **ALWAYS** provide a relevant semantic emoji or icon for the `icon="..."` prop. e.g. `<Card ... icon="🚀"/>` for Speed, `<Card ... icon="💰"/>` for Finance.
 - **Process Visuals**: For `ProcessStrip` or steps, ensure the labels are concise.
+- **ProcessStripEx Construction**: When utilizing `ProcessStripEx`, ALWAYS include a final "End Node" item representing the successful outcome or destination. Use `status='success'` for this final item to trigger the result styling. The title should be the result (e.g., "Deployable Governance") and the icon should represent completion (e.g., "✅" or "🛡️").
 
 
 # LAYOUT STRATEGY (HOW TO CHOOSE)
@@ -99,9 +100,9 @@ Don't just list facts; visualize relationships.
 |--------|----------|------------------|
 | `LayoutCover` | Transitions, Titles, Closings | Minimalist. Headline + Subtitle + Quote. No heavy data. |
 | `LayoutSplit` | Comparisons (A vs B), Visual Proof | Context on Left, Data/Visual on Right. **HEADLINE RULE**: For **Comparisons** (A vs B), use **BOTH** headers. For **Visual Proof** (Text + Visual), use **ONLY Left** header (Right has NO header). |
-| `LayoutDashboard` | KPI Overview, Process Flows | **Main (Narrow/Left)**: Context/Lists. **Sidebar (Wide/Right)**: Hero Visuals (Charts, Process). **ABSOLUTELY NO TABLES**. |
+| `LayoutDashboard` | KPI Overview, Simple Status | **Main (Narrow/Left)**: Context/Lists. **Sidebar (Wide/Right)**: Hero Visuals (Charts, Simple Process). **ABSOLUTELY NO TABLES**. |
 | `LayoutTimeline` | History, Roadmaps | Chronological flow. Text-heavy but visually structured. |
-| `LayoutStacked` | Narrative Flow, Wide Tables | **Primary Choice for Tables**. Use when you have a large Table or CardGroup that needs full width. |
+| `LayoutStacked` | Narrative Flow, Detailed Processes | **Primary Choice for Tables and ProcessStripEx**. Use when you have a large Table or Card-based Flow that needs full width. |
 
 # CONTENT MAPPING (STORY → COMPONENT)
 - **Table Data**: If the story provides a structured table (rows/cols), use `TableData` inside `LayoutStacked`. **DO NOT** try to break it into a List + Table (Mirroring). Just show the Table once, beautifully explanation above or below it.
@@ -115,7 +116,7 @@ Don't just list facts; visualize relationships.
 | EVIDENCE (Data) | `Chart` | Best for trends (Line), shares (Pie), comparisons (Bar) |
 | EVIDENCE (Hero) | `BigNum` | Single high-impact number (Revenue, Growth) |
 | EVIDENCE (Set) | `MetricGroup` | Group of 3-4 related metrics (KPIs) |
-| EVIDENCE (Flow) | `ProcessStrip` | Linear A→B→C flows (Stages, Pipelines) |
+| EVIDENCE (Flow) | `ProcessStrip`/`ProcessStripEx` | Linear flows. `Ex` combines step w/ details. |
 | EVIDENCE (Net) | `NetworkGraph` | Branching or complex relationships |
 | TAKEAWAY | `Callout` | Slide conclusion - the "So What?" |
 
@@ -176,15 +177,25 @@ QuoteBlock is for **distinct voices** - testimonials, leadership mandates, or ex
 
 *Block = A functional unit (e.g., a Chart, a List, a Heading Group).*
 
-- **LayoutSplit**: 6-8 blocks total.
-    - **Target**: 3-4 blocks PER SIDE.
-    - **Exception**: If a side has a **HEAVY VISUAL** (Chart, Table, detailed ProcessStrip), 3 blocks is sufficient (Heading + Visual + Text).
+- **LayoutSplit**: 6-8 blocks total. ONLY use if you have enough content for BOTH sides.
+    - **Minimum**: 3 blocks PER SIDE (e.g., Heading + Visual + Text).
+    - **Fallback**: If you have < 6 blocks total, DO NOT use `LayoutSplit`. LayoutSplit with only 1 block on any side is FORBIDDEN. Use `LayoutStacked` instead.
+    - **Exception**: If a side has a **HEAVY VISUAL** (Chart, Table, detailed ProcessStrip), 2 blocks is sufficient (Heading + Visual).
+    - **Restrictions**: `ProcessStripEx` is NOT fit for Split layouts (too wide). Use `LayoutStacked`.
     - **Exception**: If a side is **TEXT-HEAVY** (Lists, supporting text), it needs 4+ blocks to look balanced.
 - **LayoutDashboard**: 5-7 blocks total. Main(Left/Narrow) + Sidebar(Right/Wide). **NO TABLES**.
     - **Content Sorting**: Put **Visuals** (Charts, ProcessStrip, MetricGroup) in the **Sidebar** (Wide/Right). Put **Lists/Text/Callout** in **Main** (Narrow/Left).
 - **LayoutStacked**: 4-6 blocks total. **PREFERRED FOR TABLES**.
 
 **"Sparse" vs "Dense" is about information quality, not empty space. Even sparse slides should fill the visual canvas (70%+ coverage) using spacing and hierarchy, not by leaving giant gaps.**
+
+# CHART SIZING & PLACEMENT (CRITICAL)
+- **Charts Need Width**: Charts (`ChartBar`, `ChartLine`, etc.) generally need width to be readable.
+- **LayoutSplit Restriction**: If a slide contains a Chart and uses `LayoutSplit`:
+    - **MUST USE** `ratio="1:1"`.
+    - **FORBIDDEN**: Do NOT use Charts in `2:1` or `1:2` splits.
+- **LayoutDashboard**: Charts ALWAYS go in the **Sidebar** (Wide).
+- **LayoutStacked**: Charts can go anywhere (Full Width).
 
 # LIST GROUPING & CONTEXT
 - **Consolidate Lists**: Avoid fragmented lists. Consecutive lists (e.g., `SmartList` followed by another `SmartList`) dilute the message. Consolidate them into one unless they are conceptually distinct categories.
@@ -275,12 +286,15 @@ def render_slide_generation_prompt(
 2. Follow each slide's `density` field (sparse=2-3 blocks, moderate=3-4, dense=5+)
 3. Each slide tells its own story from the `story` field
 4. Use Diagram ONLY when visual_design explicitly mentions it
-5. ≥4 different layouts across deck. Avoid consecutive repeats if possible.
+5. ≥4 different layouts across deck.
+6. **VARIETY RULE**: Avoid consecutive slides with identical structures.
+    - If Slide `N` uses `LayoutStacked` + `ProcessStripEx`, Slide `N+1` SHOULD NOT use `ProcessStripEx`. Use `LayoutSplit`, `LayoutDashboard`, or `ProcessStrip`+`SmartList` instead.
+    - Vary the rhythm: High-Density Card Flow -> Simple Headline Flow -> Dashboard.
 {rule_6}
 7. Combine text AND visual on each slide (one leads, other supports)
 8. Fill space appropriate to density (sparse≠empty)
 9. **CONTENT FLEXIBILITY**: You may refactor, shorten, or selectively omit content details to achieve a clean, well-balanced layout. Visual appeal and readability trump exhaustive completeness.
-10. **NO TEXT-ONLY SLIDES**: Every slide must have a visual anchor (Chart, BigNum, MetricGroup, ProcessStrip, StepList, or CardGroup). Pure text slides (Heading + Text + List) are forbidden.
+10. **NO TEXT-ONLY SLIDES**: Every slide must have a visual anchor (Chart, BigNum, MetricGroup, ProcessStrip, ProcessStripEx, StepList, or CardGroup). Pure text slides (Heading + Text + List) are forbidden.
 
 Generate MDX slides wrapped in <Slide> elements."""
 
