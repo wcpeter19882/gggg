@@ -75,14 +75,17 @@ When options behave differently across 2 dimensions:
   xLabel="Dimension X"
   yLabel="Dimension Y"
   data={[
-    {label: "Option A", description: "Best for X scenarios", x: 25, y: 30, size: 50},
-    {label: "Option B", description: "Best for Y scenarios", x: 80, y: 75, size: 50}
+    {label: "Option A", description: "Best for X scenarios", x: 20, y: 80, size: 50},
+    {label: "Option B", description: "Best for Y scenarios", x: 80, y: 25, size: 50}
   ]}
 />
 ```
 
 **Positioning map rules:**
 - x/y values are relative positions (0-100 scale), NOT real measurements
+- **SPREAD BUBBLES ACROSS THE CHART**: Maximize distance between bubbles by placing them in opposite quadrants/corners. Avoid clustering bubbles together.
+  - For 2 bubbles: Use opposite corners (e.g., [20, 80] vs [80, 25]) or diagonal positions
+  - For 3+ bubbles: Distribute across all quadrants (top-left, top-right, bottom-left, bottom-right)
 - Bubbles auto-size to fit labels comfortably (don't set extreme size values)
 - Add `description` field to explain each option's strength (displayed inside bubble)
 - Axis labels describe the dimension conceptually, not numeric values

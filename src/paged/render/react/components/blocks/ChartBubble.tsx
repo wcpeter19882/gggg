@@ -54,46 +54,62 @@ import {
 // Constants
 // =============================================================================
 
-// Gradient color pairs for bubbles [start, end]
-const GRADIENT_COLORS = [
-  { start: '#667eea', end: '#764ba2' },  // Purple-violet
-  { start: '#a18cd1', end: '#fbc2eb' },  // Purple-pink light
-  { start: '#43e97b', end: '#38f9d7' },  // Green-teal
-  { start: '#fa709a', end: '#fee140' },  // Pink-yellow
-  { start: '#a8edea', end: '#fed6e3' },  // Teal-pink light
-  { start: '#ff9a9e', end: '#fecfef' },  // Salmon-pink
+// Fallback solid colors for bubbles - used when theme colors unavailable
+const FALLBACK_BUBBLE_COLORS = [
+  '#3b82f6',  // Blue (primary-like)
+  '#10b981',  // Green (success-like)
+  '#f59e0b',  // Amber (warning-like)
+  '#06b6d4',  // Cyan (info-like)
+  '#8b5cf6',  // Purple (accent-like)
+  '#ef4444',  // Red (danger-like)
 ];
 
-// Axis arrow color
-const AXIS_COLOR = '#6b7280';
+// Theme-aware color CSS variable names
+// These will be resolved at runtime from the theme
+const THEME_COLOR_KEYS = [
+  '--theme-primary',
+  '--theme-warning',
+  '--theme-success',
+  '--theme-info',
+  '--theme-accent',
+  '--theme-danger',
+];
 
 // Base bubble size ranges (will be scaled based on chart size)
 const DATA_BUBBLE_SIZE_RANGE: [number, number] = [100, 600];  // Smaller for data viz
 
 /**
  * Calculate bubble size range based on chart dimensions
- * For positioning mode, bubbles should fit within chart area without overflow
- * We use bubbles at 8-12% of chart dimension for good visibility
+ * For positioning mode, bubbles should fill the chart nicely without overlapping or overflowing
+ * We calculate based on available space and number of bubbles
  */
 const calculateBubbleSizeRange = (width: number, height: number, bubbleCount: number): [number, number] => {
   const minDimension = Math.min(width, height);
-  // Target bubble diameter: 8-12% of chart for positioning maps
-  // Adjust based on number of bubbles to prevent overlap
-  const scaleFactor = Math.max(0.5, 1 - (bubbleCount - 2) * 0.1); // Reduce size if many bubbles
-  const targetDiameter = minDimension * 0.10 * scaleFactor;
+  
+  // For positioning maps, calculate size based on number of bubbles
+  // With well-spread bubbles, each can be larger; more bubbles = smaller each
+  // Base: 15-18% of chart dimension for 2 bubbles, scaling down for more
+  const baseDiameterPercent = 0.15;
+  const scaleFactor = Math.max(0.5, 1 - (bubbleCount - 2) * 0.15);
+  const targetDiameter = minDimension * baseDiameterPercent * scaleFactor;
+  
   // ZAxis range is area (πr²), so we need to convert diameter to area
-  const minArea = Math.PI * Math.pow(targetDiameter * 0.65, 2);
-  const maxArea = Math.PI * Math.pow(targetDiameter * 0.95, 2);
+  const minArea = Math.PI * Math.pow(targetDiameter * 0.90, 2);
+  const maxArea = Math.PI * Math.pow(targetDiameter * 1.0, 2);
   return [Math.round(minArea), Math.round(maxArea)];
 };
 
 /**
  * Calculate domain padding based on bubble size to prevent overflow
  * Returns padding as percentage to add to domain bounds
+ * Padding should be at least half the bubble diameter to prevent clipping at edges
  */
 const calculateDomainPadding = (bubbleCount: number): number => {
-  // Add 10-15% padding to domain to accommodate bubble radius
-  return Math.max(10, 15 - bubbleCount);
+  // Base bubble diameter is 15% of chart, so we need ~10% padding (slightly more than radius)
+  // Scale down padding slightly for more bubbles since bubbles are smaller
+  const basePadding = 12;
+  const scaleFactor = Math.max(0.6, 1 - (bubbleCount - 2) * 0.1);
+  return Math.round(basePadding * scaleFactor);
 };
 
 // =============================================================================
@@ -126,11 +142,6 @@ export interface ChartBubbleProps {
 // =============================================================================
 // Helper Functions
 // =============================================================================
-
-/**
- * Generate a unique gradient ID for each bubble
- */
-const generateGradientId = (index: number) => `bubble-gradient-${index}`;
 
 /**
  * Auto-detect if this is a positioning map (relative 0-100 scale)
@@ -168,25 +179,57 @@ export function ChartBubble({
   const chartSize = sizeMap[size] || sizeMap.md;
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 400, height: 300 });
+  const [themeColors, setThemeColors] = useState<string[]>(FALLBACK_BUBBLE_COLORS);
+  const [axisColor, setAxisColor] = useState('#6b7280');
   
-  // Track container dimensions
+  // Track container dimensions and resolve theme colors
   useEffect(() => {
+    const resolveThemeColors = () => {
+      if (containerRef.current) {
+        // Resolve theme CSS variables to actual colors
+        const computedStyle = getComputedStyle(containerRef.current);
+        
+        // Resolve axis color
+        const resolvedAxisColor = computedStyle.getPropertyValue('--theme-text-muted').trim() || '#6b7280';
+        setAxisColor(resolvedAxisColor);
+        
+        // Resolve solid colors from theme
+        const resolvedColors = THEME_COLOR_KEYS.map((key, index) => {
+          const color = computedStyle.getPropertyValue(key).trim();
+          // Fall back to default colors if CSS variables not defined
+          if (color) {
+            return color;
+          }
+          return FALLBACK_BUBBLE_COLORS[index % FALLBACK_BUBBLE_COLORS.length];
+        });
+        setThemeColors(resolvedColors);
+      }
+    };
+    
     const updateDimensions = () => {
       if (containerRef.current) {
         const { width, height } = containerRef.current.getBoundingClientRect();
         if (width > 0 && height > 0) {
           setDimensions({ width, height });
         }
+        resolveThemeColors();
       }
     };
     
     updateDimensions();
+    
+    // Retry theme resolution after a short delay (theme may be applied after mount)
+    const timeoutId = setTimeout(resolveThemeColors, 100);
+    
     const resizeObserver = new ResizeObserver(updateDimensions);
     if (containerRef.current) {
       resizeObserver.observe(containerRef.current);
     }
     
-    return () => resizeObserver.disconnect();
+    return () => {
+      clearTimeout(timeoutId);
+      resizeObserver.disconnect();
+    };
   }, []);
   
   // Prepare and validate bubble data
@@ -205,11 +248,13 @@ export function ChartBubble({
   const effectiveSizeRange: [number, number] = sizeRange || 
     (isPositioningMode ? dynamicSizeRange : DATA_BUBBLE_SIZE_RANGE);
 
-  // Generate gradient IDs
-  const gradientIds = React.useMemo(
-    () => bubbleData.map((_, i) => generateGradientId(i)),
-    [bubbleData.length]
-  );
+  // Determine final bubble colors - prefer explicit colors prop over theme colors
+  const effectiveColors = React.useMemo(() => {
+    if (colors && colors.length > 0) {
+      return colors;
+    }
+    return themeColors;
+  }, [colors, themeColors]);
   
   // Handle empty data
   if (bubbleData.length === 0) {
@@ -257,18 +302,32 @@ export function ChartBubble({
     return null;
   };
   
+  // Calculate adaptive font sizes based on chart dimensions
+  const minDimension = Math.min(dimensions.width, dimensions.height);
+  const titleFontSize = Math.max(14, Math.min(24, minDimension * 0.06));
+  const axisLabelFontSize = Math.max(12, Math.min(20, minDimension * 0.05));
+  
   return (
-    <div ref={containerRef} className="chart-block chart-bubble" style={{ position: 'relative', width: '100%', height: '100%', minHeight: '200px' }}>
+    <div ref={containerRef} className="chart-block chart-bubble" style={{ 
+      position: 'relative', 
+      width: '100%', 
+      height: '100%', 
+      minHeight: '200px',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+    }}>
       {/* Block Header */}
       {(title || subtitle) && (
-        <div className="block-header">
-          {title && <h3 className="block-title">{title}</h3>}
+        <div className="block-header" style={{ textAlign: 'center' }}>
+          {title && <h3 className="block-title" style={{ fontSize: `${titleFontSize}px`, fontWeight: 600 }}>{title}</h3>}
           {subtitle && <p className="block-subtitle">{subtitle}</p>}
         </div>
       )}
       
       {/* Main Chart Content */}
-      <ResponsiveContainer width="60%" aspect={1.5}>
+      <ResponsiveContainer width="80%" aspect={1.5}>
         <ScatterChart
           margin={{ 
             top: 20, 
@@ -277,24 +336,8 @@ export function ChartBubble({
             left: 10 
           }}
         >
-          {/* Gradient definitions */}
+          {/* Definitions for axis arrows */}
           <defs>
-            {bubbleData.map((_, index) => {
-              const gradientColor = GRADIENT_COLORS[index % GRADIENT_COLORS.length];
-              return (
-                <radialGradient
-                  key={gradientIds[index]}
-                  id={gradientIds[index]}
-                  cx="30%"
-                  cy="30%"
-                  r="70%"
-                >
-                  <stop offset="0%" stopColor={gradientColor.start} stopOpacity={0.95} />
-                  <stop offset="100%" stopColor={gradientColor.end} stopOpacity={0.85} />
-                </radialGradient>
-              );
-            })}
-
             {/* Arrow markers for axis ends */}
             <marker
               id="axis-arrow-right"
@@ -305,7 +348,7 @@ export function ChartBubble({
               orient="auto"
               markerUnits="strokeWidth"
             >
-              <path d="M0,0 L0,10 L10,5 z" fill={AXIS_COLOR} />
+              <path d="M0,0 L0,10 L10,5 z" fill={axisColor} />
             </marker>
             <marker
               id="axis-arrow-up"
@@ -316,7 +359,7 @@ export function ChartBubble({
               orient="auto"
               markerUnits="strokeWidth"
             >
-              <path d="M0,10 L5,0 L10,10 z" fill={AXIS_COLOR} />
+              <path d="M0,10 L5,0 L10,10 z" fill={axisColor} />
             </marker>
           </defs>
 
@@ -332,14 +375,14 @@ export function ChartBubble({
             type="number"
             name={xLabel || 'X'}
             tick={isPositioningMode ? false : axisStyle.tick}
-            axisLine={{ stroke: AXIS_COLOR, strokeWidth: 2 }}
+            axisLine={{ stroke: axisColor, strokeWidth: 2 }}
             tickLine={isPositioningMode ? false : axisStyle.tickLine}
             domain={isPositioningMode ? [-domainPadding, 100 + domainPadding] : ['auto', 'auto']}
             label={xLabel ? { 
               value: xLabel, 
               position: 'insideBottom', 
               offset: isPositioningMode ? 0 : -10,
-              style: { fill: AXIS_COLOR, fontSize: 15, fontWeight: 500 }
+              style: { fill: axisColor, fontSize: axisLabelFontSize, fontWeight: 600 }
             } : undefined}
           />
           <YAxis 
@@ -347,7 +390,7 @@ export function ChartBubble({
             type="number"
             name={yLabel || 'Y'}
             tick={isPositioningMode ? false : axisStyle.tick}
-            axisLine={{ stroke: AXIS_COLOR, strokeWidth: 2 }}
+            axisLine={{ stroke: axisColor, strokeWidth: 2 }}
             tickLine={isPositioningMode ? false : axisStyle.tickLine}
             domain={isPositioningMode ? [-domainPadding, 100 + domainPadding] : ['auto', 'auto']}
             label={yLabel ? { 
@@ -355,7 +398,7 @@ export function ChartBubble({
               angle: -90, 
               position: 'insideButtomLeft',
               offset: isPositioningMode ? 10 : 0,
-              style: { fill: AXIS_COLOR, fontSize: 15, fontWeight: 500 }
+              style: { fill: axisColor, fontSize: axisLabelFontSize, fontWeight: 600 }
             } : undefined}
           />
           <ZAxis 
@@ -369,12 +412,12 @@ export function ChartBubble({
           
           <Scatter 
             data={bubbleData}
-            fillOpacity={1}
+            fillOpacity={0.9}
           >
             {bubbleData.map((entry, index) => (
               <Cell 
                 key={`cell-${index}`}
-                fill={`url(#${gradientIds[index]})`}
+                fill={effectiveColors[index % effectiveColors.length]}
                 stroke="rgba(255,255,255,0.4)"
                 strokeWidth={2}
                 style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.15))' }}
@@ -410,32 +453,43 @@ export function ChartBubble({
                     {/* X-axis arrow pointing right */}
                     <polygon
                       points={`${xArrowX},${xArrowY - 5} ${xArrowX + 10},${xArrowY} ${xArrowX},${xArrowY + 5}`}
-                      fill={AXIS_COLOR}
+                      fill={axisColor}
                     />
                     {/* Y-axis arrow pointing up */}
                     <polygon
                       points={`${yArrowX - 5},${yArrowY} ${yArrowX},${yArrowY - 10} ${yArrowX + 5},${yArrowY}`}
-                      fill={AXIS_COLOR}
+                      fill={axisColor}
                     />
                     {/* Bubble labels centered on each bubble */}
-                    {points.map((point: any, index: number) => (
-                      <text
-                        key={`label-${index}`}
-                        x={point.cx}
-                        y={point.cy}
-                        fill="white"
-                        textAnchor="middle"
-                        dominantBaseline="central"
-                        fontSize={13}
-                        fontWeight={600}
-                        style={{ 
-                          pointerEvents: 'none',
-                          textShadow: '0 1px 2px rgba(0,0,0,0.3)'
-                        }}
-                      >
-                        {point.payload?.label || ''}
-                      </text>
-                    ))}
+                    {points.map((point: any, index: number) => {
+                      // Calculate font size based on bubble radius
+                      // point.size is the ZAxis value, which maps to area in effectiveSizeRange
+                      // The actual rendered radius comes from the ZAxis range mapping
+                      // Recharts uses the z value to interpolate within the range
+                      const bubbleArea = point.z || effectiveSizeRange[0];
+                      const bubbleRadius = Math.sqrt(bubbleArea / Math.PI);
+                      // Font size should be proportional to radius, roughly 35-45% of diameter for readability
+                      const fontSize = Math.max(10, Math.min(24, bubbleRadius * 0.4));
+                      
+                      return (
+                        <text
+                          key={`label-${index}`}
+                          x={point.cx}
+                          y={point.cy}
+                          fill="white"
+                          textAnchor="middle"
+                          dominantBaseline="central"
+                          fontSize={fontSize}
+                          fontWeight={600}
+                          style={{ 
+                            pointerEvents: 'none',
+                            textShadow: '0 1px 2px rgba(0,0,0,0.3)'
+                          }}
+                        >
+                          {point.payload?.label || ''}
+                        </text>
+                      );
+                    })}
                   </g>
                 );
               }}
