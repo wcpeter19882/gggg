@@ -19,6 +19,7 @@
 
 import React, { type ReactNode, Children, isValidElement } from 'react';
 import type { ThemeName, VibeLevel } from '@/utils/types';
+import { TimelineHeader } from './TimelineHeader';
 
 function nodeToText(node: ReactNode): string {
   if (node === null || node === undefined) return '';
@@ -142,38 +143,17 @@ export function LayoutStacked({
         data-align={align}
         data-theme={theme}
         data-vibe={vibe}
+        style={{
+          paddingTop: useTimelineHeader ? '0' : 'var(--theme-spacing-padding)',
+          paddingLeft: 'var(--theme-spacing-padding)',
+          paddingRight: 'var(--theme-spacing-padding)',
+          paddingBottom: 'var(--theme-spacing-padding)',
+        }}
       >
         <div className="layout-header">
           {useTimelineHeader ? (
-            <div style={{ textAlign: 'left' }}>
-              <h1
-                className="heading-1"
-                style={{
-                  margin: '1.0rem 1.0rem 0 1.0rem',
-                  textAlign: 'left',
-                  fontSize: '4rem',
-                  fontWeight: 700,
-                  color: 'var(--theme-text)',
-                  textWrap: 'wrap',
-                  width: '100%',
-                  maxWidth: 'none',
-                }}
-              >
-                {resolvedHeadline}
-              </h1>
-              {resolvedSubtitle && (
-                <p
-                  style={{
-                    margin: '0.5rem 1.0rem 0 1.0rem',
-                    textAlign: 'left',
-                    fontSize: '1.5rem',
-                    fontStyle: 'italic',
-                    color: 'var(--theme-text-muted)',
-                  }}
-                >
-                  {resolvedSubtitle}
-                </p>
-              )}
+             <div style={{ textAlign: 'left', marginBottom: 'var(--theme-spacing-gap)' }}>
+                <TimelineHeader headline={resolvedHeadline!} subtitle={resolvedSubtitle} />
             </div>
           ) : (
             header
@@ -197,6 +177,9 @@ export function LayoutStacked({
       data-align={align}
       data-theme={theme}
       data-vibe={vibe}
+      style={{
+        padding: 'var(--theme-spacing-padding)',
+      }}
     >
       <div className="content-body">
         {children}

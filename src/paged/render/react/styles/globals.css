@@ -187,6 +187,51 @@ body {
   max-width: 900px;
 }
 
+/* Cover Presenter Info - metadata display for cover slides */
+.cover-presenter-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid color-mix(in srgb, var(--theme-text) 10%, transparent);
+}
+
+.cover-presenter-info .presenter-name {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--theme-text);
+  letter-spacing: 0.02em;
+}
+
+.cover-presenter-info .presenter-context {
+  font-size: 0.95rem;
+  color: var(--theme-text-muted, #64748b);
+  font-weight: 500;
+}
+
+.cover-presenter-info .presenter-date {
+  font-size: 0.875rem;
+  color: var(--theme-text-muted, #64748b);
+  opacity: 0.8;
+}
+
+/* Horizontal variant for compact display */
+.cover-presenter-info.horizontal {
+  flex-direction: row;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.cover-presenter-info.horizontal > span:not(:last-child)::after {
+  content: "·";
+  margin-left: 0.75rem;
+  color: var(--theme-text-muted, #64748b);
+  opacity: 0.5;
+}
+
 .layout-stacked {
   display: flex;
   flex-direction: column;
@@ -717,6 +762,15 @@ body {
 /* Bold modifier */
 .highlight-bold {
   font-weight: 700;
+}
+
+/* Block modifier - for standalone use in layouts */
+.highlight-block {
+  display: block;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
 }
 
 /* =============================================================================

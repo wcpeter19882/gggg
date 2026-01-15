@@ -98,8 +98,8 @@ Don't just list facts; visualize relationships.
 | Layout | Use Case | Content Strategy |
 |--------|----------|------------------|
 | `LayoutCover` | Transitions, Titles, Closings | Minimalist. Headline + Subtitle + Quote. No heavy data. |
-| LayoutSplit | Comparisons (A vs B), Visual Proof | Context on Left, Data/Visual on Right. **SYMMETRY RULE**: In `LayoutSplit`, **BOTH** Left and Right slots **MUST** begin with a Header. **NO EXCEPTIONS**. |
-| LayoutDashboard | KPI Overview, Process Flows | **Main (Narrow/Left)**: Context/Lists. **Sidebar (Wide/Right)**: Hero Visuals (Charts, Process). **ABSOLUTELY NO TABLES**. |
+| `LayoutSplit` | Comparisons (A vs B), Visual Proof | Context on Left, Data/Visual on Right. **HEADLINE RULE**: For **Comparisons** (A vs B), use **BOTH** headers. For **Visual Proof** (Text + Visual), use **ONLY Left** header (Right has NO header). |
+| `LayoutDashboard` | KPI Overview, Process Flows | **Main (Narrow/Left)**: Context/Lists. **Sidebar (Wide/Right)**: Hero Visuals (Charts, Process). **ABSOLUTELY NO TABLES**. |
 | `LayoutTimeline` | History, Roadmaps | Chronological flow. Text-heavy but visually structured. |
 | `LayoutStacked` | Narrative Flow, Wide Tables | **Primary Choice for Tables**. Use when you have a large Table or CardGroup that needs full width. |
 
@@ -117,7 +117,39 @@ Don't just list facts; visualize relationships.
 | EVIDENCE (Set) | `MetricGroup` | Group of 3-4 related metrics (KPIs) |
 | EVIDENCE (Flow) | `ProcessStrip` | Linear A→B→C flows (Stages, Pipelines) |
 | EVIDENCE (Net) | `NetworkGraph` | Branching or complex relationships |
-| TAKEAWAY | `Callout` | Boxed summary or insight |
+| TAKEAWAY | `Callout` | Slide conclusion - the "So What?" |
+
+## CALLOUT USAGE (TAKEAWAY ANCHOR)
+Callout is for **slide conclusions** - the single key insight or implication the audience should remember.
+- **Purpose**: Distill the slide's message into one memorable statement. Logical "So What?".
+- **Placement**: Bottom of LayoutStacked, or in narrow columns (Main slot of Dashboard, Left side of Split).
+- **Design**: Minimal, integrated, left-accent border.
+- **Content**: Short (1-2 sentences), actionable or insightful, not a summary of bullets.
+
+## QUOTEBLOCK USAGE (AUTHORITY & TESTIMONIALS)
+QuoteBlock is for **distinct voices** - testimonials, leadership mandates, or external validation.
+- **Purpose**: Add authority, human element, or "voice of customer".
+- **Placement**: Strong visual anchor. Can fill a sparse slot (Sidebar, Right side) effectively.
+- **Transformation Strategy**:
+    - **Customer Pain Points** -> Turn into a QuoteBlock. (e.g., "The accuracy isn't good enough for legal." - Chief Legal Officer)
+    - **Vision/North Star** -> Turn into a QuoteBlock. (e.g., "Accuracy is our north star." - VP Product)
+    - **Feedback** -> Turn into a QuoteBlock.
+- **Content**: Needs attribution (Author/Source) when possible. If attribution is not explicit, use a generic persona like "Enterprise Customer" or "Product Leadership".
+
+**Good Callout examples:**
+- `<Callout label="Implication">We're building on proven components, not starting from scratch.</Callout>`
+- `<Callout label="Takeaway">Trust in accuracy is the primary blocker for enterprise scale.</Callout>`
+
+**Good QuoteBlock examples:**
+- `<QuoteBlock author="Enterprise Customer" source="Legal Dept">We can't use this if names are misspelled.</QuoteBlock>`
+- `<QuoteBlock author="Satya Nadella" variant="large">This is the defining challenge of our time.</QuoteBlock>`
+- `<QuoteBlock author="Product Vision">Make entity accuracy the north star.</QuoteBlock>`
+
+**Bad Callout/Quote usage (avoid):**
+- ❌ Using Callout to list multiple points (use SmartList).
+- ❌ Using Callout for status alerts (use Highlight or Text with styling).
+- ❌ Using QuoteBlock for simple text that lacks "voice".
+- ❌ Duplicating content already in the slide.
 
 # DEDUPLICATION & ECONOMY (NO REDUNDANCY)
 - **One Concept, One Component**: Do not visualize the same data twice.
@@ -128,6 +160,7 @@ Don't just list facts; visualize relationships.
     - **Scenario A (Visual Focus)**: Use `ProcessStrip` (in Main) + `SmartList` (in Sidebar/Text). Best for `LayoutDashboard`.
     - **Scenario B (Text Focus)**: Use `StepList` (Detailed descriptions). Best for `LayoutSplit` or `LayoutStacked`.
     - **CRITICAL**: Never use `ProcessStrip` and `StepList` together.
+- **Fill the Void**: If a slot looks empty/sparse, consider adding a **QuoteBlock** (testament/principle) or a **Callout** (conclusion). Do not leave huge white spaces.
 
 # ANTI-PATTERNS (STRICTLY FORBIDDEN)
 - **The "Mirroring" Trap**: In `LayoutSplit`, **NEVER** use the Right side to summarize or "list" the content of the Left side.
@@ -135,19 +168,20 @@ Don't just list facts; visualize relationships.
     - **Forbidden**: Left = Text description; Right = Checklist of the same points.
     - **Correction**: If you have a detailed List/Table on one side, use the other side for:
         1. A **Visual Anchor**: `BigNum` (Key Stat), `Chart` (Impact), or `NetworkGraph` (Concept).
-        2. An **Insight**: `Callout` or `QuoteBlock` comprising the "So What?".
+        2. An **Insight**: `Callout` (conclusion) or `QuoteBlock` (attributed quote).
         3. **Never** just repeat the list.
 - **The "Counting" Metrics**: **NEVER** use `BigNum` to count the number of rows in a table or items in a list (e.g., "5 Decisions", "3 Pillars"). This is noise, not data.
-- **Footer Discipline**: In `LayoutStacked`, the last element is the bottom anchor. Do not put heavy detailed lists (like `StepList`) at the very bottom. Use the bottom slot for a `Callout` (Takeaway) or a `QuoteBlock`.
+- **Footer Discipline**: In `LayoutStacked`, the last element is the bottom anchor. Do not put heavy detailed lists (like `StepList`) at the very bottom. Use the bottom slot for a `Callout` (conclusion) or a `QuoteBlock`.
+- **Callout Misuse**: `Callout` is for **conclusions**, not alerts. Don't use it with warning/info styling - that's what `<Highlight>` is for inline.
 
 *Block = A functional unit (e.g., a Chart, a List, a Heading Group).*
 
 - **LayoutSplit**: 6-8 blocks total.
     - **Target**: 3-4 blocks PER SIDE.
     - **Exception**: If a side has a **HEAVY VISUAL** (Chart, Table, detailed ProcessStrip), 3 blocks is sufficient (Heading + Visual + Text).
-    - **Exception**: If a side is **TEXT-HEAVY** (Lists, Callouts), it needs 4+ blocks to look balanced.
+    - **Exception**: If a side is **TEXT-HEAVY** (Lists, supporting text), it needs 4+ blocks to look balanced.
 - **LayoutDashboard**: 5-7 blocks total. Main(Left/Narrow) + Sidebar(Right/Wide). **NO TABLES**.
-    - **Content Sorting**: Put **Visuals** (Charts, ProcessStrip, MetricGroup) in the **Sidebar** (Wide/Right). Put **Lists/Text** in **Main** (Narrow/Left).
+    - **Content Sorting**: Put **Visuals** (Charts, ProcessStrip, MetricGroup) in the **Sidebar** (Wide/Right). Put **Lists/Text/Callout** in **Main** (Narrow/Left).
 - **LayoutStacked**: 4-6 blocks total. **PREFERRED FOR TABLES**.
 
 **"Sparse" vs "Dense" is about information quality, not empty space. Even sparse slides should fill the visual canvas (70%+ coverage) using spacing and hierarchy, not by leaving giant gaps.**
