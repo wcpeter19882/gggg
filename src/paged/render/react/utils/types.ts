@@ -136,7 +136,9 @@ export type ThemeName =
   | 'academic'
   | 'creative'
   | 'duolingo'
-  | 'dark';
+  | 'dark'
+  | 'teamsDark'
+  | 'teamsLight';
 
 /** Vibe intensity levels */
 export type VibeLevel =
@@ -217,6 +219,10 @@ export interface ThemeComponentOverrides {
   chart?: {
     bg?: string;
     radius?: string;
+  };
+  heading?: {
+    /** Gradient for h1 headings, e.g., 'linear-gradient(135deg, #5b5fc7, #3aa9ff)' */
+    gradient?: string;
   };
   // Add other components as needed
 }

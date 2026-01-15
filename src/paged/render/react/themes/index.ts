@@ -14,6 +14,8 @@ import { academicTheme } from './academic';
 import { creativeTheme } from './creative';
 import { duolingoTheme } from './duolingo';
 import { darkTheme } from './dark';
+import { teamsDarkTheme } from './teamsDark';
+import { teamsLightTheme } from './teamsLight';
 import { 
   vibeConfigs, 
   vibeToCSSVariables, 
@@ -39,6 +41,8 @@ export const themes: Record<ThemeName, ThemeDefinition> = {
   creative: creativeTheme,
   duolingo: duolingoTheme,
   dark: darkTheme,
+  teamsDark: teamsDarkTheme,
+  teamsLight: teamsLightTheme,
 };
 
 /** Get a theme by name, with fallback to business */
@@ -131,6 +135,9 @@ export function themeToCSSVariables(theme: ThemeDefinition): Record<string, stri
       variables['--comp-metric-card-bg'] = theme.components.metricCard.bg;
     }
   }
+
+  // Heading gradient (optional, defaults to 'none')
+  variables['--theme-heading-gradient'] = theme.components?.heading?.gradient || 'none';
 
   return variables;
 }
