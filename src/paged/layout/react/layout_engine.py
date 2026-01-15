@@ -195,6 +195,7 @@ You are designing slides as MDX markup. Match layout to the visual_design intent
   - Split columns are narrow → horizontal diagrams look cramped and short
   - Prefer vertical flow diagrams that fill the column height, not width
 - **CONTENT PLANNING BY RATIO**:
+  - **⚠️ COUNTING RULE**: When counting elements for these ratios, **IGNORE `<Callout>` `<Header>` components**.
   - **1:1**: Equal content on both sides (4-5 elements each)
   - **2:1**: Larger side (2) gets main content (5-6 elements); smaller side (1) gets 2-3 supporting elements
   - **1:2**: Smaller side (1) gets 2-3 elements; larger side (2) gets main content (5-6 elements)
@@ -574,6 +575,7 @@ Display: 6 words | Heading: 8 | Body: 25 | List item: 10 words"""
 ## SPLIT LAYOUT REQUIREMENTS (CRITICAL)
 Split layouts (LayoutSplit) need SUBSTANTIAL content on BOTH sides:
 - **Each side must have 4+ elements** (Heading + 2-3 content blocks + supporting text)
+- **Fallback**: If you have < 6 blocks total, DO NOT use `LayoutSplit`. LayoutSplit with only 1 block on any side is FORBIDDEN. Use `LayoutStacked` instead.
 - **Both sides must have similar vertical height** so they visually overlap (not a sparse 2x3 grid)
 - **Bad example**: Left has Heading+SmartList (2 items), Right has Heading+SmartList → looks like unfinished grid
 - **Good example**: Left has Heading+Diagram+Text, Right has BigNum+MetricGroup+SmartList+Text
