@@ -26,6 +26,7 @@ class TodoType(str, Enum):
     THEME = "theme"                # Generate/update theme
     STORY = "story"                # Plan story arc (atoms -> draft slides with story/visual_design)
     CONTENT = "content"            # Generate layouts/widgets (draft slides -> active slides)
+    CODEGEN = "codegen"            # Generate React code for invented components
     EXPORT = "export"              # Layout + render
 
 
@@ -267,6 +268,17 @@ class ContentParams(BaseModel):
     )
 
 
+class CodegenParams(BaseModel):
+    """Parameters for code generation todo.
+    
+    Codegen tool generates React components for InventComponent placeholders.
+    """
+    component_ids: List[str] = Field(
+        default_factory=list,
+        description="Specific component IDs to generate (empty = all invented components)"
+    )
+
+
 class ExportParams(BaseModel):
     """Parameters for export todo."""
     layout_engine: str = Field(
@@ -302,7 +314,7 @@ class TodoItem(BaseModel):
     )
     
     # Type-specific parameters
-    params: Union[ConstitutionPatch, AtomsParams, ThemeParams, StoryParams, ContentParams, ExportParams, Dict[str, Any]] = Field(
+    params: Union[ConstitutionPatch, AtomsParams, ThemeParams, StoryParams, ContentParams, CodegenParams, ExportParams, Dict[str, Any]] = Field(
         default_factory=dict,
         description="Type-specific parameters"
     )

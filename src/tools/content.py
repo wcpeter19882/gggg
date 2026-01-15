@@ -120,12 +120,24 @@ Only layout and widgets are generated."""
         else:
             # All draft slides
             draft_slides = [s for s in sorted_slides if s.get("state") == "draft"]
-        self._log(f"DEBUG: Found {len(draft_slides)} draft slides for processing")
+            
+            # If no drafts found, but we have active slides, assume user wants to RE-GENERATE content for them
+            if not draft_slides:
+                active_slides = [s for s in sorted_slides if s.get("state") == "active"]
+                if active_slides:
+                    self._log(f"Note: No draft slides found. Re-processing {len(active_slides)} active slides as drafts.")
+                    draft_slides = active_slides
+
+        self._log(f"DEBUG: Found {len(draft_slides)} slides for processing")
         
         # Get context slides (2 before and 2 after the draft range)
         context_before = []
         context_after = []
-        if draft_slides:
+        # Only calculate context if we aren't processing EVERYTHING
+        # If we are reprocessing all active slides, context is irrelevant (we see them all as drafts)
+        is_reprocessing_all = (len(draft_slides) == len([s for s in sorted_slides if s.get("state") == "active"]))
+        
+        if draft_slides and not is_reprocessing_all:
             first_draft_rank = min(s.get("rank", 0) for s in draft_slides)
             last_draft_rank = max(s.get("rank", 0) for s in draft_slides)
             
@@ -182,7 +194,7 @@ Only layout and widgets are generated."""
             context_before=context_before,
             context_after=context_after,
             atoms_collection=state.get_atoms(),
-            theme_id=state.active_theme_id,
+            theme_id=state.active_theme,
             themes=themes,
             intent_guidance=intent_guidance,
             selected_theme=selected_theme,
@@ -250,17 +262,60 @@ Only layout and widgets are generated."""
         
         # Get current slides
         current_slides = state.slides or []
-        
-        # Build lookup of generated slides by ID
-        generated_by_id = {s["id"]: s for s in patch.slides}
+
+        # Build lookup of generated slides by ID (plus tolerant matchers)
+        import re
+
+        def _canonical_slide_id(slide_id: Any) -> Any:
+            if not isinstance(slide_id, str):
+                return slide_id
+            match = re.fullmatch(r"slide_(\d+)", slide_id)
+            if not match:
+                return slide_id
+            try:
+                return f"slide_{int(match.group(1))}"
+            except ValueError:
+                return slide_id
+
+        generated_by_id = {s.get("id"): s for s in patch.slides if s.get("id") is not None}
+        generated_by_canonical_id = {}
+        generated_by_rank = {}
+        for generated in patch.slides:
+            gen_id = generated.get("id")
+            canonical = _canonical_slide_id(gen_id)
+            if canonical is not None:
+                generated_by_canonical_id[canonical] = generated
+            gen_rank = generated.get("rank")
+            if isinstance(gen_rank, int):
+                generated_by_rank[gen_rank] = generated
         
         # Merge: replace drafts with generated, keep others
         merged = []
+        unmatched_generated_ids = set(generated_by_id.keys())
+
         for slide in current_slides:
             slide_id = slide.get("id")
+            slide_rank = slide.get("rank")
+
+            generated = None
             if slide_id in generated_by_id:
-                # Replace draft with generated active slide
                 generated = generated_by_id[slide_id]
+
+            else:
+                canonical = _canonical_slide_id(slide_id)
+                generated = generated_by_canonical_id.get(canonical)
+                if generated is None and isinstance(slide_rank, int):
+                    generated = generated_by_rank.get(slide_rank)
+
+            if generated is not None:
+                # Replace draft with generated active slide
+                if slide_id is not None:
+                    # Keep state IDs stable even if the model returned slide_01 vs slide_1
+                    generated["id"] = slide_id
+                if generated.get("id") in unmatched_generated_ids:
+                    unmatched_generated_ids.discard(generated.get("id"))
+                if slide_id in unmatched_generated_ids:
+                    unmatched_generated_ids.discard(slide_id)
                 # Preserve story/atoms/visual_design/content from original
                 generated["story"] = slide.get("story", generated.get("story", ""))
                 generated["atoms"] = slide.get("atoms", generated.get("atoms", []))
@@ -282,6 +337,15 @@ Only layout and widgets are generated."""
                 merged.append(generated)
             else:
                 merged.append(slide)
+
+        # Helpful debug signal when the LLM returns IDs that don't exist in state.
+        # This prevents silent failures that lead to empty exports.
+        if unmatched_generated_ids:
+            sample = sorted([str(x) for x in list(unmatched_generated_ids)[:5]])
+            self._log(
+                f"[WARN] {len(unmatched_generated_ids)} generated slide(s) did not match existing state IDs/ranks. "
+                f"Sample IDs: {sample}"
+            )
         
         # Post-processing: Fix consecutive same-layout issues
         from src.paged.layout.slidev.validate_slides import fix_consecutive_layouts

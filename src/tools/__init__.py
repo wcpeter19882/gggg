@@ -34,6 +34,7 @@ from src.common.tool_protocol import (
 from src.tools import constitution
 from src.tools import atoms
 from src.tools import theme
+from src.tools import codegen
 # Content and export are in src/paged (connect to layout/render)
 from src.paged import content
 from src.paged import export

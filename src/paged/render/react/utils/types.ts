@@ -275,6 +275,7 @@ export interface ThemeContextValue {
   themeName: ThemeName;
   vibe: VibeLevel;
   setTheme: (name: ThemeName) => void;
+  setCustomTheme: (theme: ThemeDefinition | null) => void;
   setVibe: (level: VibeLevel) => void;
 }
 

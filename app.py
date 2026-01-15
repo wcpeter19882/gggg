@@ -224,7 +224,6 @@ async def run_generation_async(
             state = PipelineState.load(state_path)
         else:
             state = PipelineState()
-            state.load_default_themes()
         
         state.set_source(source_path)
         
@@ -355,7 +354,7 @@ async def apply_theme_async(
     """Apply theme via todo orchestrator (export only).
     
     Updates:
-    1. state.active_theme_id - the selected theme
+    1. state.active_theme - the selected theme
     2. slides[].parameters.theme - for export to use
     3. Files export todo
     """
@@ -374,16 +373,8 @@ async def apply_theme_async(
         # Load state and update theme
         state = PipelineState.load(state_path)
         
-        # Ensure themes are loaded
-        if not state.themes:
-            state.load_default_themes()
-        
-        # Set active theme (validates theme exists)
-        try:
-            state.set_active_theme(theme_id)
-        except ValueError:
-            state.load_default_themes()
-            state.set_active_theme(theme_id)
+        # Set active theme
+        state.set_active_theme(theme_id)
         
         # Update slides' parameters.theme (this is what export uses)
         if state.slides:
@@ -512,7 +503,7 @@ def on_session_change(session_id: str) -> tuple[str, List[str], str, str, List[D
     state, status = load_session_state(session_id)
     files = get_session_files(session_id)
     todo_display = get_todo_display(state, current_idx=None)
-    current_theme = state.active_theme_id if state else "corp_modern_v1"
+    current_theme = state.active_theme if state else "corp_modern_v1"
     
     # Clear chat history on session change
     chat_history = []

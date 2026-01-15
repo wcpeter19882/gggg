@@ -19,6 +19,10 @@ from src.generation.atom.collection import AtomCollection
 from src.utils.llm_client import call_llm
 
 
+# System prompt for SCQA story generation
+SCQA_SYSTEM_PROMPT = """You are an elite Strategy Consultant specialized in high-stakes venture capital pitches and executive reviews."""
+
+
 def _get_atom_content(atom) -> str:
     """Extract displayable content from any atom type."""
     # Try different field names based on atom type
@@ -656,7 +660,7 @@ def generate_story_from_source(
         intent_guidance=intent_guidance,
     )
     
-    system_prompt = """You are an elite Strategy Consultant specialized in high-stakes venture capital pitches and executive reviews."""
+    system_prompt = SCQA_SYSTEM_PROMPT
     
     deployment = os.getenv('AZURE_OPENAI_DEPLOYMENT', 'gpt-4o')
     response = call_llm(

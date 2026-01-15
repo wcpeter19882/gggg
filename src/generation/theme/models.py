@@ -1,100 +1,112 @@
-"""Theme models for structured theme representation."""
-from typing import Optional, Dict, Any, Literal
+"""Theme models corresponding to React ThemeDefinition interface.
+
+This model aligns 1:1 with the TypeScript definitions in src/paged/render/react/utils/types.ts.
+"""
+from typing import Optional, Dict, Any, Union, Literal
 from pydantic import BaseModel, Field
 
 
-class TypographyStyle(BaseModel):
-    """Typography style for a specific text level."""
-    size: int = Field(..., ge=10, le=200, description="Font size in pixels")
-    weight: Literal["light", "regular", "medium", "semibold", "bold", "black"] = Field(
-        default="regular", description="Font weight"
-    )
-    line_height: float = Field(default=1.4, ge=0.8, le=3.0, description="Line height multiplier")
+class ThemeColors(BaseModel):
+    """Theme color palette."""
+    bg: str = Field(..., description="Main background color")
+    surface: str = Field(..., description="Surface/Card background color")
+    primary: str = Field(..., description="Primary brand color (buttons, links)")
+    secondary: str = Field(..., description="Secondary info color")
+    accent: str = Field(..., description="Accent/Highlight color")
+    text: str = Field(..., description="Main text color")
+    textMuted: str = Field(..., description="Muted/Secondary text color")
+    border: str = Field(..., description="Border color")
+    
+    # Intent colors
+    info: str = Field(default="#3b82f6", description="Info state color")
+    warning: str = Field(default="#f59e0b", description="Warning state color")
+    success: str = Field(default="#22c55e", description="Success state color")
+    danger: str = Field(default="#ef4444", description="Error/Danger state color")
 
 
 class ThemeTypography(BaseModel):
-    """Typography settings for all text levels."""
-    h1: TypographyStyle = Field(default_factory=lambda: TypographyStyle(size=60, weight="bold", line_height=1.1))
-    h2: TypographyStyle = Field(default_factory=lambda: TypographyStyle(size=40, weight="medium", line_height=1.2))
-    h3: TypographyStyle = Field(default_factory=lambda: TypographyStyle(size=28, weight="medium", line_height=1.3))
-    body: TypographyStyle = Field(default_factory=lambda: TypographyStyle(size=18, weight="regular", line_height=1.5))
-    caption: TypographyStyle = Field(default_factory=lambda: TypographyStyle(size=14, weight="regular", line_height=1.4))
+    """Theme typography settings."""
+    fontDisplay: str = Field(default="Inter, sans-serif", description="Font for hero/display text")
+    fontBody: str = Field(default="Inter, sans-serif", description="Font for body text")
+    fontMono: str = Field(default="monospace", description="Monospace font")
+    
+    sizeDisplay: str = Field(default="3rem", description="Display font size")
+    sizeHeading: str = Field(default="2rem", description="Heading font size")
+    sizeBody: str = Field(default="1rem", description="Body font size")
+    sizeCaption: str = Field(default="0.875rem", description="Caption font size")
+    
+    lineHeight: str = Field(default="1.5", description="Base line height")
+    letterSpacing: str = Field(default="normal", description="Base letter spacing")
 
 
-class ThemeHeaderFooter(BaseModel):
-    """Header and footer positioning settings."""
-    header_height: str = Field(default="15%", description="Header height as percentage")
-    footer_height: str = Field(default="10%", description="Footer height as percentage")
-    header_position: Literal["fixed_top_left", "fixed_top_right", "centered", "none"] = Field(
-        default="fixed_top_left", description="Header position"
+class ThemeSpacing(BaseModel):
+    """Theme spacing settings."""
+    gap: str = Field(default="1rem", description="Default gap")
+    padding: str = Field(default="1.5rem", description="Default padding")
+    margin: str = Field(default="1rem", description="Default margin")
+    
+    # Optional overrides
+    sm: Optional[str] = None
+    md: Optional[str] = None
+    lg: Optional[str] = None
+    xl: Optional[str] = None
+
+
+class ThemeRadius(BaseModel):
+    """Border radius values."""
+    sm: str = "0.125rem"
+    md: str = "0.375rem"
+    lg: str = "0.5rem"
+    xl: str = "0.75rem"
+    full: str = "9999px"
+
+
+class ThemeShadow(BaseModel):
+    """Box shadow values."""
+    sm: str = "0 1px 2px 0 rgb(0 0 0 / 0.05)"
+    md: str = "0 4px 6px -1px rgb(0 0 0 / 0.1)"
+    lg: str = "0 10px 15px -3px rgb(0 0 0 / 0.1)"
+    none: str = "none"
+
+
+class ThemeVisuals(BaseModel):
+    """Visual style settings."""
+    radius: Union[str, ThemeRadius] = Field(
+        default_factory=ThemeRadius,
+        description="Border radius settings"
     )
-    footer_position: Literal["fixed_bottom_left", "fixed_bottom_right", "centered", "none"] = Field(
-        default="fixed_bottom_left", description="Footer position"
+    shadow: Union[str, ThemeShadow] = Field(
+        default_factory=ThemeShadow, 
+        description="Box shadow settings"
     )
-    header_decoration: Literal["underline_accent", "overline_accent", "box", "none"] = Field(
-        default="none", description="Header decoration style"
-    )
-    footer_decoration: Literal["underline_accent", "overline_accent", "box", "none"] = Field(
-        default="none", description="Footer decoration style"
-    )
+    borderWidth: str = Field(default="1px", description="Default border width")
+    borderStyle: Optional[str] = Field(default="solid", description="Default border style")
 
 
 class Theme(BaseModel):
-    """Complete theme definition for presentations.
+    """Complete theme definition matching Frontend ThemeDefinition."""
     
-    A theme defines the visual appearance of slides including:
-    - Colors (primary, secondary, accent, background, text)
-    - Typography (sizes, weights for h1, h2, h3, body, caption)
-    - Spacing (margins, gutters)
-    - Header/footer styling
+    name: str = Field(..., description="Internal theme ID (kebab-case)")
+    displayName: str = Field(..., description="Human readable name")
     
-    Built-in themes:
-    - corp_modern_v1: Professional corporate with blue accent
-    - minimal_dark_v1: Clean dark theme with cyan accent
-    - cyber_neon_v1: Vibrant neon on dark background
-    - forest_nature_v1: Green nature-inspired theme
-    - ocean_deep_v1: Deep blue oceanic theme
-    - royal_purple_v1: Elegant purple theme
-    - slate_professional_v1: Neutral slate professional
-    - warm_sunset_v1: Warm orange/red sunset colors
-    """
+    colors: ThemeColors
+    typography: ThemeTypography
+    spacing: ThemeSpacing
+    visuals: ThemeVisuals
     
-    # Identity
-    id: str = Field(..., description="Unique theme identifier (e.g., 'my_theme_v1')")
-    
-    # Spacing
-    margin_x: str = Field(default="40px", description="Horizontal margin")
-    margin_y: str = Field(default="30px", description="Vertical margin")
-    gutter: str = Field(default="20px", description="Gap between elements")
-    
-    # Header/Footer
-    header_footer: ThemeHeaderFooter = Field(default_factory=ThemeHeaderFooter)
-    
-    # Sequence pattern
-    sequence_pattern: Literal["alternating_background", "section_break", "progressive", "uniform"] = Field(
-        default="alternating_background",
-        description="How slide backgrounds vary through the deck"
-    )
-    
-    # Typography
-    typography: ThemeTypography = Field(default_factory=ThemeTypography)
-    
-    # Colors - the core visual identity
-    primary_color: str = Field(default="#2563eb", description="Primary brand color (buttons, links)")
-    secondary_color: str = Field(default="#64748b", description="Secondary muted color")
-    accent_color: str = Field(default="#f59e0b", description="Accent highlight color")
-    background_color: str = Field(default="#ffffff", description="Main background color")
-    text_color: str = Field(default="#1e293b", description="Main text color")
-    primary_background: str = Field(default="#f8fafc", description="Primary slide background")
-    secondary_background: str = Field(default="#ffffff", description="Secondary/alternate background")
-    
-    # Fonts
-    font_family: str = Field(default="Inter, system-ui, sans-serif", description="Body font family")
-    heading_font: str = Field(default="Inter, system-ui, sans-serif", description="Heading font family")
-    
+    # Component overrides can be a loose dict for now as they are complex
+    components: Optional[Dict[str, Any]] = Field(default={})
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
-        return self.model_dump()
+        d = self.model_dump()
+        d['id'] = self.name  # Backward compatibility
+        return d
+    
+    @property
+    def id(self) -> str:
+        """Backward compatibility for id access."""
+        return self.name
     
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "Theme":
@@ -103,60 +115,60 @@ class Theme(BaseModel):
     
     def is_dark(self) -> bool:
         """Check if this is a dark theme based on background color."""
-        # Simple heuristic: if background is dark, text should be light
-        bg = self.background_color.lower()
-        # Dark colors typically have low RGB values
+        bg = self.colors.bg.lower()
         if bg.startswith("#"):
             try:
+                # Basic hex brightness calculation
                 r = int(bg[1:3], 16)
                 g = int(bg[3:5], 16)
                 b = int(bg[5:7], 16)
-                return (r + g + b) / 3 < 128
+                # (R*299 + G*587 + B*114) / 1000
+                brightness = (r * 299 + g * 587 + b * 114) / 1000
+                return brightness < 128
             except (ValueError, IndexError):
                 pass
         return False
 
-
-# Reference schema for LLM - shows all available keys
+# TypeScript Interface Reference for LLM
 THEME_SCHEMA_REFERENCE = """
-Theme JSON Schema:
-{
-  "id": "string (required) - Unique identifier like 'my_theme_v1'",
-  
-  "margin_x": "string - Horizontal margin e.g. '40px', '60px'",
-  "margin_y": "string - Vertical margin e.g. '30px', '40px'",
-  "gutter": "string - Gap between elements e.g. '20px', '24px'",
-  
-  "header_footer": {
-    "header_height": "string - e.g. '15%', '20%'",
-    "footer_height": "string - e.g. '10%'",
-    "header_position": "fixed_top_left | fixed_top_right | centered | none",
-    "footer_position": "fixed_bottom_left | fixed_bottom_right | centered | none",
-    "header_decoration": "underline_accent | overline_accent | box | none",
-    "footer_decoration": "underline_accent | overline_accent | box | none"
-  },
-  
-  "sequence_pattern": "alternating_background | section_break | progressive | uniform",
-  
-  "typography": {
-    "h1": {"size": 60, "weight": "bold", "line_height": 1.1},
-    "h2": {"size": 40, "weight": "medium", "line_height": 1.2},
-    "h3": {"size": 28, "weight": "medium", "line_height": 1.3},
-    "body": {"size": 18, "weight": "regular", "line_height": 1.5},
-    "caption": {"size": 14, "weight": "regular", "line_height": 1.4}
-  },
-  
-  "primary_color": "#hex - Primary brand color (buttons, links, accents)",
-  "secondary_color": "#hex - Secondary muted color (subtitles, metadata)",
-  "accent_color": "#hex - Highlight color for emphasis",
-  "background_color": "#hex - Main background",
-  "text_color": "#hex - Main text color",
-  "primary_background": "#hex - Primary slide background",
-  "secondary_background": "#hex - Alternate/secondary background",
-  
-  "font_family": "string - Body font e.g. 'Inter, system-ui, sans-serif'",
-  "heading_font": "string - Heading font e.g. 'Playfair Display, serif'"
+export interface ThemeDefinition {
+  name: string;
+  displayName: string;
+  colors: {
+    bg: string;
+    surface: string;
+    primary: string;
+    secondary: string;
+    accent: string;
+    text: string;
+    textMuted: string;
+    border: string;
+    info: string;
+    warning: string;
+    success: string;
+    danger: string;
+  };
+  typography: {
+    fontDisplay: string;
+    fontBody: string;
+    fontMono: string;
+    sizeDisplay: string;
+    sizeHeading: string;
+    sizeBody: string;
+    sizeCaption: string;
+    lineHeight: string;
+    letterSpacing: string;
+  };
+  spacing: {
+    gap: string;
+    padding: string;
+    margin: string;
+  };
+  visuals: {
+    radius: { sm: string; md: string; lg: string; xl: string; full: string };
+    shadow: { sm: string; md: string; lg: string; none: string };
+    borderWidth: string;
+    borderStyle?: string;
+  };
 }
-
-Weight options: light | regular | medium | semibold | bold | black
 """

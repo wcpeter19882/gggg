@@ -23,8 +23,8 @@ renderer = SlidevRenderer(output_dir=output_dir)
 
 # Get active theme
 theme = None
-if state.active_theme_id and state.themes:
-    theme = state.themes.get(state.active_theme_id)
+if state.active_theme and state.themes:
+    theme = state.themes.get(state.active_theme)
 
 # Render
 print("\nRendering slides...")

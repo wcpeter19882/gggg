@@ -18,12 +18,21 @@ interface Slide {
   mdx?: string;
 }
 
+interface GeneratedComponent {
+  name: string;
+  code?: string;
+  props_interface?: string;
+}
+
 interface StateJson {
   slides?: Slide[];
   presentation?: {
     theme?: string;
     title?: string;
   };
+  active_theme?: string;
+  themes?: Record<string, any>;
+  generated_components?: Record<string, GeneratedComponent>;
 }
 
 /**
@@ -59,6 +68,7 @@ export async function GET(
   request: NextRequest,
   { params }: { params: { path: string[] } }
 ) {
+  console.log('[THEME DEBUG] /api/slides/[...path] called with path:', params.path);
   try {
     // Construct path from URL segments
     const outputPath = params.path.join('/');
@@ -135,12 +145,27 @@ export async function GET(
       }
     }
     
+    // Get generated components from state.json
+    const generatedComponents = stateJson.generated_components || {};
+
+    console.log(`[THEME DEBUG] Loaded ${serializedSlides.length} slides from ${foundPath}`);
+    
+    // Determine theme and check for custom theme definition
+    const themeId = stateJson.active_theme || stateJson.presentation?.theme || 'business';
+    console.log('[THEME DEBUG] themeId:', themeId, 'active_theme:', stateJson.active_theme, 'presentation.theme:', stateJson.presentation?.theme);
+    let customTheme = null;
+    if (stateJson.themes && stateJson.themes[themeId]) {
+      customTheme = stateJson.themes[themeId];
+    }
+
     return NextResponse.json({
       slides: serializedSlides,
       slideCount: serializedSlides.length,
       source: foundPath,
-      theme: stateJson.presentation?.theme || 'default',
+      theme: themeId,
+      customTheme: customTheme,
       path: outputPath,
+      generatedComponents: generatedComponents,
     });
     
   } catch (error) {

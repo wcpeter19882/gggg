@@ -82,3 +82,6 @@ export type { CytoscapeElement, ParsedDiagram } from './NetworkGraph';
 // Backward compatibility alias
 export { NetworkGraph as SmartDiagram } from './NetworkGraph';
 export { NetworkGraph as Diagram } from './NetworkGraph';
+
+export { InventComponent } from './InventComponent';
+export type { InventComponentProps } from './InventComponent';

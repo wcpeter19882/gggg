@@ -71,9 +71,13 @@ export function ThemeProvider({
 }: ThemeProviderProps): JSX.Element {
   const [themeName, setThemeName] = useState<ThemeName>(initialTheme);
   const [vibe, setVibe] = useState<VibeLevel>(initialVibe);
+  const [customTheme, setCustomTheme] = useState<ThemeDefinition | null>(null);
   
   // Get the full theme definition
-  const theme: ThemeDefinition = useMemo(() => getTheme(themeName), [themeName]);
+  const theme: ThemeDefinition = useMemo(() => {
+    if (customTheme) return customTheme;
+    return getTheme(themeName);
+  }, [themeName, customTheme]);
   
   // Apply theme CSS variables to document
   useEffect(() => {
@@ -91,6 +95,7 @@ export function ThemeProvider({
     themeName,
     vibe,
     setTheme: setThemeName,
+    setCustomTheme,
     setVibe,
   }), [theme, themeName, vibe]);
   
@@ -139,8 +144,9 @@ export function ThemedContainer({
     themeName: themeOverride ?? parentContext.themeName,
     vibe,
     setTheme: parentContext.setTheme,
+    setCustomTheme: parentContext.setCustomTheme,
     setVibe: parentContext.setVibe,
-  }), [theme, themeOverride, parentContext.themeName, vibe, parentContext.setTheme, parentContext.setVibe]);
+  }), [theme, themeOverride, parentContext.themeName, vibe, parentContext.setTheme, parentContext.setCustomTheme, parentContext.setVibe]);
   
   return (
     <ThemeContext.Provider value={localContext}>

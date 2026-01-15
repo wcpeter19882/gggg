@@ -173,7 +173,7 @@ def parse_instruction_file(file_path: Path) -> List[str]:
     help='Project style to use (default: react-mdx)'
 )
 @click.option(
-    '--mdx-theme',
+    '--active-theme',
     type=click.Choice(['business', 'cyber', 'minimal', 'academic', 'creative', 'duolingo', 'dark', 'purple'], case_sensitive=False),
     default='business',
     help='Theme for react-mdx export (default: business)'
@@ -202,7 +202,7 @@ def cli(
     state: Optional[Path],
     force_rerun: bool,
     project: str,
-    mdx_theme: str,
+    active_theme: str,
 ) -> None:
     """Render layouts using the Universal Content Engine.
     
@@ -359,7 +359,8 @@ def cli(
                     source_path=effective_source,
                     user_instruction=instruction,
                     project=project,
-                    mdx_theme=mdx_theme,
+                    active_theme=active_theme,
+                    force_rerun=force_rerun,
                 )
             
             click.echo(f"\n{'='*50}")
@@ -545,9 +546,9 @@ def cli(
                 themes_data = [render_data['theme']]
             
             # Get active theme if specified, otherwise use first theme
-            active_theme_id = render_data.get('active_theme_id')
-            if active_theme_id and isinstance(themes_raw, dict) and active_theme_id in themes_raw:
-                theme_data = themes_raw[active_theme_id]
+            active_theme = render_data.get('active_theme')
+            if active_theme and isinstance(themes_raw, dict) and active_theme in themes_raw:
+                theme_data = themes_raw[active_theme]
             else:
                 theme_data = themes_data[0] if themes_data else {}
             

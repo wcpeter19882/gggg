@@ -5,10 +5,14 @@
  * 
  * Renders MDX slides using pre-serialized content from API.
  * The API handles server-side MDX serialization.
+ * Generated components are loaded from state.json at runtime.
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { MDXRemote, MDXRemoteSerializeResult } from 'next-mdx-remote';
+import { transform } from 'sucrase';
+import * as FramerMotion from 'framer-motion';
+import * as Lucide from 'lucide-react';
 import { mdxComponents } from '@/components/core/MDXProvider';
 import { SlideContainer, SlideWrapper, SlideNavigation } from '@/components/core';
 import { useTheme } from '@/components/core/ThemeContext';
@@ -18,6 +22,12 @@ import type { ThemeName } from '@/utils/types';
 // =============================================================================
 // Types
 // =============================================================================
+
+interface GeneratedComponent {
+  name: string;
+  code?: string;
+  props_interface?: string;
+}
 
 interface SlideContent {
   source: MDXRemoteSerializeResult | null;
@@ -31,7 +41,58 @@ interface ApiResponse {
   slideCount: number;
   source: string;
   theme: string;
+  generatedComponents?: Record<string, GeneratedComponent>;
   error?: string;
+}
+
+// =============================================================================
+// Runtime Component Compiler
+// =============================================================================
+
+/**
+ * Compile generated component code into React components at runtime.
+ * This allows components stored in state.json to be used without building.
+ */
+function compileGeneratedComponents(
+  generatedComponents: Record<string, GeneratedComponent>
+): Record<string, React.ComponentType<any>> {
+  const compiled: Record<string, React.ComponentType<any>> = {};
+  
+  for (const [id, comp] of Object.entries(generatedComponents)) {
+    if (!comp.code || !comp.name) continue;
+    
+    try {
+      const tsxCode = comp.code;
+
+      const { code: jsCode } = transform(tsxCode, {
+        transforms: ['typescript', 'jsx', 'imports'],
+      });
+
+      const componentFn = new Function('exports', 'require', 'React', jsCode);
+      const exportsObj: Record<string, any> = {};
+
+      const requireFn = (mod: string) => {
+        if (mod === 'react') return React;
+        if (mod === 'framer-motion') return FramerMotion;
+        if (mod === 'lucide-react') return Lucide;
+        throw new Error(`Cannot require module '${mod}' in generated component`);
+      };
+
+      componentFn(exportsObj, requireFn, React);
+
+      const Component = exportsObj[comp.name];
+      if (Component) {
+        compiled[comp.name] = Component;
+        console.log(`[slides] Compiled generated component: ${comp.name}`);
+      } else {
+        console.warn(`[slides] Component '${comp.name}' not found in exports. Available:`, Object.keys(exportsObj));
+      }
+    } catch (err) {
+      console.error(`[slides] Failed to compile ${comp.name}:`, err);
+    }
+  }
+  
+  return compiled;
 }
 
 // =============================================================================
@@ -42,9 +103,10 @@ interface SlideRendererProps {
   slide: SlideContent;
   isActive: boolean;
   index: number;
+  components: Record<string, React.ComponentType<any>>;
 }
 
-function SlideRenderer({ slide, isActive, index }: SlideRendererProps): JSX.Element {
+function SlideRenderer({ slide, isActive, index, components }: SlideRendererProps): JSX.Element {
   if (slide.error || !slide.source) {
     return (
       <SlideWrapper index={index} isActive={isActive}>
@@ -64,7 +126,7 @@ function SlideRenderer({ slide, isActive, index }: SlideRendererProps): JSX.Elem
   
   return (
     <SlideWrapper index={index} isActive={isActive}>
-      <MDXRemote {...slide.source} components={mdxComponents} />
+      <MDXRemote {...slide.source} components={components} />
     </SlideWrapper>
   );
 }
@@ -90,6 +152,13 @@ export default function SlidesPage(): JSX.Element {
     setOutputPath(pathParam);
     setLoading(true); // Reset loading state when path changes
   }, [typeof window !== 'undefined' ? window.location.search : '']);
+
+  const [runtimeComponents, setRuntimeComponents] = useState<Record<string, React.ComponentType<any>>>({});
+  // Merge base components with runtime-compiled generated components
+  const allComponents = useMemo(() => ({
+    ...mdxComponents,
+    ...runtimeComponents,
+  }), [runtimeComponents]);
 
   // Load pre-serialized slides from API
   useEffect(() => {
@@ -119,6 +188,14 @@ export default function SlidesPage(): JSX.Element {
         if (data.theme && validThemes.includes(data.theme as ThemeName)) {
           setTheme(data.theme as ThemeName);
           console.log(`Applied theme: ${data.theme}`);
+        }
+
+        // Compile generated components from state.json at runtime
+        if (data.generatedComponents && Object.keys(data.generatedComponents).length > 0) {
+          console.log(`[slides] Found ${Object.keys(data.generatedComponents).length} generated component(s)`);
+          const compiled = compileGeneratedComponents(data.generatedComponents);
+          console.log("Shiyi compiled generated components:", Object.keys(compiled));
+          setRuntimeComponents(compiled);
         }
         
         setLoading(false);
@@ -186,6 +263,7 @@ export default function SlidesPage(): JSX.Element {
           slide={slide}
           isActive={index === currentSlide}
           index={index}
+          components={allComponents}
         />
       ))}
       

@@ -2,14 +2,15 @@
 import json
 import logging
 from pathlib import Path
-from typing import Optional, Dict, Any
+import sys
+from typing import Optional, Dict, Any, List
 
 from src.generation.theme.models import Theme
 from src.generation.theme.prompts import (
     render_theme_creation_prompt,
     render_theme_customization_prompt,
     get_theme_creation_config,
-    get_builtin_themes,
+    get_builtin_theme_source,
 )
 from src.utils.llm_client import call_llm
 from src.utils.cache import GenerationCache
@@ -23,21 +24,22 @@ _cache = GenerationCache(Path(".cache/themes"))
 def create_theme(
     user_instruction: str,
     base_theme_id: Optional[str] = None,
-    intent_guidance: str = "",
+    new_theme_id: Optional[str] = None,
     use_cache: bool = True,
+    keywords_list: Optional[List[str]] = None,
 ) -> Theme:
     """Create a new theme based on user instruction.
     
     This function generates a complete theme using LLM, guided by:
     - User instruction (e.g., "create a dark theme with purple accents")
     - Optional base theme to start from
-    - Intent guidance from constitution
     
     Args:
         user_instruction: Description of desired theme
         base_theme_id: Optional ID of existing theme to use as base
-        intent_guidance: Optional style guidance
+        new_theme_id: Optional specific ID for the new theme
         use_cache: Whether to use cached results
+        keywords_list: Optional list of specific keywords (colors, styles) to emphasize
         
     Returns:
         Generated Theme object
@@ -51,14 +53,18 @@ def create_theme(
         >>> print(theme.primary_color)  # e.g., "#3b82f6"
     """
     # Get base theme if specified
-    base_theme = None
+    base_theme_source = None
     if base_theme_id:
-        base_theme = _get_builtin_theme(base_theme_id)
+        base_theme_source = _get_builtin_theme_source(base_theme_id)
+    
+    # Fallback to a default theme for structure reference if no base provided
+    if not base_theme_source:
+        base_theme_source = _get_builtin_theme_source("business")
     
     # Check cache
     cache_key = None
     if use_cache:
-        cache_input = f"{str(base_theme)}|{intent_guidance}"
+        cache_input = f"{str(base_theme_source)}|{new_theme_id}"
         cache_key = _cache.hash_key(user_instruction, cache_input)
         cached = _cache.load(cache_key)
         if cached:
@@ -69,11 +75,22 @@ def create_theme(
     # Get config
     config = get_theme_creation_config()
     
+    # Use provided keywords or empty list
+    keywords = keywords_list or []
+
+    # Generate a descriptive ID suggestion based on keywords if not provided
+    if new_theme_id:
+        new_theme_name = new_theme_id
+    else:
+        short_desc = "_".join(keywords[:4]) if keywords else "custom"
+        new_theme_name = f"theme_{short_desc}"
+
     # Render prompt
     user_prompt = render_theme_creation_prompt(
         user_instruction=user_instruction,
-        base_theme=base_theme,
-        intent_guidance=intent_guidance,
+        base_theme_source=base_theme_source,
+        new_theme_name=new_theme_name,
+        keywords=keywords
     )
     
     logger.info(f"Creating theme via LLM: {user_instruction[:50]}...")
@@ -114,7 +131,6 @@ def create_theme(
 def customize_theme(
     base_theme_id: str,
     modifications: str,
-    intent_guidance: str = "",
     use_cache: bool = True,
 ) -> Theme:
     """Customize an existing theme with specific modifications.
@@ -128,7 +144,6 @@ def customize_theme(
     Args:
         base_theme_id: ID of the theme to customize
         modifications: What to change
-        intent_guidance: Optional style guidance
         use_cache: Whether to use cached results
         
     Returns:
@@ -141,15 +156,12 @@ def customize_theme(
         >>> theme = customize_theme("corp_modern_v1", "make the accent color red")
         >>> print(theme.accent_color)  # e.g., "#ef4444"
     """
-    # Get base theme
-    base_theme = _get_builtin_theme(base_theme_id)
-    if not base_theme:
-        raise ValueError(f"Base theme not found: {base_theme_id}")
+    base_theme_source = _get_builtin_theme_source(base_theme_id) or _get_builtin_theme_source("business")
     
     # Check cache
     cache_key = None
     if use_cache:
-        cache_input = f"{base_theme_id}|{modifications}|{intent_guidance}"
+        cache_input = f"{base_theme_id}|{modifications}"
         cache_key = _cache.hash_key("customize_theme", cache_input)
         cached = _cache.load(cache_key)
         if cached:
@@ -162,9 +174,8 @@ def customize_theme(
     
     # Render prompt
     user_prompt = render_theme_customization_prompt(
-        base_theme=base_theme,
+        base_theme_source=base_theme_source,
         modifications=modifications,
-        intent_guidance=intent_guidance,
     )
     
     logger.info(f"Customizing theme {base_theme_id}: {modifications[:50]}...")
@@ -201,29 +212,16 @@ def customize_theme(
     return theme
 
 
-def _get_builtin_theme(theme_id: str) -> Optional[Dict[str, Any]]:
-    """Get a built-in theme by ID.
+def _get_builtin_theme_source(theme_id: str) -> Optional[str]:
+    """Get source code of a built-in theme by ID.
     
     Args:
         theme_id: Theme ID to look up
         
     Returns:
-        Theme dictionary or None if not found
+        Theme source string or None if not found
     """
-    themes = get_builtin_themes()
-    
-    # Try exact match first
-    for theme in themes:
-        if theme.get("id") == theme_id:
-            return theme
-    
-    # Try partial match (without version suffix)
-    for theme in themes:
-        tid = theme.get("id", "")
-        if theme_id in tid or tid.startswith(theme_id.replace("_v1", "")):
-            return theme
-    
-    return None
+    return get_builtin_theme_source(theme_id)
 
 
 def save_theme(theme: Theme, output_dir: Optional[Path] = None) -> Path:
@@ -258,5 +256,5 @@ def list_builtin_themes() -> list[str]:
     Returns:
         List of theme IDs
     """
-    themes = get_builtin_themes()
-    return [t.get("id", "unknown") for t in themes]
+    from src.generation.theme.prompts import get_builtin_theme_ids
+    return get_builtin_theme_ids()

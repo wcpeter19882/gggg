@@ -8,6 +8,21 @@ from src.common.slides import Slides
 from src.utils.generation_config import GenerationConfig
 
 
+COMPONENT_INVENTION = """### COMPONENT INVENTION
+When predefined components are insufficient, you MUST invent a new visual component. 
+
+## How to Declare an Invented Component
+Use the `<InventComponent>` tag. It must be self-descriptive so the next step (UI Engineering) can hardcode the content into a high-impact visual.
+
+<InventComponent
+  id="unique_component_id"
+  name="PascalCaseComponentName"
+  intent="The story this component needs to tell"
+  raw_story="the original content sections for this component"
+  space="space reserved for this component, width * height (the slide page size is 1920 * 1080 pixels)"
+/>"""
+
+
 def get_slide_generation_config(project: str = "slidev") -> GenerationConfig:
     """Get GenerationConfig for slide generation."""
     deployment = os.getenv('AZURE_OPENAI_DEPLOYMENT', 'gpt-4-turbo')
@@ -37,6 +52,9 @@ def _build_system_prompt(project: str = "slidev") -> str:
     chart_docs = ""
     if hasattr(engine, 'get_chart_prompt'):
         chart_docs = engine.get_chart_prompt()
+    
+    component_invention = ""
+    # component_invention = COMPONENT_INVENTION
 
     return f"""You are a LAYOUT DESIGNER. Convert story drafts into MDX slides.
 
@@ -154,6 +172,8 @@ Don't just list facts; visualize relationships.
 - Never leave gaps/holes - content should flow continuously
 - AVOID: sparse pages that look like work-in-progress
 - If content is limited, use simpler layout (LayoutStacked) rather than leave gaps
+
+{component_invention}
 
 {chart_docs}
 

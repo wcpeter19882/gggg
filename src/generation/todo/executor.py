@@ -57,6 +57,7 @@ class TodoExecutor:
             TodoType.THEME: "theme",
             TodoType.STORY: "story",
             TodoType.CONTENT: "content",
+            TodoType.CODEGEN: "codegen",
             TodoType.EXPORT: "export",
         }
     
@@ -135,7 +136,7 @@ class TodoExecutor:
         if state.atoms is not None and "atoms" not in todos_in_queue:
             completed_ids.add("atoms")
             completed_ids.add("atoms_existing")  # For refinement dependencies
-        if state.themes and state.active_theme_id and "theme" not in todos_in_queue:
+        if state.themes and state.active_theme and "theme" not in todos_in_queue:
             completed_ids.add("theme")
             completed_ids.add("theme_existing")  # For refinement dependencies
         if state.slides and len(state.slides) > 0:
@@ -233,9 +234,8 @@ class TodoExecutor:
         }
         if tool_name == "export":
             tool_kwargs["output_dir"] = self.output_dir
-        
         tool = get_tool(tool_name, **tool_kwargs)
-        
+
         # Mark started and persist
         todo.mark_started()
         self._persist_state(state)
@@ -267,8 +267,8 @@ class TodoExecutor:
             self._persist_state(state)
             self._log(f"✓ {todo.type.value}: {todo.id}")
             
-            # Notify status change for UI update
             print(f"📢 Todo {todo.id} completed - triggering callback (callback={self.on_status_change is not None})")
+            # Notify status change for UI update
             if self.on_status_change:
                 self.on_status_change(state)
             

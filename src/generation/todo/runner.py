@@ -78,7 +78,8 @@ class PipelineRunner:
         user_instruction: str,
         state: Optional["PipelineState"] = None,
         project: str = "slidev",
-        mdx_theme: str = "business",
+        active_theme: str = "business",
+        force_rerun: bool = False,
     ) -> "PipelineState":
         """Run full pipeline from source.
         
@@ -87,7 +88,7 @@ class PipelineRunner:
             user_instruction: User's natural language instruction
             state: Optional existing state (for incremental updates)
             project: Export project type (slidev, duolingo, react-mdx)
-            mdx_theme: Theme for react-mdx export
+            active_theme: Theme for react-mdx export
         
         Returns:
             Final pipeline state
@@ -95,22 +96,25 @@ class PipelineRunner:
         # Late import to avoid circular dependency
         from src.generation.state import PipelineState
         
-        # Try to load existing state from output folder
+        # Try to load existing state from output folder unless force_rerun is set
         state_path = self.output_dir / "state.json"
-        if state is None and state_path.exists():
+        if state is None and force_rerun and state_path.exists():
+            if self.verbose:
+                _safe_print(f"🧹 --force-rerun: ignoring existing state at {state_path}")
+            state = PipelineState()
+        elif state is None and state_path.exists():
             if self.verbose:
                 _safe_print(f"📂 Loading existing state from {state_path}")
             state = PipelineState.load(state_path)
         elif state is None:
             state = PipelineState()
-            state.load_default_themes()
         
         # Set source
         state.set_source(source_path)
         
         # Set project and theme
         state.project = project
-        state.mdx_theme = mdx_theme
+        state.active_theme = active_theme
         
         # Check if state already has pending todos - if so, skip planning
         # This makes state.json the source of truth
