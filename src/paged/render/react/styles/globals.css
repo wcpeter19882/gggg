@@ -502,7 +502,7 @@ body {
 /* NoSync mode - center-aligned layout for visual-heavy sidebars */
 .layout-dashboard-nosync .dashboard-body {
   display: grid;
-  grid-template-columns: 1fr minmax(400px, 480px);
+  grid-template-columns: minmax(400px, 640px) 1fr;
   gap: 40px;
   flex: 1;
   min-height: 0;

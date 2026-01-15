@@ -214,8 +214,8 @@ You are designing slides as MDX markup. Match layout to the visual_design intent
 - **Sidebar slot (Right, 2/3 width)**: Wide visual column. Best for Hero Charts, ProcessStrips, MetricGroups.
 - **CRITICAL**: Put visual anchors (Charts/Process) in **Sidebar** (Wide). Put text/lists in **Main** (Narrow).
 - **SYNC MODES** (prop: `nosync`, boolean, default: `false`):
-  - **sync mode (`nosync={false}`, default)**: Main and Sidebar content is row-aligned (top-aligned). Use for text/metrics matching.
-  - **nosync mode (`nosync={true}`)**: Main and Sidebar are vertically center-aligned. **Use `nosync={true}` when Sidebar contains a visual (Chart, Diagram, ProcessStrip)**.
+  - **sync mode (`nosync={false}`, default)**: Main and Sidebar content is row-aligned (top-aligned). Use for most cases.
+  - **nosync mode (`nosync={true}`)**: Main and Sidebar are vertically center-aligned. **Use `nosync={true}` when Sidebar contains Chart, Diagram**.
 
 **LayoutTimeline** — Use for chronological milestones with rich content per event.
 - Best: company history, project milestones, annual roadmap with details
