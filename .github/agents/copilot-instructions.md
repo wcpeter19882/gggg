@@ -1,8 +1,54 @@
 # gggg Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2025-12-18
+Auto-generated from all feature plans. Last updated: 2025-01-09
 
 ## Architecture Principles
+
+### Skills and Subagents Architecture (NEW)
+
+The system now uses a **content-manager skill** that orchestrates multiple **specialized subagents**:
+
+```
+.claude/skills/                  # Claude skill definitions
+├── content-manager.md           # Orchestrator skill
+├── theme-subagent.md            # Theme subagent
+├── atom-subagent.md             # Atom subagent
+├── storyline-subagent.md        # Storyline subagent
+├── paged-layout-subagent.md     # Layout/widget subagent
+└── export-subagent.md           # Export subagent
+
+src/skills/                      # Python implementation
+├── __init__.py                  # Skill registry with register_skill decorator
+├── models/                      # Shared data models
+│   ├── content_json.py          # ContentJson schema
+│   ├── patch.py                 # Patch format and apply_patch
+│   └── project.py               # Project metadata
+├── content_manager/             # Orchestrator implementation
+│   ├── orchestrator.py          # Main orchestrator
+│   └── constitution.py          # Constitution extraction
+├── theme/                       # Theme handler
+├── atom/                        # Atom handler
+├── storyline/                   # Storyline handler
+├── paged_layout/                # Layout/widget handler
+└── export/                      # Export handler
+
+src/scripts/
+├── apply_patch.py               # Patch application
+├── slice_atoms.py               # Extract atoms from content.json
+├── slice_theme.py               # Extract theme from content.json
+├── slice_storylines.py          # Extract slides from content.json
+└── check_mdx_server.py          # Server status checking
+```
+
+**Project Directory Structure**:
+```
+$tmp/content-manager/{project_id}/
+├── content.json      # Central data store
+├── todo.md           # Subagent todo list
+├── files/            # Source files
+├── patches/          # JSON patches from subagents
+└── output/           # Generated MDX and renders
+```
 
 ### Layout System Decoupling
 - **Layout/widgets/presets are provided by LayoutEngine** via `get_layout_documentation()` protocol method
@@ -41,6 +87,8 @@ Auto-generated from all feature plans. Last updated: 2025-12-18
 - [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION] + [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION] (002-mdx-direct-output)
 - [if applicable, e.g., PostgreSQL, CoreData, files or N/A] (002-mdx-direct-output)
 - TypeScript 5.x (React components), Python 3.11 (content generation) + Recharts (already in use), React 18, Python LLM generation pipeline (003-extended-chart-types)
+- Python 3.11+ (backend), TypeScript/React (MDX renderer) + Pydantic, Anthropic API (via LLM client), React, MDX, Next.js (001-skills-subagent-migration)
+- File-based (content.json per project) (001-skills-subagent-migration)
 
 - Python 3.11+ + Pydantic 2.x, Jinja2 3.x, Click 8.x (001-uce-render)
 
@@ -68,9 +116,9 @@ pytest; ruff check src; mypy src
 Python 3.11+: Follow PEP 8, use type hints, prefer Pydantic for validation
 
 ## Recent Changes
+- 001-skills-subagent-migration: Added Python 3.11+ (backend), TypeScript/React (MDX renderer) + Pydantic, Anthropic API (via LLM client), React, MDX, Next.js
+- 001-skills-subagent-migration: Added [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION] + [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]
 - 003-extended-chart-types: Added TypeScript 5.x (React components), Python 3.11 (content generation) + Recharts (already in use), React 18, Python LLM generation pipeline
-- 002-mdx-direct-output: Added [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION] + [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]
-- 001-react-mdx-renderer: Added TypeScript 5.x (React components), Python 3.11+ (MDX generator/CLI)
 
 
 <!-- MANUAL ADDITIONS START -->

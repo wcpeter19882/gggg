@@ -12,7 +12,12 @@ You are a LAYOUT DESIGNER. Convert story drafts into MDX slides.
 
 ## Your Task
 
-Read draft slides and generate MDX content following the exact component syntax and rules below.
+Read draft slides and generate MDX content following the exact component syntax and rules.
+
+**IMPORTANT**: Before generating MDX, read the complete layout documentation:
+```
+read_file(".claude/skills/paged-layout/LAYOUT.md")
+```
 
 ## Step 0: Read Constitution
 
@@ -77,6 +82,8 @@ mcp_apply-patch_read_section({
 | `processstrip_too_wide` | Use StepList instead, or reduce items to 3 |
 | `metric_value_too_long` | Shorten value to <10 chars, move text to label |
 
+---
+
 ## Step 2: Generate MDX Content
 
 ### CORE PRINCIPLE
@@ -105,298 +112,197 @@ Follow the draft slide's `story` and `visual_design` fields exactly:
 
 ---
 
-## LAYOUT REFERENCE
+## DESIGN PRINCIPLES (NON-NEGOTIABLE)
 
-### LayoutCover
-TRADITIONAL cover page: title + subtitle only. Clean, minimal, impactful.
-- Best: opening title slide, closing "Thank You" slide, section dividers
-- Components: Heading (level 1), Text (subtitle), optionally ONE of: QuoteBlock OR simple Callout
-- **🚫 FORBIDDEN**: BigNum, MetricGroup, SmartList, Charts, Diagrams, CardGroup, ProcessStrip, StepList
-- **MAX ELEMENTS**: 2-3 elements total (Heading + subtitle + optional quote/callout)
+### 1. Visual-Narrative Balance
+Every slide must tell a story (Narrative) AND prove it (Visual).
+- **Narrative**: Use Heading + Text/SmartList to explain the "Why".
+- **Visual**: Use Charts, BigNum, ProcessStrip, MetricGroup, or structured lists (StepList, CardGroup) to show the "What".
+- **Rule**: **NEVER create text-only slides**. SmartList and TableData are text-heavy. Always anchor the slide with at least one true visual component (Chart, BigNum, MetricGroup, ProcessStrip, StepList, CardGroup).
 
-```jsx
-<LayoutCover>
-  <Heading level={1}>Main Title</Heading>
-  <Text variant="lead">Subtitle here</Text>
-</LayoutCover>
-```
+### 2. Data Integrity: Performance vs Structure
+Numbers must represent **performance metrics**, not **document structure**.
+- **Definition of Metric**: A Performance Metric must be a **quantitative measurement** (e.g., "15%", "$10M", "300ms", "500 Users").
+- **Real Data Only**: `MetricGroup` and `BigNum` are for KPIs. **NEVER** use them to show:
+    - Counts of bullet points (e.g., "3 Steps", "4 Pillars") <--- This is structure, not data.
+    - Dates or Years (e.g., "2026", "Q1") <--- Use Heading or Text.
+    - Indices (e.g., "01", "02") <--- Use StepList.
+- **Categorical Enumerations Forbidden**: NEVER use `BigNum`, `Metric`, or `MetricGroup` to visualize categorical indices or ordinal numbers.
+- **Value-Add Metrics**: Use numbers that add *new* information not visible in the structure itself.
+- **STRICTLY NO DUPLICATION**: A specific data point should appear **EXACTLY ONCE** on the slide.
+    - If a number is in a Chart, Table, or Text list, **do NOT** repeat it in a BigNum or MetricGroup.
+    - If a number is in a BigNum, **do NOT** repeat it in key text or lists.
+    - Components must be complementary.
+- **STRICTLY NO HALLUCINATION**:
+    - **Source-Based Data Only**: Use numbers explicitly provided in the text or mathematically available (e.g., calculating differences, sums, or ratios from given numbers is ALLOWED).
+    - **No Arbitrary Inventions**: Do not invent missing variables to solve an equation. (e.g., if input only says "Sales up 15%", you do not know the total volume. Do not invent "$100M" as a baseline).
+    - **No Assumed Complements**: Do not assume "remainder" values exist unless the category is binary/closed (e.g., "30% Market Share" does not imply who owns the other 70%).
+    - **No Qualitative-to-Quantitative**: Do NOT assign arbitrary numbers to qualitative states (e.g. do not chart "In Progress" as 50%).
+- **Visual**: If you have 3+ data points, use a Chart, not a list of metrics.
 
-### LayoutSplit
-Two-column layout. Use when pairing text with visual, or showing two related concepts.
-- Best: metric + context, chart + explanation, before/after
-- **Slots**: `<Left>`, `<Right>` (NOT Column!)
-- **Ratios**: ratio="1:1", "2:1", "1:2", "3:1", "1:3"
-- **HEADING RULE**: Use the SAME heading level on both sides
+### 3. Visual Metaphor (The "Flashpoint" Rule)
+Don't just list facts; visualize relationships.
+- **Conceptual Comparisons**: If you are comparing two things (e.g., "SIM vs TBT", "Risk vs Scale") on dimensions like "Speed", "Quality", or "Cost", **ALWAYS use a `ChartBubble`** inside a `LayoutSplit` (Left: Context, Right: Bubble).
+    - This is the "Flashpoint": showing the trade-off visually is 10x more powerful than a list.
+    - Use imaginary 0-100 scales for X/Y to position the bubbles conceptually.
+- **Flow vs Structure**: Use `ProcessStrip` for linear time (`mode="linear"`) and `NetworkGraph` for complex branching.
 
-```jsx
-<LayoutSplit ratio="2:1">
-  <Left>
-    <Heading level={2}>Left Content</Heading>
-    <SmartList items={["Point 1", "Point 2", "Point 3"]} />
-    <Callout intent="info">Supporting note</Callout>
-  </Left>
-  <Right>
-    <BigNum value="95%" label="Success Rate" />
-    <Text variant="caption">Source: Q4 Report</Text>
-  </Right>
-</LayoutSplit>
-```
+### 4. Chart Logic (No Nonsense Charts)
+- **Dates are NOT Quantities**: NEVER put years (2025, 2026) or dates (20260331) as the `value` in a Bar/Line chart. That makes no sense. Use `LayoutTimeline` or a simple List for dates.
+- **Pie vs Bar**: Use `ChartPie` ONLY for "Part-to-Whole" relationships (e.g., Budget Split, Market Share) where values must sum to 100%. Use `ChartBar` for "Independent Comparisons" (e.g., Completion % of 3 different projects, CSAT scores of 4 regions).
+- **Single Data Point**: Do NOT make a Chart for 1 number. Use `BigNum`.
+- **No Relative Inventions**: If input has **relative change ONLY** ("delta is ZZ"), do NOT invent "before=XX, after=YY". This applies to **Charts and Tables**. inventing baseline data is FALSE DATA.
+- **No "Filler" Data**: For `ChartBar` or `ChartLine`, if you have sparse data (e.g., only 2 years), plot exactly those 2 years. **Do NOT invent** intermediate years or extra categories to "fill out" the chart.
 
-### LayoutStacked
-Vertical flow layout. Use for text-heavy narrative or sequential content.
-- Best: storytelling, explanations, step-by-step instructions
-- Components: Heading, Text, SmartList, TableData, ProcessStrip, Callout
+### 5. Table Discipline
+- **Data over Text**: Tables are for *data* (metrics, status, prices), not long paragraphs of text.
+- **No Mock Data**: **NEVER** invent example rows (e.g. "Contoso", "Fabrikam", "John Doe") just to show what the table *could* look like. If the input text does not contain specific data rows, **do NOT** use a Table. Use a descriptive Text or List instead.
+- **Refactor to Cards**: If a table is just a list of "Item Name" and "Description" (2 columns), it is a List, not a Table. Use `CardGroup` or `StepList` instead, as they handle text wrapping better than tables. Only use `TableData` for dense, structured matrices (3+ columns of short data).
+- **Layout Choice**: **NEVER** use `LayoutDashboard` for slides with `TableData`. Sidebar is too narrow, and Main should be for Charts. Use `LayoutSplit` (Table on one side) or `LayoutStacked` (Table full width) instead.
 
-```jsx
-<LayoutStacked>
-  <Heading level={1}>Section Title</Heading>
-  <Text variant="lead">Introduction paragraph</Text>
-  <SmartList items={["Item 1", "Item 2", "Item 3"]} />
-  <Callout intent="success">Key takeaway</Callout>
-</LayoutStacked>
-```
-
-### LayoutDashboard
-Data-dense KPI displays. Use for metrics overview, performance summary.
-- **Slots**: `<Header>`, `<Main>`, `<Sidebar>`, `<Footer>`
-- **Header slot**: Heading level={2} ONLY (no Text, no lead paragraph)
-- **Main slot**: Text variant="lead" (first), MetricGroup, Charts, Tables, BigNum
-- **Sidebar slot**: SmartList, Callout, compact text (supporting content)
-
-```jsx
-<LayoutDashboard>
-  <Header><Heading level={2}>Performance Dashboard</Heading></Header>
-  <Main>
-    <Text variant="lead">Key metrics for Q4 2025</Text>
-    <MetricGroup cols={3}>
-      <Metric value="$1.2M" label="Revenue" delta="+12%" />
-      <Metric value="89%" label="Margin" />
-      <Metric value="4.2" label="Rating" />
-    </MetricGroup>
-  </Main>
-  <Sidebar>
-    <SmartList items={["On track for targets", "Q1 outlook positive"]} />
-    <Callout intent="success">Record quarter</Callout>
-  </Sidebar>
-</LayoutDashboard>
-```
-
-### LayoutFullBleed
-Visual impact with background. Use for hero moments, emotional beats.
-- Best: key quotes, big numbers, section transitions
-- Components: Heading, QuoteBlock, BigNum (overlay on image)
-
-```jsx
-<LayoutFullBleed>
-  <Heading level={1}>The Big Question</Heading>
-  <Text variant="display">How do we achieve 80% CSAT?</Text>
-</LayoutFullBleed>
-```
-
-### LayoutGrid
-Parallel items of equal importance. Use for features, team, products.
-- **Cols**: cols={2}, cols={3}, cols={4}
-- Components: CardGroup, MetricGroup, Heading
-
-```jsx
-<LayoutGrid cols={3}>
-  <CardGroup>
-    <Card title="Feature 1" description="Description" icon="🚀" />
-    <Card title="Feature 2" description="Description" icon="⚡" />
-    <Card title="Feature 3" description="Description" icon="🎯" />
-  </CardGroup>
-</LayoutGrid>
-```
-
-### LayoutTimeline
-Chronological milestones with rich content per event.
-- Best: company history, project milestones, annual roadmap
-- **Slots**: `<LayoutTimeline.Item year="2024">`
-
-```jsx
-<LayoutTimeline>
-  <LayoutTimeline.Item year="2024">
-    <Heading level={3}>Product Launch</Heading>
-    <Text>Released v1.0 to market</Text>
-  </LayoutTimeline.Item>
-  <LayoutTimeline.Item year="2025" highlighted={true}>
-    <Heading level={3}>Series A</Heading>
-    <Text>Raised $10M funding</Text>
-  </LayoutTimeline.Item>
-</LayoutTimeline>
-```
+### 6. Component Polish (Icons & Visuals)
+- **CardGroup Icons**: When using `CardGroup`, **ALWAYS** provide a relevant semantic emoji or icon for the `icon="..."` prop. e.g. `<Card ... icon="🚀"/>` for Speed, `<Card ... icon="💰"/>` for Finance.
+- **Process Visuals**: For `ProcessStrip` or steps, ensure the labels are concise.
 
 ---
 
-## COMPONENT REFERENCE
+## LAYOUT STRATEGY (HOW TO CHOOSE)
 
-### Typography (Atoms)
-
-```jsx
-<Heading level={1}>Display Title</Heading>
-<Heading level={2}>Section Title</Heading>
-<Heading level={3}>Subsection</Heading>
-<Text variant="lead">Lead paragraph</Text>
-<Text variant="body">Body text</Text>
-<Text variant="caption">Caption/source</Text>
-<Text>We achieved <Highlight color="success">10x growth</Highlight> this quarter.</Text>
-<Callout intent="info" title="Note">Important message</Callout>
-<Callout intent="success" title="Win">Positive outcome</Callout>
-<Callout intent="warning" title="Risk">Caution needed</Callout>
-```
-
-### Metrics (Blocks)
-
-```jsx
-<BigNum value="42%" label="Growth" trend="+5%" />
-<MetricGroup cols={3}>
-  <Metric value="$1M" label="Revenue" delta="+12%" />
-  <Metric value="89%" label="Margin" />
-  <Metric value="4.2" label="Rating" />
-</MetricGroup>
-<MetricStrip metrics={[{value: "100", label: "Users"}, {value: "50", label: "Sales"}]} />
-```
-
-### Lists & Content (Blocks)
-
-```jsx
-<SmartList items={["Item 1", "Item 2", "Item 3"]} />
-<SmartList ordered={true} items={["First", "Second", "Third"]} />
-<StepList items={[
-  {label: "Step 1", description: "Do this first"},
-  {label: "Step 2", description: "Then this"}
-]} />
-<ProcessStrip items={["Plan", "Build", "Test", "Deploy"]} />
-<ProcessStrip items={[
-  {label: "Collect", status: "done"},
-  {label: "Process", status: "active"},
-  {label: "Deploy", status: "pending"}
-]} />
-<QuoteBlock author="CEO">Stay focused on the customer.</QuoteBlock>
-<CardGroup columns={3}>
-  <Card title="Speed" description="10x faster" icon="🚀" />
-</CardGroup>
-<TableData headers={["Name", "Value"]} rows={[["A", "1"], ["B", "2"]]} />
-```
-
-### Charts (Blocks)
-
-**⚠️ CRITICAL DATA FORMAT** - Using wrong properties causes EMPTY charts:
-
-| Component | Required Format | Example |
-|-----------|----------------|---------|
-| ChartBar (simple) | `{label, value}` | `{label: "Q1", value: 50}` |
-| ChartBar (clustered) | `{label, before, after}` | `{label: "Sales", before: 80, after: 120}` |
-| ChartLine | `{label, value}` | `{label: "Jan", value: 100}` |
-| ChartPie | `{label, value}` | `{label: "Segment", value: 30}` |
-| ChartArea | `{label, value}` | `{label: "Jan", value: 100}` |
-| ChartBubble | `{label, x, y, size}` | `{label: "Item", x: 10, y: 20, size: 50}` |
-| ChartRadar | `{label, value}` | `{label: "Speed", value: 80}` |
-| BarStats | `{label, value}` | `{label: "Region A", value: 85}` |
-
-**⚠️ NEVER use arbitrary keys** like `revenue`, `signups` - components ignore unknown properties!
-
-```jsx
-<ChartBar data={[{label: "Q1", value: 100}, {label: "Q2", value: 150}]} />
-<ChartBar data={[{label: "Accuracy", before: 65, after: 85}]} />
-<ChartLine data={[{label: "Jan", value: 50}, {label: "Feb", value: 75}]} />
-<ChartPie data={[{label: "A", value: 60}, {label: "B", value: 40}]} variant="donut" />
-<ChartArea data={[{label: "Jan", value: 100}]} gradient={true} />
-<BarStats data={[{label: "Team A", value: 95}]} sortDescending={true} />
-```
-
-### Diagrams (Blocks)
-
-**⚠️⚠️⚠️ CRITICAL: NetworkGraph vs ProcessStrip DECISION**
-
-**STEP 1: Count how many edges come OUT of each node:**
-- If EVERY node has exactly 0 or 1 outgoing edge → USE ProcessStrip (it's linear!)
-- If ANY node has 2+ outgoing edges → NetworkGraph is OK (it's branching)
-
-**LINEAR (USE ProcessStrip, NOT NetworkGraph):**
-- "Speaker → Capture → Translate → Playback" ← each node has 1 output = ProcessStrip!
-- "Input → Process → Judge → Output" ← each node has 1 output = ProcessStrip!
-
-**BRANCHING (NetworkGraph OK):**
-- "Engine → Interpreter, Captions, Transcription" ← Engine has 3 outputs = NetworkGraph OK
-
-```jsx
-// For LINEAR sequences - USE THIS 90% of the time!
-<ProcessStrip items={["Capture", "Translate", "Playback"]} />
-
-// For BRANCHING only - when one node connects to multiple targets
-<NetworkGraph direction="TB" size="medium">
-  <Node id="api" label="API Gateway" />
-  <Node id="auth" label="Auth Service" />
-  <Node id="cache" label="Cache" />
-  <Node id="db" label="Database" />
-  <Edge source="api" target="auth" />
-  <Edge source="api" target="cache" />
-  <Edge source="auth" target="db" />
-  <Edge source="cache" target="db" />
-</NetworkGraph>
-```
-
-**NetworkGraph SIZE RULE (count your nodes!):**
-- `size="compact"`: 2-3 nodes ONLY
-- `size="medium"`: 4-5 nodes ONLY
-- `size="tall"`: 6+ nodes (MUST use tall if ≥6 nodes!)
-
-**In Split layouts**: ALWAYS use `direction="TB"` (vertical) - horizontal diagrams look cramped
+| Layout | Use Case | Content Strategy |
+|--------|----------|------------------|
+| `LayoutCover` | Transitions, Titles, Closings | Minimalist. Headline + Subtitle + Quote. No heavy data. |
+| `LayoutSplit` | Comparisons (A vs B), Visual Proof | Context on Left, Data/Visual on Right. **HEADLINE RULE**: For **Comparisons** (A vs B), use **BOTH** headers. For **Visual Proof** (Text + Visual), use **ONLY Left** header (Right has NO header). |
+| `LayoutDashboard` | KPI Overview, Process Flows | **Main (Narrow/Left)**: Context/Lists. **Sidebar (Wide/Right)**: Hero Visuals (Charts, Process). **ABSOLUTELY NO TABLES**. |
+| `LayoutTimeline` | History, Roadmaps | Chronological flow. Text-heavy but visually structured. |
+| `LayoutStacked` | Narrative Flow, Wide Tables | **Primary Choice for Tables**. Use when you have a large Table or CardGroup that needs full width. |
 
 ---
 
-## LAYOUT CONSTRAINTS
+## CONTENT MAPPING (STORY → COMPONENT)
 
-### Layout-Widget Compatibility
+- **Table Data**: If the story provides a structured table (rows/cols), use `TableData` inside `LayoutStacked`. **DO NOT** try to break it into a List + Table (Mirroring). Just show the Table once, beautifully explanation above or below it.
 
-| Widget | cover | split | stacked | grid | fullbleed | dashboard | timeline |
-|--------|-------|-------|---------|------|-----------|-----------|----------|
-| Heading | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Text | ✅ | ✅ | ✅ | ⚠️ | ✅ | ❌ | ✅ |
-| SmartList | ❌ | ✅ | ✅ | ⚠️ | ❌ | ❌ | ❌ |
-| BigNum | ✅ | ✅ | ❌ | ✅ | ✅ | ✅ | ❌ |
-| MetricGroup | ❌ | ✅ | ❌ | ✅ | ❌ | ✅ | ❌ |
-| Charts | ❌ | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ |
-| NetworkGraph | ❌ | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ |
-| QuoteBlock | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ | ❌ |
-| CardGroup | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
-| TableData | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
-| Callout | ❌ | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ |
-| ProcessStrip | ❌ | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ |
-| StepList | ❌ | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ |
+| Story Element | Component | Note |
+|---------------|-----------|------|
+| HEADLINE | `Heading` | Level 1 for Title, Level 2 for Sections |
+| NARRATIVE | `Text` | Use `variant="lead"` for the main story arc |
+| DETAIL | `SmartList` | Bullet points (max 3-4 items per list) |
+| EVIDENCE (Data) | `Chart` | Best for trends (Line), shares (Pie), comparisons (Bar) |
+| EVIDENCE (Hero) | `BigNum` | Single high-impact number (Revenue, Growth) |
+| EVIDENCE (Set) | `MetricGroup` | Group of 3-4 related metrics (KPIs) |
+| EVIDENCE (Flow) | `ProcessStrip` | Linear A→B→C flows (Stages, Pipelines) |
+| EVIDENCE (Net) | `NetworkGraph` | Branching or complex relationships |
+| TAKEAWAY | `Callout` | Slide conclusion - the "So What?" |
 
-### ProcessStrip Width Rule (CRITICAL - WILL CAUSE OVERFLOW!)
+---
 
-| Layout Context | Max ProcessStrip Items |
-|----------------|------------------------|
-| 1:1 split (Left or Right) | **3 items MAX** |
-| 1:2 split small side | **2 items MAX** |
-| 2:1 split large side | 4 items OK |
-| LayoutStacked (full width) | 5+ items OK |
-| LayoutDashboard Main | 4 items OK |
+## CALLOUT USAGE (TAKEAWAY ANCHOR)
+Callout is for **slide conclusions** - the single key insight or implication the audience should remember.
+- **Purpose**: Distill the slide's message into one memorable statement. Logical "So What?".
+- **Placement**: Bottom of LayoutStacked, or in narrow columns (Main slot of Dashboard, Left side of Split).
+- **Design**: Minimal, integrated, left-accent border.
+- **Content**: Short (1-2 sentences), actionable or insightful, not a summary of bullets.
 
-**IF YOU HAVE 4+ STEPS IN A 1:1 SPLIT → USE StepList INSTEAD**
+## QUOTEBLOCK USAGE (AUTHORITY & TESTIMONIALS)
+QuoteBlock is for **distinct voices** - testimonials, leadership mandates, or external validation.
+- **Purpose**: Add authority, human element, or "voice of customer".
+- **Placement**: Strong visual anchor. Can fill a sparse slot (Sidebar, Right side) effectively.
+- **Transformation Strategy**:
+    - **Customer Pain Points** -> Turn into a QuoteBlock. (e.g., "The accuracy isn't good enough for legal." - Chief Legal Officer)
+    - **Vision/North Star** -> Turn into a QuoteBlock. (e.g., "Accuracy is our north star." - VP Product)
+    - **Feedback** -> Turn into a QuoteBlock.
+- **Content**: Needs attribution (Author/Source) when possible. If attribution is not explicit, use a generic persona like "Enterprise Customer" or "Product Leadership".
 
-### Slide Variety (CRITICAL)
+**Good Callout examples:**
+- `<Callout label="Implication">We're building on proven components, not starting from scratch.</Callout>`
+- `<Callout label="Takeaway">Trust in accuracy is the primary blocker for enterprise scale.</Callout>`
 
-**Never use the same layout + component pattern on consecutive slides.**
-- If slide N uses LayoutSplit with NetworkGraph+SmartList, slide N+1 MUST use different layout OR different components
-- **Good**: Split→Dashboard→Split(different ratio)→Grid→Stacked
-- **Bad**: Split(2:1)+Diagram→Split(2:1)+Diagram→Split(2:1)+Diagram
+**Good QuoteBlock examples:**
+- `<QuoteBlock author="Enterprise Customer" source="Legal Dept">We can't use this if names are misspelled.</QuoteBlock>`
+- `<QuoteBlock author="Satya Nadella" variant="large">This is the defining challenge of our time.</QuoteBlock>`
+- `<QuoteBlock author="Product Vision">Make entity accuracy the north star.</QuoteBlock>`
 
-### No Redundant Content (CRITICAL)
+**Bad Callout/Quote usage (avoid):**
+- ❌ Using Callout to list multiple points (use SmartList).
+- ❌ Using Callout for status alerts (use Highlight or Text with styling).
+- ❌ Using QuoteBlock for simple text that lacks "voice".
+- ❌ Duplicating content already in the slide.
 
-- NEVER show the same data twice on a slide in different formats
-- If Left has MetricGroup with "71% → 80%", Right should NOT have BigNum with same numbers
-- BAD: MetricGroup(71%, 80%) + BigNum(80%) ← REDUNDANT
-- GOOD: MetricGroup(71%, 80%) + SmartList(key actions) ← COMPLEMENTARY
+---
 
-### Split Layout Requirements
+## DEDUPLICATION & ECONOMY (NO REDUNDANCY)
+- **One Concept, One Component**: Do not visualize the same data twice.
+    - **Chart vs List**: If you have a Chart showing data, do NOT write a list of those exact data points next to it.
+    - **Process vs List**: If you have a `ProcessStrip`, do NOT write a `StepList` repeating the steps.
+    - **Table vs List**: If you have a `TableData`, do NOT summarize the rows in a `SmartList`.
+- **Mutual Exclusion**: `ProcessStrip` and `StepList` are **MUTUALLY EXCLUSIVE**.
+    - **Scenario A (Visual Focus)**: Use `ProcessStrip` (in Main) + `SmartList` (in Sidebar/Text). Best for `LayoutDashboard`.
+    - **Scenario B (Text Focus)**: Use `StepList` (Detailed descriptions). Best for `LayoutSplit` or `LayoutStacked`.
+    - **CRITICAL**: Never use `ProcessStrip` and `StepList` together.
+- **Fill the Void**: If a slot looks empty/sparse, consider adding a **QuoteBlock** (testament/principle) or a **Callout** (conclusion). Do not leave huge white spaces.
 
-Split layouts need SUBSTANTIAL content on BOTH sides:
-- **Each side must have 4+ elements** (Heading + 2-3 content blocks + supporting text)
-- **Both sides must have similar vertical height**
+---
+
+## ANTI-PATTERNS (STRICTLY FORBIDDEN)
+- **The "Mirroring" Trap**: In `LayoutSplit`, **NEVER** use the Right side to summarize or "list" the content of the Left side.
+    - **Forbidden**: Left = Table of 5 items; Right = List of the same 5 items.
+    - **Forbidden**: Left = Text description; Right = Checklist of the same points.
+    - **Correction**: If you have a detailed List/Table on one side, use the other side for:
+        1. A **Visual Anchor**: `BigNum` (Key Stat), `Chart` (Impact), or `NetworkGraph` (Concept).
+        2. An **Insight**: `Callout` (conclusion) or `QuoteBlock` (attributed quote).
+        3. **Never** just repeat the list.
+- **The "Counting" Metrics**: **NEVER** use `BigNum` to count the number of rows in a table or items in a list (e.g., "5 Decisions", "3 Pillars"). This is noise, not data.
+- **Footer Discipline**: In `LayoutStacked`, the last element is the bottom anchor. Do not put heavy detailed lists (like `StepList`) at the very bottom. Use the bottom slot for a `Callout` (conclusion) or a `QuoteBlock`.
+- **Callout Misuse**: `Callout` is for **conclusions**, not alerts. Don't use it with warning/info styling - that's what `<Highlight>` is for inline.
+
+---
+
+## SMARTLIST VARIANT SELECTION (choose appropriate variant based on content)
+- **default**: Standard bullet or numbered list - use for general narrative points
+- **cards**: Each item in a card with left accent border - use for key insights, feature lists, or when items need visual emphasis
+- **highlight**: Text with highlighted keywords - use for data-focused content where numbers or key terms need to stand out
+  - Provide items as objects: `{ text: "Revenue grew by 40%", highlight: "40%" }`
+- **checklist**: Green checkmark items - use for completed items, requirements met, or success criteria
+- **timeline**: Vertical timeline with dots - use for sequential steps, milestones, or chronological events
+- **compact**: Dense small-font list - use for supplementary info, footnotes, or sidebar content
+
+## SMARTLIST HIGHLIGHT BEST PRACTICES
+- Use highlight variant when content contains metrics, percentages, or key terms that should pop
+- Keep highlights short (1-3 words) - the highlighted text should be the key data point
+- Example: `{ text: "Customer satisfaction improved to 85%", highlight: "85%" }`
+- Example: `{ text: "Launch scheduled for Q3 2024", highlight: "Q3 2024" }`
+
+---
+
+## SPACE MANAGEMENT (70% MINIMUM COVERAGE)
+- **EVERY PAGE must fill ≥70% of vertical space** with content
+- Split layouts: BOTH sides need 4+ elements EACH (Heading + visual + text + support)
+- Both sides of split must span similar vertical height (visual overlap)
+- Dashboard/Stacked: ALL slots need content, no empty or sparse slots
+- Never leave gaps/holes - content should flow continuously
+- AVOID: sparse pages that look like work-in-progress
+- If content is limited, use simpler layout (LayoutStacked) rather than leave gaps
+
+---
+
+## LIST GROUPING & CONTEXT
+- **Consolidate Lists**: Avoid fragmented lists. Consecutive lists (e.g., `SmartList` followed by another `SmartList`) dilute the message. Consolidate them into one unless they are conceptually distinct categories.
+- **Context Headers**: Lists (`SmartList`, `StepList`) must NEVER appear at the top of a slot (Main, Sidebar, Left, Right) without a `Heading` immediately preceding them. A list without a header is a "naked list" and is forbidden.
+
+---
+
+## TEXT DENSITY WITH METRICS
+- **If using MetricGroup**: Keep accompanying `Text` concise (max 2 sentences). The Metrics are the hero; don't drown them in a wall of text.
+- **If using BigNum**: You can use more text, as BigNum takes less space.
+
+---
+
+## TEXT-ONLY SLIDES ARE FORBIDDEN
+- Every slide MUST have at least one visual block (BigNum, MetricGroup, Chart, CardGroup, ProcessStrip, TableData).
+- **TableData IS A VISUAL**: A dense `TableData` counts as the visual anchor. You do NOT need to add a Chart or BigNum if you have a good Table.
+- **Layout Choice for Tables**: If you have a Table, use `LayoutStacked`. This is the ONLY layout that handles tables well.
+    - **Forbidden**: Do not put Tables in `LayoutDashboard` (Sidebar is too narrow).
+    - **Forbidden**: Do not put Tables in `LayoutSplit` (Half-width is usually too narrow).
 
 ---
 
@@ -428,6 +334,26 @@ mcp_apply-patch_apply_patch({
   "patch_file": "{project_dir}/patches/slides_active.json"
 })
 ```
+
+---
+
+## GENERATION OUTPUT RULES
+
+**RULES**:
+1. Follow each slide's `visual_design` field for layout and content approach
+2. Follow each slide's `density` field (sparse=2-3 blocks, moderate=3-4, dense=5+)
+3. Each slide tells its own story from the `story` field
+4. Use Diagram ONLY when visual_design explicitly mentions it
+5. ≥4 different layouts across deck. Avoid consecutive repeats if possible.
+6. Each <Slide> has id, rank, story, atoms attributes (or content field if use_content_field mode)
+7. Combine text AND visual on each slide (one leads, other supports)
+8. Fill space appropriate to density (sparse≠empty)
+9. **CONTENT FLEXIBILITY**: You may refactor, shorten, or selectively omit content details to achieve a clean, well-balanced layout. Visual appeal and readability trump exhaustive completeness.
+10. **NO TEXT-ONLY SLIDES**: Every slide must have a visual anchor (Chart, BigNum, MetricGroup, ProcessStrip, StepList, or CardGroup). Pure text slides (Heading + Text + List) are forbidden.
+
+Generate MDX slides wrapped in <Slide> elements.
+
+---
 
 ## Example Output
 
