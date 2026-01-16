@@ -1,58 +1,41 @@
 /**
  * API Route: /api/slides
  * 
- * Returns pre-serialized MDX slides from content.json
- * 
- * The project path is read from PROJECT_DIR environment variable
- * which is set by export_mdx.py when starting the server.
+ * Returns pre-serialized MDX slides from state.json
+ * Converts widget-based slides to MDX if needed and serializes them server-side
  */
 
 import { NextResponse } from 'next/server';
 import * as fs from 'fs';
 import * as path from 'path';
 import { serialize } from 'next-mdx-remote/serialize';
+import he from 'he';
 
-/**
- * Get project path from PROJECT_DIR environment variable
- */
-function getProjectPath(): string | null {
-  return process.env.PROJECT_DIR || null;
-}
+// Look for state.json in these locations
+const STATE_JSON_PATHS = [
+  // Development: relative to workspace root
+  path.join(process.cwd(), '../../../../output/golden_set_mdx/state.json'),
+  path.join(process.cwd(), '../../../../output/golden_set_mdx_v13/state.json'),
+  path.join(process.cwd(), '../../../../output/state.json'),
+  // Absolute paths for Windows
+  'C:/Users/yidansun/newProject/gggg/output/golden_set_mdx/state.json',
+  'C:/Users/wangchao/repos/gggg/output/golden_set_mdx/state.json',
+  'C:/Users/wangchao/repos/gggg/output/golden_set_mdx_v13/state.json',
+  'C:/Users/wangchao/repos/gggg/output/state.json',
+];
 
 interface Slide {
   mdx?: string;
-  state?: string;
-  story?: string;
 }
 
-interface ContentJson {
+interface StateJson {
   slides?: Slide[];
-  theme?: {
-    id?: string;
+  presentation?: {
+    theme?: string;
+    title?: string;
   };
-}
-
-/**
- * Generate simple MDX from widgets when mdx field is missing
- */
-function generateMdxFromWidgets(slide: Slide): string {
-  const story = slide.story || 'Slide';
-  const widgets = slide.widgets || {};
-  
-  // Build MDX content from widgets
-  const widgetsMdx: string[] = [];
-  for (const [slotId, widget] of Object.entries(widgets)) {
-    const text = widget.parameters?.text || '';
-    if (text) {
-      widgetsMdx.push(`  <Text>${text}</Text>`);
-    }
-  }
-  
-  // Create simple slide MDX
-  return `<Slide layout="center">
-  <Title>${story}</Title>
-${widgetsMdx.join('\n')}
-</Slide>`;
+  /** React theme name from CLI --mdx-theme */
+  mdx_theme?: string;
 }
 
 /**
@@ -85,47 +68,52 @@ function fixMdxContent(mdx: string): string {
   return fixed;
 }
 
+/**
+ * Decode HTML entities in MDX content.
+ */
+function decodeHtmlEntities(mdx: string): string {
+  return he.decode(mdx);
+}
+
 export async function GET(request: Request) {
   try {
-    // Get project path from PROJECT_DIR environment variable
-    const projectPath = getProjectPath();
+    // Get path parameter from query string
+    const { searchParams } = new URL(request.url);
+    const outputPath = searchParams.get('path') || 'golden_set_mdx';
     
-    if (!projectPath) {
-      return NextResponse.json(
-        { 
-          error: 'PROJECT_DIR not set',
-          hint: 'Start server with: PROJECT_DIR=/path/to/project npm run dev'
-        },
-        { status: 500 }
-      );
-    }
+    // Build paths to check based on the requested output directory
+    const pathsToCheck = [
+      // Relative paths
+      path.join(process.cwd(), `../../../../output/${outputPath}/state.json`),
+      // Absolute path
+      `C:/Users/yidansun/newProject/gggg/output/${outputPath}/state.json`,
+    ];
     
-    // Read content.json from project directory
-    const contentJsonPath = path.join(projectPath, 'content.json');
+    // Find state.json
+    let stateJson: StateJson | null = null;
+    let foundPath = '';
     
-    let contentJson: ContentJson | null = null;
-    
-    try {
-      if (fs.existsSync(contentJsonPath)) {
-        const content = fs.readFileSync(contentJsonPath, 'utf-8');
-        contentJson = JSON.parse(content);
+    for (const statePath of pathsToCheck) {
+      try {
+        if (fs.existsSync(statePath)) {
+          const content = fs.readFileSync(statePath, 'utf-8');
+          stateJson = JSON.parse(content);
+          foundPath = statePath;
+          break;
+        }
+      } catch {
+        continue;
       }
-    } catch (err) {
-      return NextResponse.json(
-        { error: 'Failed to read content.json', path: contentJsonPath },
-        { status: 500 }
-      );
     }
     
-    if (!contentJson) {
+    if (!stateJson) {
       return NextResponse.json(
-        { error: 'content.json not found', searched: contentJsonPath },
+        { error: 'state.json not found', searched: pathsToCheck, requestedPath: outputPath },
         { status: 404 }
       );
     }
     
-    // Filter to only active slides
-    const slides = (contentJson.slides || []).filter(s => s.state === 'active');
+    const slides = stateJson.slides || [];
     
     // Build individual slide MDX content and serialize each
     const serializedSlides = [];
@@ -133,17 +121,23 @@ export async function GET(request: Request) {
     for (let i = 0; i < slides.length; i++) {
       const slide = slides[i];
       
-      // Use MDX content from content.json, or generate from widgets
-      let mdxContent = slide.mdx || '';
+      // Use MDX content directly from state.json (generated by LLM)
+      const mdxContent = slide.mdx || '';
       
       if (!mdxContent) {
-        // Generate MDX from widgets if no mdx field
-        mdxContent = generateMdxFromWidgets(slide);
-        console.log(`Slide ${i + 1}: Generated MDX from widgets`);
+        console.warn(`Slide ${i + 1} has no mdx field - skipping`);
+        serializedSlides.push({
+          source: null,
+          slideNumber: i + 1,
+          mdx: '',
+          error: 'No MDX content in slide. Regenerate with --project react-mdx',
+        });
+        continue;
       }
       
       // Fix multi-line text content that MDX doesn't support
-      const fixedMdx = fixMdxContent(mdxContent);
+      // and decode HTML entities (e.g., &amp; -> &)
+      const fixedMdx = fixMdxContent(decodeHtmlEntities(mdxContent));
       
       // Serialize the MDX content server-side
       try {
@@ -172,8 +166,8 @@ export async function GET(request: Request) {
     return NextResponse.json({
       slides: serializedSlides,
       slideCount: slides.length,
-      source: contentJsonPath,
-      theme: contentJson.theme?.id || 'business',
+      source: foundPath,
+      theme: stateJson.mdx_theme || stateJson.presentation?.theme || 'business',
     });
     
   } catch (err) {

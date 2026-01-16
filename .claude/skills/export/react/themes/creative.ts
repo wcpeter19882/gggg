@@ -36,8 +36,8 @@ export const creativeTheme: ThemeDefinition = {
     letterSpacing: '-0.02em',
   },
   spacing: {
-    gap: '2rem',
-    padding: '2.5rem',
+    gap: '4rem',
+    padding: '5rem',
     margin: '1.5rem',
   },
   visuals: {

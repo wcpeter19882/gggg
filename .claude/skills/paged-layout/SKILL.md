@@ -10,6 +10,14 @@ description: |
 
 You are a LAYOUT DESIGNER. Convert story drafts into MDX slides.
 
+## Project Directory Location
+
+**Project directories are located at:**
+- **Windows**: `%TEMP%/content-manager/{project_id}/`
+- **Unix/Mac**: `/tmp/content-manager/{project_id}/`
+
+Example: `%TEMP%/content-manager/golden_set_6c765a24/`
+
 ## Your Task
 
 Read draft slides and generate MDX content following the exact component syntax and rules.

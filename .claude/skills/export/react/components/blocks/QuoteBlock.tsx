@@ -72,18 +72,19 @@ export function QuoteBlock({
       className={`quote-block ${sizeClass} quote-${variant}`}
       data-variant={variant}
     >
-      <blockquote className="quote-text">
-        <span className="quote-mark quote-open">"</span>
-        {children}
-        <span className="quote-mark quote-close">"</span>
-      </blockquote>
-      
-      {hasAttribution && (
-        <figcaption className="quote-attribution">
-          {author && <cite className="quote-author">— {author}</cite>}
-          {source && <span className="quote-source">{source}</span>}
-        </figcaption>
-      )}
+      <span className="quote-icon">"</span>
+      <div className="quote-content">
+        <blockquote className="quote-text">
+          {children}
+        </blockquote>
+        
+        {hasAttribution && (
+          <figcaption className="quote-attribution">
+            {author && <cite className="quote-author">— {author}</cite>}
+            {source && <span className="quote-source">{source}</span>}
+          </figcaption>
+        )}
+      </div>
     </figure>
   );
 }

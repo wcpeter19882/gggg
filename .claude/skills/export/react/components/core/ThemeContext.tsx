@@ -78,6 +78,10 @@ export function ThemeProvider({
   // Apply theme CSS variables to document
   useEffect(() => {
     applyThemeToDocument(theme);
+    
+    // Set data attribute for gradient heading support
+    const hasGradient = !!theme.components?.heading?.gradient;
+    document.documentElement.setAttribute('data-theme-gradient', String(hasGradient));
   }, [theme]);
 
   // Apply vibe CSS variables to document

@@ -1,9 +1,9 @@
 /**
  * Shared TypeScript Types for React MDX Presentation Renderer
- * 
+ *
  * This file defines the type interfaces that are used across the application.
  * Component-specific props are defined in their respective component files.
- * 
+ *
  * IMPORTANT: These types are for INTERNAL use. Agent-facing types are defined
  * in the component props themselves (L1-L3 components only).
  */
@@ -28,6 +28,18 @@ export type SplitRatio = '1:1' | '2:1' | '1:2' | '3:1' | '1:3';
 
 /** Grid column count */
 export type GridCols = 2 | 3 | 4;
+
+/**
+ * Card layout variants
+ *
+ * - default: icon/image and text stacked in one column
+ * - left: icon/image on the left with a divider
+ * - top: icon/image in a separate top circle
+ */
+export type CardLayout = 'default' | 'left' | 'top';
+
+/** Card media (icon/image) size variants */
+export type CardMediaSize = 'sm' | 'md' | 'lg';
 
 /** Heading levels */
 export type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
@@ -105,6 +117,10 @@ export interface CardData {
   image?: string;
   icon?: string;
   link?: string;
+  /** Optional per-card layout override */
+  layout?: CardLayout;
+  /** Optional per-card media (icon/image) size override */
+  mediaSize?: CardMediaSize;
 }
 
 // =============================================================================
@@ -112,18 +128,20 @@ export interface CardData {
 // =============================================================================
 
 /** Theme name identifiers */
-export type ThemeName = 
+export type ThemeName =
   | 'base'
-  | 'business' 
-  | 'cyber' 
-  | 'minimal' 
-  | 'academic' 
-  | 'creative' 
-  | 'duolingo' 
-  | 'dark';
+  | 'business'
+  | 'cyber'
+  | 'minimal'
+  | 'academic'
+  | 'creative'
+  | 'duolingo'
+  | 'dark'
+  | 'teamsDark'
+  | 'teamsLight';
 
 /** Vibe intensity levels */
-export type VibeLevel = 
+export type VibeLevel =
   | 'minimal'      // 0 - Clean, no decorations
   | 'clean'        // 1 - Subtle accents
   | 'balanced'     // 2 - Default, moderate styling
@@ -202,6 +220,10 @@ export interface ThemeComponentOverrides {
     bg?: string;
     radius?: string;
   };
+  heading?: {
+    /** Gradient for h1 headings, e.g., 'linear-gradient(135deg, #5b5fc7, #3aa9ff)' */
+    gradient?: string;
+  };
   // Add other components as needed
 }
 
@@ -221,7 +243,7 @@ export interface ThemeDefinition {
 // =============================================================================
 
 /** Slide layout type */
-export type LayoutType = 
+export type LayoutType =
   | 'cover'
   | 'split'
   | 'grid'

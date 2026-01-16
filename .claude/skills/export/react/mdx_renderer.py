@@ -498,12 +498,32 @@ class ReactMDXRenderer:
             return f'{self._indent()}<Card title="{title}" description="{description}" icon="{icon}" />'
         
         elif component == "Callout":
-            intent = params.get("intent", "info")
-            title = params.get("title", "")
+            # New API: label (optional prefix), variant (default/accent/muted)
+            # Legacy API fallback: intent -> variant mapping, title -> label
+            label = params.get("label") or params.get("title", "")
             text = params.get("text", "")
-            if title:
-                return f'{self._indent()}<Callout intent="{intent}" title="{title}">{text}</Callout>'
-            return f'{self._indent()}<Callout intent="{intent}">{text}</Callout>'
+            align = params.get("align", "left")
+            
+            # Map legacy intent to new variant (if present)
+            intent = params.get("intent")
+            variant = params.get("variant", "default")
+            if intent and not params.get("variant"):
+                # Legacy mapping: warning/success -> accent, info/danger -> default
+                variant = "accent" if intent in ("warning", "success") else "default"
+            
+            # Build props
+            props = []
+            if label:
+                props.append(f'label="{label}"')
+            if variant and variant != "default":
+                props.append(f'variant="{variant}"')
+            if align and align != "left":
+                props.append(f'align="{align}"')
+            
+            props_str = " ".join(props)
+            if props_str:
+                return f'{self._indent()}<Callout {props_str}>{text}</Callout>'
+            return f'{self._indent()}<Callout>{text}</Callout>'
         
         # Default: render as Text
         text = params.get("text", str(params))
@@ -589,9 +609,14 @@ class ReactMDXRenderer:
                         after_widget = widgets[i + 2]
                         if after_widget.get("type") in {"Type.Callout", "Type.Alert"}:
                             callout_params = after_widget.get("parameters", {})
+                            # Map legacy intent to variant
+                            intent = callout_params.get("intent")
+                            variant = callout_params.get("variant", "default")
+                            if intent and not callout_params.get("variant"):
+                                variant = "accent" if intent in ("warning", "success") else "default"
                             integrated_params["callout"] = {
-                                "intent": callout_params.get("intent", "info"),
-                                "title": callout_params.get("title", ""),
+                                "label": callout_params.get("label") or callout_params.get("title", ""),
+                                "variant": variant,
                                 "text": callout_params.get("text", "")
                             }
                             integrated_widget["parameters"] = integrated_params
@@ -611,9 +636,14 @@ class ReactMDXRenderer:
                     if next_widget.get("type") in {"Type.Callout", "Type.Alert"}:
                         callout_params = next_widget.get("parameters", {})
                         if not integrated_params.get("callout"):
+                            # Map legacy intent to variant
+                            intent = callout_params.get("intent")
+                            variant = callout_params.get("variant", "default")
+                            if intent and not callout_params.get("variant"):
+                                variant = "accent" if intent in ("warning", "success") else "default"
                             integrated_params["callout"] = {
-                                "intent": callout_params.get("intent", "info"),
-                                "title": callout_params.get("title", ""),
+                                "label": callout_params.get("label") or callout_params.get("title", ""),
+                                "variant": variant,
                                 "text": callout_params.get("text", "")
                             }
                             integrated_widget["parameters"] = integrated_params
@@ -678,7 +708,16 @@ class ReactMDXRenderer:
         
         # Render based on layout type
         if layout_component == "LayoutCover":
-            lines.append(f'<LayoutCover theme="{theme}">')
+            # Build LayoutCover with optional presenter info props
+            cover_props = [f'theme="{theme}"']
+            if "presenter" in slide:
+                cover_props.append(f'presenter="{slide["presenter"]}"')
+            if "context" in slide:
+                cover_props.append(f'context="{slide["context"]}"')
+            if "date" in slide:
+                cover_props.append(f'date="{slide["date"]}"')
+            
+            lines.append(f'<LayoutCover {" ".join(cover_props)}>')
             self.indent_level += 1
             
             # Title and subtitle

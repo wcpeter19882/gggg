@@ -38,6 +38,8 @@ const THEMES: { value: ThemeName; label: string; description: string }[] = [
   { value: 'creative', label: 'Creative', description: 'Bold artistic design' },
   { value: 'duolingo', label: 'Duolingo', description: 'Playful, friendly style' },
   { value: 'dark', label: 'Dark', description: 'Dark mode presentation' },
+  { value: 'teamsDark', label: 'Teams Dark', description: 'Microsoft Teams dark mode' },
+  { value: 'teamsLight', label: 'Teams Light', description: 'Microsoft Teams light mode' },
 ];
 
 /** Vibe levels with descriptions */

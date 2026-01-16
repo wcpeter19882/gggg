@@ -23,7 +23,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState, useCallback, ReactNode, Children, isValidElement } from 'react';
-import { diagramTheme } from './diagramTheme';
+import { getResponsiveDiagramTheme } from './diagramTheme';
 
 // =============================================================================
 // Types
@@ -189,20 +189,66 @@ interface LayoutConfig {
 }
 
 /**
+ * Calculate effective dimension based on aspect ratio
+ * For horizontal layouts (wide), weight width more heavily
+ * For vertical layouts (tall), weight height more heavily
+ */
+function getEffectiveDimension(containerWidth: number, containerHeight: number): number {
+  const aspectRatio = containerWidth / containerHeight;
+  
+  if (aspectRatio > 1.5) {
+    // Very wide: weight width 70%, height 30%
+    return containerWidth * 0.7 + containerHeight * 0.3;
+  } else if (aspectRatio > 1.1) {
+    // Wide: weight width 60%, height 40%
+    return containerWidth * 0.6 + containerHeight * 0.4;
+  } else if (aspectRatio < 0.67) {
+    // Very tall: weight height 70%, width 30%
+    return containerHeight * 0.7 + containerWidth * 0.3;
+  } else if (aspectRatio < 0.9) {
+    // Tall: weight height 60%, width 40%
+    return containerHeight * 0.6 + containerWidth * 0.4;
+  } else {
+    // Square-ish: use average
+    return (containerWidth + containerHeight) / 2;
+  }
+}
+
+/**
+ * Calculate responsive spacing based on container size and aspect ratio
+ * Priority: Maximize node size by aggressively reducing spacing in small containers
+ */
+function getResponsiveSpacing(containerWidth: number, containerHeight: number) {
+  const effectiveDim = getEffectiveDimension(containerWidth, containerHeight);
+  
+  // Scale padding based on effective dimension - minimal for small containers
+  const padding = effectiveDim < 300 ? 3 : effectiveDim < 400 ? 5 : effectiveDim < 600 ? 10 : 30;
+  
+  // Much tighter spacing for smaller containers to protect node size
+  const spacingFactor = effectiveDim < 300 ? 0.5 : effectiveDim < 400 ? 0.65 : effectiveDim < 600 ? 0.85 : 1.2;
+  
+  return { padding, spacingFactor };
+}
+
+/**
  * Get layout configuration based on diagram type and aspect ratio
  */
 function getLayoutConfig(
   type: ParsedDiagram['type'],
   aspectRatio: number,
-  animationDuration: number
+  animationDuration: number,
+  containerWidth: number,
+  containerHeight: number
 ): LayoutConfig {
+  const { padding, spacingFactor } = getResponsiveSpacing(containerWidth, containerHeight);
+  
   const baseConfig: LayoutConfig = {
     name: 'dagre',
     animate: true,
     animationDuration,
-    padding: 30,
+    padding,
     nodeDimensionsIncludeLabels: true,
-    spacingFactor: 1.2,
+    spacingFactor,
   };
 
   // Determine direction based on aspect ratio
@@ -345,13 +391,17 @@ export function NetworkGraph({
         return;
       }
 
+      // Get container dimensions for responsive theme
+      const { offsetWidth: w, offsetHeight: h } = containerRef.current;
+      const responsiveTheme = getResponsiveDiagramTheme(w, h);
+
       // Create new instance
       cyRef.current = cytoscape({
         container: containerRef.current,
         elements: parsedData.elements,
-        style: diagramTheme,
+        style: responsiveTheme,
         maxZoom: 2,
-        minZoom: 0.3,
+        minZoom: 0.5,  // Increased from 0.3 to keep text more readable
         userZoomingEnabled: zoomable,
         userPanningEnabled: pannable,
         boxSelectionEnabled: false,
@@ -367,15 +417,21 @@ export function NetworkGraph({
 
         const aspectRatio = w / h;
         const diagramType = typeProp || parsedData.type;
-        const layoutConfig = getLayoutConfig(diagramType, aspectRatio, animationDuration);
+        const layoutConfig = getLayoutConfig(diagramType, aspectRatio, animationDuration, w, h);
+
+        // Update theme for current container size
+        const responsiveTheme = getResponsiveDiagramTheme(w, h);
+        cyRef.current.style(responsiveTheme);
 
         // Run layout
         const layout = cyRef.current.layout(layoutConfig);
         layout.run();
 
         // Fit to container after layout completes
+        // Use smaller padding to maximize space usage
+        const fitPadding = Math.max(10, Math.min(30, Math.min(w, h) * 0.05));
         setTimeout(() => {
-          cyRef.current?.fit(undefined, 30);
+          cyRef.current?.fit(undefined, fitPadding);
         }, animationDuration + 50);
       };
 

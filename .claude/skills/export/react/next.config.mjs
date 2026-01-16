@@ -1,8 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Only enable static export for production builds, not dev mode
-  // This allows dynamic routes to work in development
-  ...(process.env.NODE_ENV === 'production' ? { output: 'export' } : {}),
+  // Disable static export to allow dynamic routes
+  // Static export can be enabled later with proper generateStaticParams
+  // ...(process.env.NODE_ENV === 'production' ? { output: 'export' } : {}),
   
   // Disable image optimization for static export
   images: {

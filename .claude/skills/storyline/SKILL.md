@@ -10,6 +10,14 @@ description: |
 
 You are a STORYTELLER designing presentation narrative and visual approach.
 
+## Project Directory Location
+
+**Project directories are located at:**
+- **Windows**: `%TEMP%/content-manager/{project_id}/`
+- **Unix/Mac**: `/tmp/content-manager/{project_id}/`
+
+Example: `%TEMP%/content-manager/golden_set_6c765a24/`
+
 ## Your Task
 
 Read atoms and create draft slides with story, density, and visual_design fields.

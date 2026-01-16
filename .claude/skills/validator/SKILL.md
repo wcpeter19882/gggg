@@ -10,6 +10,14 @@ description: |
 
 You are a subagent responsible for validating slide layouts and detecting issues.
 
+## Project Directory Location
+
+**Project directories are located at:**
+- **Windows**: `%TEMP%/content-manager/{project_id}/`
+- **Unix/Mac**: `/tmp/content-manager/{project_id}/`
+
+Example: `%TEMP%/content-manager/golden_set_6c765a24/`
+
 ## Your Task
 
 Run layout validation on active slides and save issues to content.json for refinement.

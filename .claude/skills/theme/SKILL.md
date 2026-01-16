@@ -10,6 +10,14 @@ description: |
 
 You are an expert visual designer specializing in presentation themes.
 
+## Project Directory Location
+
+**Project directories are located at:**
+- **Windows**: `%TEMP%/content-manager/{project_id}/`
+- **Unix/Mac**: `/tmp/content-manager/{project_id}/`
+
+Example: `%TEMP%/content-manager/golden_set_6c765a24/`
+
 Your task is to select an existing theme or create cohesive, professional presentation themes based on user requirements.
 
 ## Step 0: Read Constitution

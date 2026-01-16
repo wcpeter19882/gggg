@@ -1,40 +1,104 @@
 'use client';
 
 /**
- * Slides Index Page
+ * Dynamic Slides Page
  * 
- * Lists available projects from the content-manager folder.
- * Click on a project to view its slides at /slides/{projectId}
+ * Renders MDX slides using pre-serialized content from API.
+ * The API handles server-side MDX serialization.
  */
 
-import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
+import React, { useState, useEffect, useCallback } from 'react';
+import { MDXRemote, MDXRemoteSerializeResult } from 'next-mdx-remote';
+import { mdxComponents } from '@/components/core/MDXProvider';
+import { SlideContainer, SlideWrapper, SlideNavigation } from '@/components/core';
+import { useTheme } from '@/components/core/ThemeContext';
+import { ThemeSelector } from '@/components/core/ThemeSelector';
+import type { ThemeName } from '@/utils/types';
 
-interface Project {
-  id: string;
-  name: string;
-  slideCount?: number;
-  theme?: string;
-}
+// =============================================================================
+// Types
+// =============================================================================
 
-interface ApiResponse {
-  projects: Project[];
-  basePath: string;
+interface SlideContent {
+  source: MDXRemoteSerializeResult | null;
+  slideNumber: number;
+  mdx?: string;
   error?: string;
 }
 
-export default function SlidesIndexPage(): JSX.Element {
-  const [projects, setProjects] = useState<Project[]>([]);
+interface ApiResponse {
+  slides: SlideContent[];
+  slideCount: number;
+  source: string;
+  theme: string;
+  error?: string;
+}
+
+// =============================================================================
+// Components
+// =============================================================================
+
+interface SlideRendererProps {
+  slide: SlideContent;
+  isActive: boolean;
+  index: number;
+}
+
+function SlideRenderer({ slide, isActive, index }: SlideRendererProps): JSX.Element {
+  if (slide.error || !slide.source) {
+    return (
+      <SlideWrapper index={index} isActive={isActive}>
+        <div className="text-red-500 p-8">
+          <h2 className="text-xl mb-4">Error rendering slide {slide.slideNumber}</h2>
+          <pre className="text-sm bg-red-900/20 p-4 rounded">{slide.error || 'No source'}</pre>
+          {slide.mdx && (
+            <details className="mt-4">
+              <summary>MDX Source</summary>
+              <pre className="text-xs mt-2 overflow-auto max-h-48">{slide.mdx}</pre>
+            </details>
+          )}
+        </div>
+      </SlideWrapper>
+    );
+  }
+  
+  return (
+    <SlideWrapper index={index} isActive={isActive}>
+      <MDXRemote {...slide.source} components={mdxComponents} />
+    </SlideWrapper>
+  );
+}
+
+// =============================================================================
+// Main Page Component
+// =============================================================================
+
+export default function SlidesPage(): JSX.Element {
+  const [slides, setSlides] = useState<SlideContent[]>([]);
+  const [currentSlide, setCurrentSlide] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [basePath, setBasePath] = useState<string>('');
+  const [outputPath, setOutputPath] = useState<string>('golden_set_mdx');
+  
+  // Get theme setter from context to apply theme from state.json
+  const { setTheme } = useTheme();
 
+  // Get path from URL query parameter - runs on mount and when URL changes
   useEffect(() => {
-    async function loadProjects() {
+    const params = new URLSearchParams(window.location.search);
+    const pathParam = params.get('path') || 'golden_set_mdx';
+    setOutputPath(pathParam);
+    setLoading(true); // Reset loading state when path changes
+  }, [typeof window !== 'undefined' ? window.location.search : '']);
+
+  // Load pre-serialized slides from API
+  useEffect(() => {
+    async function loadSlides() {
       try {
-        const response = await fetch('/api/slides/projects');
+        // Load from API endpoint that returns pre-serialized MDX
+        const response = await fetch(`/api/slides/?path=${encodeURIComponent(outputPath)}`);
         if (!response.ok) {
-          throw new Error(`Failed to load projects: ${response.statusText}`);
+          throw new Error(`Failed to load slides: ${response.statusText}`);
         }
         
         const data: ApiResponse = await response.json();
@@ -43,80 +107,96 @@ export default function SlidesIndexPage(): JSX.Element {
           throw new Error(data.error);
         }
         
-        setProjects(data.projects || []);
-        setBasePath(data.basePath || '');
+        if (!data.slides || data.slides.length === 0) {
+          throw new Error('No slides found in response');
+        }
+
+        console.log(`Loaded ${data.slides.length} slides from ${data.source} (path: ${outputPath}, theme: ${data.theme})`);
+        setSlides(data.slides);
+        
+        // Apply theme from state.json (set by --mdx-theme CLI flag)
+        const validThemes: ThemeName[] = ['business', 'cyber', 'minimal', 'academic', 'creative', 'duolingo', 'dark'];
+        if (data.theme && validThemes.includes(data.theme as ThemeName)) {
+          setTheme(data.theme as ThemeName);
+          console.log(`Applied theme: ${data.theme}`);
+        }
+        
         setLoading(false);
       } catch (err) {
-        console.error('Failed to load projects:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load projects');
+        console.error('Failed to load slides:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load slides');
         setLoading(false);
       }
     }
 
-    loadProjects();
-  }, []);
+    loadSlides();
+  }, [outputPath]);
 
+  // Keyboard navigation
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key === 'ArrowRight' || e.key === ' ') {
+      e.preventDefault();
+      setCurrentSlide(prev => Math.min(prev + 1, slides.length - 1));
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      setCurrentSlide(prev => Math.max(prev - 1, 0));
+    }
+  }, [slides.length]);
+
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleKeyDown]);
+
+  // Loading state
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="text-white text-xl">Loading projects...</div>
+      <div className="flex items-center justify-center h-screen bg-gray-900">
+        <div className="text-white text-xl">Loading slides...</div>
       </div>
     );
   }
 
+  // Error state
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center">
+      <div className="flex flex-col items-center justify-center h-screen bg-gray-900">
         <div className="text-red-500 text-xl mb-4">Error: {error}</div>
         <div className="text-gray-400 text-sm">
-          Make sure the content-manager folder exists
+          Make sure state.json exists in the output directory
         </div>
       </div>
     );
   }
 
-  return (
-    <div className="min-h-screen bg-gray-900 p-8">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-white mb-2">Slide Projects</h1>
-        <p className="text-gray-400 text-sm mb-8">
-          Base path: <code className="bg-gray-800 px-2 py-1 rounded">{basePath}</code>
-        </p>
-        
-        {projects.length === 0 ? (
-          <div className="bg-gray-800 rounded-lg p-8 text-center">
-            <p className="text-gray-400">No projects found</p>
-            <p className="text-gray-500 text-sm mt-2">
-              Create a project using the content-manager pipeline
-            </p>
-          </div>
-        ) : (
-          <div className="grid gap-4">
-            {projects.map((project) => (
-              <Link
-                key={project.id}
-                href={`/slides/${project.id}`}
-                className="block bg-gray-800 hover:bg-gray-700 rounded-lg p-6 transition-colors"
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h2 className="text-xl font-semibold text-white">{project.name}</h2>
-                    <p className="text-gray-400 text-sm mt-1">ID: {project.id}</p>
-                  </div>
-                  <div className="text-right">
-                    {project.slideCount !== undefined && (
-                      <span className="text-blue-400">{project.slideCount} slides</span>
-                    )}
-                    {project.theme && (
-                      <p className="text-gray-500 text-sm">Theme: {project.theme}</p>
-                    )}
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        )}
+  // No slides
+  if (slides.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-900">
+        <div className="text-yellow-500 text-xl">No slides to display</div>
       </div>
-    </div>
+    );
+  }
+
+  return (
+    <SlideContainer currentSlide={currentSlide}>
+      {slides.map((slide, index) => (
+        <SlideRenderer
+          key={index}
+          slide={slide}
+          isActive={index === currentSlide}
+          index={index}
+        />
+      ))}
+      
+      <SlideNavigation
+        currentSlide={currentSlide}
+        totalSlides={slides.length}
+        onSlideChange={setCurrentSlide}
+      />
+      
+      {/* Theme selector - toggle with Shift+T to override theme */}
+      <ThemeSelector />
+    </SlideContainer>
   );
 }

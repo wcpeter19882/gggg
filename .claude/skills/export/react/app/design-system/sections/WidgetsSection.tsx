@@ -99,11 +99,91 @@ export function WidgetsSection() {
 
        <ComponentShowcase
           title="SmartList"
-          description="A styled list component."
+          description="A styled list component with multiple visual variants for different scenarios."
           component={SmartList}
-          defaultProps={MOCK_SMART_LIST}
+          defaultProps={{
+            ...MOCK_SMART_LIST,
+            variant: 'default'
+          }}
           propConfigs={[
-              { name: 'items', type: 'json', label: 'List Items (Array of strings)'}
+              { name: 'items', type: 'json', label: 'List Items (Array of strings or objects)'},
+              { name: 'variant', type: 'select', options: ['default', 'cards', 'highlight', 'checklist', 'timeline', 'compact'], label: 'Visual Variant' },
+              { name: 'ordered', type: 'boolean', label: 'Ordered List' },
+              { name: 'title', type: 'text', label: 'Title' }
+          ]}
+       />
+
+       <ComponentShowcase
+          title="SmartList (Highlight)"
+          description="SmartList with highlighted key terms - ideal for data-focused content."
+          component={SmartList}
+          defaultProps={{
+            variant: 'highlight',
+            items: [
+              { text: 'Revenue increased by 40% year-over-year', highlight: '40%' },
+              { text: 'Customer satisfaction at 85%', highlight: '85%' },
+              { text: 'Launch scheduled for Q3 2024', highlight: 'Q3 2024' }
+            ]
+          }}
+          propConfigs={[
+              { name: 'items', type: 'json', label: 'List Items'},
+              { name: 'variant', type: 'select', options: ['default', 'cards', 'highlight', 'checklist', 'timeline', 'compact'], label: 'Visual Variant' }
+          ]}
+       />
+
+       <ComponentShowcase
+          title="SmartList (Cards)"
+          description="SmartList with card-style items - ideal for feature lists and key insights."
+          component={SmartList}
+          defaultProps={{
+            variant: 'cards',
+            items: [
+              { text: 'Automated workflow integration', description: 'Seamlessly connects with your existing tools' },
+              { text: 'Real-time analytics dashboard', description: 'Monitor performance metrics instantly' },
+              { text: 'Enterprise-grade security', description: 'SOC 2 compliant with end-to-end encryption' }
+            ]
+          }}
+          propConfigs={[
+              { name: 'items', type: 'json', label: 'List Items'},
+              { name: 'variant', type: 'select', options: ['default', 'cards', 'highlight', 'checklist', 'timeline', 'compact'], label: 'Visual Variant' }
+          ]}
+       />
+
+       <ComponentShowcase
+          title="SmartList (Checklist)"
+          description="SmartList with checkmark icons - ideal for completed items, requirements, or success criteria."
+          component={SmartList}
+          defaultProps={{
+            variant: 'checklist',
+            items: [
+              'Security audit completed',
+              'Performance benchmarks passed',
+              'Documentation reviewed and approved',
+              'Stakeholder sign-off received'
+            ]
+          }}
+          propConfigs={[
+              { name: 'items', type: 'json', label: 'List Items'},
+              { name: 'variant', type: 'select', options: ['default', 'cards', 'highlight', 'checklist', 'timeline', 'compact'], label: 'Visual Variant' }
+          ]}
+       />
+
+       <ComponentShowcase
+          title="SmartList (Timeline)"
+          description="SmartList as vertical timeline - ideal for milestones, sequential steps, or chronological events."
+          component={SmartList}
+          defaultProps={{
+            variant: 'timeline',
+            items: [
+              { text: 'Project kickoff', description: 'Initial planning and team assembly' },
+              { text: 'Design phase complete', description: 'UI/UX designs approved by stakeholders' },
+              { text: 'Development sprint 1', description: 'Core features implemented' },
+              { text: 'Beta launch', description: 'Limited release to early adopters' }
+            ]
+          }}
+          propConfigs={[
+              { name: 'items', type: 'json', label: 'List Items'},
+              { name: 'variant', type: 'select', options: ['default', 'cards', 'highlight', 'checklist', 'timeline', 'compact'], label: 'Visual Variant' }
           ]}
        />
 
@@ -159,12 +239,13 @@ export function WidgetsSection() {
 
       <ComponentShowcase
         title="ProcessStrip"
-        description="Horizontal process phases with status indicators."
+        description="Horizontal process phases with status indicators. Supports linear and circular modes."
         component={ProcessStrip}
         defaultProps={MOCK_PROCESS_STRIP}
         propConfigs={[
           { name: 'title', type: 'text', label: 'Title' },
           { name: 'items', type: 'json', label: 'Items', description: 'Array of {label, status} objects (status: done/active/pending)' },
+          { name: 'mode', type: 'select', options: ['linear', 'circular'], label: 'Mode' },
           { name: 'showConnectors', type: 'boolean', label: 'Show Connectors' },
           { name: 'variant', type: 'select', options: ['default', 'compact'], label: 'Variant' }
         ]}

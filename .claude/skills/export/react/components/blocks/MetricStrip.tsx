@@ -34,9 +34,7 @@ export interface MetricStripItem {
 
 export interface MetricStripProps {
   /** Array of metrics to display */
-  metrics?: MetricStripItem[];
-  /** Alias for metrics (for compatibility) */
-  items?: MetricStripItem[];
+  metrics: MetricStripItem[];
   /** Optional title above the strip */
   title?: string;
 }
@@ -45,14 +43,7 @@ export interface MetricStripProps {
 // Component
 // =============================================================================
 
-export function MetricStrip({ metrics, items, title }: MetricStripProps): JSX.Element {
-  // Support both 'metrics' and 'items' prop names
-  const data = metrics || items || [];
-  
-  if (data.length === 0) {
-    return <div className="metric-strip text-gray-500">No metrics provided</div>;
-  }
-  
+export function MetricStrip({ metrics, title }: MetricStripProps): JSX.Element {
   return (
     <div className="metric-strip">
       {title && (
@@ -60,7 +51,7 @@ export function MetricStrip({ metrics, items, title }: MetricStripProps): JSX.El
           {title}
         </div>
       )}
-      {data.map((metric, index) => (
+      {metrics.map((metric, index) => (
         <div key={index} className="metric-strip-item">
           {metric.icon && (
             <span className="strip-icon" aria-hidden="true">

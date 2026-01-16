@@ -1,10 +1,10 @@
 /**
  * LayoutStacked Component (L1 Layout)
- * 
+ *
  * Single-column layout for dense text content.
  * Content is distributed vertically across the page with explicit
  * header, body, and footer sections.
- * 
+ *
  * Usage:
  * ```mdx
  * <LayoutStacked>
@@ -17,8 +17,40 @@
  * ```
  */
 
-import React, { type ReactNode, Children } from 'react';
+import React, { type ReactNode, Children, isValidElement } from 'react';
 import type { ThemeName, VibeLevel } from '@/utils/types';
+import { TimelineHeader } from './TimelineHeader';
+
+function nodeToText(node: ReactNode): string {
+  if (node === null || node === undefined) return '';
+  if (typeof node === 'string' || typeof node === 'number') return String(node);
+  if (Array.isArray(node)) return node.map(nodeToText).join('');
+  if (!isValidElement(node)) return '';
+  return nodeToText((node.props as { children?: ReactNode }).children);
+}
+
+function elementTypeName(el: React.ReactElement): string {
+  const t = el.type as unknown as { name?: string; displayName?: string };
+  return t.displayName ?? t.name ?? '';
+}
+
+function isWhitespaceNode(node: ReactNode): boolean {
+  return typeof node === 'string' && !node.trim();
+}
+
+function isHeadingLevel2(node: ReactNode): node is React.ReactElement<{ children?: ReactNode; level?: unknown }> {
+  if (!isValidElement(node)) return false;
+  const name = elementTypeName(node);
+  const props = node.props as { level?: unknown };
+  return (name === 'Heading' || props.level !== undefined) && props.level === 2;
+}
+
+function isLeadText(node: ReactNode): node is React.ReactElement<{ children?: ReactNode; variant?: unknown }> {
+  if (!isValidElement(node)) return false;
+  const name = elementTypeName(node);
+  const props = node.props as { variant?: unknown };
+  return (name === 'Text' || props.variant !== undefined) && props.variant === 'lead';
+}
 
 // =============================================================================
 // Types
@@ -40,12 +72,12 @@ export interface LayoutStackedProps {
 
 /**
  * LayoutStacked Component
- * 
+ *
  * Renders a single-column layout with explicit header, body, and footer sections.
  * - Header: First child (typically a Heading)
  * - Body: Middle children (content), wrapped in content-body div
  * - Footer: Last child (typically a Callout)
- * 
+ *
  * @param children - Content elements (headings, text, lists, callouts)
  * @param align - Text alignment ('left' or 'center')
  * @param theme - Optional theme override
@@ -58,16 +90,52 @@ export function LayoutStacked({
   vibe,
 }: LayoutStackedProps): JSX.Element {
   const alignClass = align === 'center' ? 'align-center' : 'align-left';
-  
+
   // Convert children to array
   const childArray = Children.toArray(children);
-  
+
+  const meaningful: Array<{ node: ReactNode; index: number }> = [];
+  childArray.forEach((node, index) => {
+    if (node === null || node === undefined) return;
+    if (isWhitespaceNode(node)) return;
+    meaningful.push({ node, index });
+  });
+
   // Always split into header (first), body (middle), footer (last)
-  if (childArray.length >= 3) {
-    const header = childArray[0];
-    const body = childArray.slice(1, -1);
-    const footer = childArray[childArray.length - 1];
-    
+  if (meaningful.length >= 3) {
+    const headerIndex = meaningful[0].index;
+    const footerIndex = meaningful[meaningful.length - 1].index;
+    const header = childArray[headerIndex];
+    const footer = childArray[footerIndex];
+
+    let resolvedHeadline: string | null = null;
+    let resolvedSubtitle: string | null = null;
+    let subtitleIndex: number | null = null;
+
+    const second = meaningful[1];
+    if (isHeadingLevel2(header)) {
+      const hText = nodeToText((header.props as { children?: ReactNode }).children).trim();
+      if (hText) {
+        resolvedHeadline = hText;
+        if (second && isLeadText(second.node)) {
+          const sText = nodeToText((second.node.props as { children?: ReactNode }).children).trim();
+          if (sText) {
+            resolvedSubtitle = sText;
+            subtitleIndex = second.index;
+          }
+        }
+      }
+    }
+
+    const useTimelineHeader = Boolean(resolvedHeadline);
+    const body = childArray.filter((node, idx) => {
+      if (idx === headerIndex) return false;
+      if (idx === footerIndex) return false;
+      if (subtitleIndex !== null && idx === subtitleIndex) return false;
+      if (isWhitespaceNode(node)) return false;
+      return true;
+    });
+
     return (
       <div
         className={`layout-stacked ${alignClass}`}
@@ -75,9 +143,21 @@ export function LayoutStacked({
         data-align={align}
         data-theme={theme}
         data-vibe={vibe}
+        style={{
+          paddingTop: useTimelineHeader ? '0' : 'var(--theme-spacing-padding)',
+          paddingLeft: 'var(--theme-spacing-padding)',
+          paddingRight: 'var(--theme-spacing-padding)',
+          paddingBottom: 'var(--theme-spacing-padding)',
+        }}
       >
         <div className="layout-header">
-          {header}
+          {useTimelineHeader ? (
+             <div style={{ textAlign: 'left', marginBottom: 'var(--theme-spacing-gap)' }}>
+                <TimelineHeader headline={resolvedHeadline!} subtitle={resolvedSubtitle} />
+            </div>
+          ) : (
+            header
+          )}
         </div>
         <div className="content-body">
           {body}
@@ -88,7 +168,7 @@ export function LayoutStacked({
       </div>
     );
   }
-  
+
   // Fallback for fewer children: just wrap all in body
   return (
     <div
@@ -97,6 +177,9 @@ export function LayoutStacked({
       data-align={align}
       data-theme={theme}
       data-vibe={vibe}
+      style={{
+        padding: 'var(--theme-spacing-padding)',
+      }}
     >
       <div className="content-body">
         {children}

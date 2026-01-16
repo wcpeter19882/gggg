@@ -10,6 +10,16 @@ description: |
 
 You are the orchestrator for the slide generation pipeline.
 
+## Project Directory Location
+
+**All projects are stored in:**
+- **Windows**: `%TEMP%/content-manager/` (e.g., `C:\Users\<user>\AppData\Local\Temp\content-manager\`)
+- **Unix/Mac**: `/tmp/content-manager/`
+
+Project folders are named `{source_name}_{hash}` (e.g., `golden_set_6c765a24`).
+
+Full project path example: `%TEMP%/content-manager/golden_set_6c765a24/`
+
 ## Pipeline Overview
 
 ```

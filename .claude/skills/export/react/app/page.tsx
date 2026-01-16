@@ -23,7 +23,7 @@ export default function HomePage(): JSX.Element {
     <SlideContainer currentSlide={1}>
       {/* Slide 1: Timeline Demo */}
       <SlideWrapper index={0} isActive={false}>
-        <LayoutTimeline>
+        <LayoutTimeline headline="Company Timeline">
           <LayoutTimeline.Item year="2020">
             <Heading level={3}>Product Launch</Heading>
             <Text>Released v1.0 to market</Text>

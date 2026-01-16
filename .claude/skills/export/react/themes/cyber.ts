@@ -36,8 +36,8 @@ export const cyberTheme: ThemeDefinition = {
     letterSpacing: '0.05em',
   },
   spacing: {
-    gap: '2rem',
-    padding: '2.5rem',
+    gap: '4rem',
+    padding: '5rem',
     margin: '1.5rem',
   },
   visuals: {

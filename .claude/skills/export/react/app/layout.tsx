@@ -13,8 +13,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }): JSX.Element {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body suppressHydrationWarning>
+    <html lang="en">
+      <body>
         <ThemeProvider theme="business" vibe="balanced">
           <MDXProvider>
             {children}

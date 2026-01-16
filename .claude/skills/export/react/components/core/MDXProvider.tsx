@@ -36,7 +36,6 @@ import { ChartPolar } from '@/components/blocks/ChartPolar';
 import { ChartCustom } from '@/components/blocks/ChartCustom';
 import { BarStats } from '@/components/blocks/BarStats';
 import { MetricGroup, Metric } from '@/components/blocks/MetricGroup';
-import { MetricStrip } from '@/components/blocks/MetricStrip';
 import { BigNum } from '@/components/blocks/BigNum';
 import { TableData } from '@/components/blocks/TableData';
 import { QuoteBlock } from '@/components/blocks/QuoteBlock';
@@ -45,15 +44,13 @@ import { CardGroup, Card } from '@/components/blocks/CardGroup';
 import { NetworkGraph, Node, Edge, Group } from '@/components/blocks/NetworkGraph';
 import { StepList } from '@/components/blocks/StepList';
 import { ProcessStrip } from '@/components/blocks/ProcessStrip';
+import { ProcessStripEx } from '@/components/blocks/ProcessStripEx';
 
 // Import L3 Atom Components
 import { Heading } from '@/components/atoms/Heading';
 import { Text } from '@/components/atoms/Text';
 import { Callout } from '@/components/atoms/Callout';
 import { Highlight } from '@/components/atoms/Highlight';
-
-// Import Slide component for MDX navigation
-import { Slide } from './SlideContext';
 
 // =============================================================================
 // Component Mapping
@@ -98,7 +95,6 @@ export const mdxComponents = {
   ChartCustom,
   BarStats,
   MetricGroup,
-  MetricStrip,
   BigNum,
   TableData,
   QuoteBlock,
@@ -107,6 +103,7 @@ export const mdxComponents = {
   NetworkGraph,
   StepList,
   ProcessStrip,
+  ProcessStripEx,
   
   // NetworkGraph child components (JSX syntax)
   Node,
@@ -126,9 +123,6 @@ export const mdxComponents = {
   Text,
   Callout,
   Highlight,
-  
-  // Slide wrapper for navigation (used when rendering full MDX file)
-  Slide,
 };
 
 // =============================================================================

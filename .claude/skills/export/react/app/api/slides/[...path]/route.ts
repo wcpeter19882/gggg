@@ -1,20 +1,30 @@
 /**
  * API Route: /api/slides/[...path]
  * 
- * Dynamic route that loads slides from output/$PATH/slides.mdx
- * Example: /api/slides/golden_set_slides -> output/golden_set_slides/slides.mdx
- * 
- * Serializes the entire MDX file once (not per-slide).
- * The MDX uses <Slide index={N}> wrappers for navigation.
+ * Dynamic route that loads slides from output/$PATH/state.json
+ * Example: /api/slides/golden_set_mdx -> output/golden_set_mdx/state.json
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import * as fs from 'fs';
 import * as path from 'path';
 import { serialize } from 'next-mdx-remote/serialize';
+import he from 'he';
 
-// Workspace root (4 levels up from .claude/skills/export/react)
+// Workspace root (4 levels up from src/paged/render/react)
 const WORKSPACE_ROOT = path.join(process.cwd(), '../../../../');
+
+interface Slide {
+  mdx?: string;
+}
+
+interface StateJson {
+  slides?: Slide[];
+  presentation?: {
+    theme?: string;
+    title?: string;
+  };
+}
 
 /**
  * Fix MDX content to handle multi-line text inside JSX tags
@@ -39,19 +49,10 @@ function fixMdxContent(mdx: string): string {
 }
 
 /**
- * Count slides in MDX content by counting <Slide index={N}> tags
+ * Decode HTML entities in MDX content.
  */
-function countSlides(mdx: string): number {
-  const matches = mdx.match(/<Slide\s+index=\{(\d+)\}/g);
-  return matches ? matches.length : 0;
-}
-
-/**
- * Extract theme from MDX meta export
- */
-function extractTheme(mdx: string): string {
-  const match = mdx.match(/theme:\s*["']([^"']+)["']/);
-  return match ? match[1] : 'default';
+function decodeHtmlEntities(mdx: string): string {
+  return he.decode(mdx);
 }
 
 export async function GET(
@@ -62,23 +63,24 @@ export async function GET(
     // Construct path from URL segments
     const outputPath = params.path.join('/');
     
-    // Try multiple path patterns for slides.mdx
+    // Try multiple path patterns
     const possiblePaths = [
-      path.join(WORKSPACE_ROOT, 'output', outputPath, 'slides.mdx'),
-      path.join(WORKSPACE_ROOT, outputPath, 'slides.mdx'),
+      path.join(WORKSPACE_ROOT, 'output', outputPath, 'state.json'),
+      path.join(WORKSPACE_ROOT, outputPath, 'state.json'),
       // Windows absolute fallbacks
-      `C:/Users/yidansun/newProject/gggg/output/${outputPath}/slides.mdx`,
-      `C:/Users/wangchao/repos/gggg/output/${outputPath}/slides.mdx`,
+      `C:/Users/yidansun/newProject/gggg/output/${outputPath}/state.json`,
+      `C:/Users/wangchao/repos/gggg/output/${outputPath}/state.json`,
     ];
     
-    let mdxContent: string | null = null;
+    let stateJson: StateJson | null = null;
     let foundPath = '';
     
-    for (const mdxPath of possiblePaths) {
+    for (const statePath of possiblePaths) {
       try {
-        if (fs.existsSync(mdxPath)) {
-          mdxContent = fs.readFileSync(mdxPath, 'utf-8');
-          foundPath = mdxPath;
+        if (fs.existsSync(statePath)) {
+          const content = fs.readFileSync(statePath, 'utf-8');
+          stateJson = JSON.parse(content);
+          foundPath = statePath;
           break;
         }
       } catch {
@@ -86,42 +88,60 @@ export async function GET(
       }
     }
     
-    if (!mdxContent) {
+    if (!stateJson) {
       return NextResponse.json(
         { 
-          error: `slides.mdx not found for path: ${outputPath}`, 
+          error: `state.json not found for path: ${outputPath}`, 
           searched: possiblePaths 
         },
         { status: 404 }
       );
     }
     
-    // Fix and serialize the entire MDX content
-    const fixedMdx = fixMdxContent(mdxContent);
+    const slides = stateJson.slides || [];
     
-    try {
-      const source = await serialize(fixedMdx, {
-        parseFrontmatter: false,
-      });
+    // Serialize each slide's MDX
+    const serializedSlides = [];
+    
+    for (let i = 0; i < slides.length; i++) {
+      const slide = slides[i];
       
-      const slideCount = countSlides(mdxContent);
-      const theme = extractTheme(mdxContent);
+      if (!slide.mdx) {
+        serializedSlides.push({
+          source: null,
+          slideNumber: i + 1,
+          error: 'No MDX content for this slide'
+        });
+        continue;
+      }
       
-      return NextResponse.json({
-        source,
-        slideCount,
-        theme,
-        sourcePath: foundPath,
-        path: outputPath,
-      });
-      
-    } catch (serializeError) {
-      return NextResponse.json({
-        error: serializeError instanceof Error ? serializeError.message : String(serializeError),
-        mdx: mdxContent.substring(0, 500) + '...',
-        sourcePath: foundPath,
-      }, { status: 500 });
+      try {
+        const fixedMdx = fixMdxContent(decodeHtmlEntities(slide.mdx));
+        const source = await serialize(fixedMdx, {
+          parseFrontmatter: false,
+        });
+        
+        serializedSlides.push({
+          source,
+          slideNumber: i + 1,
+        });
+      } catch (error) {
+        serializedSlides.push({
+          source: null,
+          slideNumber: i + 1,
+          mdx: slide.mdx,
+          error: error instanceof Error ? error.message : String(error)
+        });
+      }
     }
+    
+    return NextResponse.json({
+      slides: serializedSlides,
+      slideCount: serializedSlides.length,
+      source: foundPath,
+      theme: stateJson.presentation?.theme || 'default',
+      path: outputPath,
+    });
     
   } catch (error) {
     return NextResponse.json(

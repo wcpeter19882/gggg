@@ -1,32 +1,70 @@
 'use client';
 
 /**
- * Dynamic Slides Page - Routes /:path to output/:path/slides.mdx
+ * Dynamic Slides Page - Routes /:path to output/:path/state.json
  * 
- * Example: /golden_set_slides -> renders slides from output/golden_set_slides/slides.mdx
- * 
- * Uses SlideProvider context + <Slide index={N}> wrappers in MDX for navigation.
+ * Example: /golden_set_mdx -> renders slides from output/golden_set_mdx/state.json
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { MDXRemote, MDXRemoteSerializeResult } from 'next-mdx-remote';
 import { mdxComponents } from '@/components/core/MDXProvider';
-import { SlideContainer, SlideNavigation, SlideProvider } from '@/components/core';
-import { ThemeSelector } from '@/components/core/ThemeSelector';
+import { SlideContainer, SlideWrapper, SlideNavigation } from '@/components/core';
 
 // =============================================================================
 // Types
 // =============================================================================
 
+interface SlideContent {
+  source: MDXRemoteSerializeResult | null;
+  slideNumber: number;
+  mdx?: string;
+  error?: string;
+}
+
 interface ApiResponse {
-  source: MDXRemoteSerializeResult;
+  slides: SlideContent[];
   slideCount: number;
+  source: string;
   theme: string;
-  sourcePath: string;
   path: string;
   error?: string;
-  mdx?: string;
+}
+
+// =============================================================================
+// Components
+// =============================================================================
+
+interface SlideRendererProps {
+  slide: SlideContent;
+  isActive: boolean;
+  index: number;
+}
+
+function SlideRenderer({ slide, isActive, index }: SlideRendererProps): JSX.Element {
+  if (slide.error || !slide.source) {
+    return (
+      <SlideWrapper index={index} isActive={isActive}>
+        <div className="text-red-500 p-8">
+          <h2 className="text-xl mb-4">Error rendering slide {slide.slideNumber}</h2>
+          <pre className="text-sm bg-red-900/20 p-4 rounded">{slide.error || 'No source'}</pre>
+          {slide.mdx && (
+            <details className="mt-4">
+              <summary>MDX Source</summary>
+              <pre className="text-xs mt-2 overflow-auto max-h-48">{slide.mdx}</pre>
+            </details>
+          )}
+        </div>
+      </SlideWrapper>
+    );
+  }
+  
+  return (
+    <SlideWrapper index={index} isActive={isActive}>
+      <MDXRemote {...slide.source} components={mdxComponents} />
+    </SlideWrapper>
+  );
 }
 
 // =============================================================================
@@ -35,8 +73,7 @@ interface ApiResponse {
 
 export default function DynamicSlidesPage(): JSX.Element {
   const params = useParams();
-  const [mdxSource, setMdxSource] = useState<MDXRemoteSerializeResult | null>(null);
-  const [slideCount, setSlideCount] = useState(0);
+  const [slides, setSlides] = useState<SlideContent[]>([]);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -45,7 +82,7 @@ export default function DynamicSlidesPage(): JSX.Element {
   // Build path from params
   const outputPath = Array.isArray(params.path) ? params.path.join('/') : params.path || '';
 
-  // Load serialized MDX from API
+  // Load pre-serialized slides from API
   useEffect(() => {
     if (!outputPath) {
       setError('No path specified');
@@ -66,14 +103,13 @@ export default function DynamicSlidesPage(): JSX.Element {
           throw new Error(data.error);
         }
         
-        if (!data.source) {
-          throw new Error('No MDX source in response');
+        if (!data.slides || data.slides.length === 0) {
+          throw new Error('No slides found in response');
         }
 
-        console.log(`Loaded ${data.slideCount} slides from ${data.sourcePath}`);
-        setMdxSource(data.source);
-        setSlideCount(data.slideCount);
-        setSourcePath(data.sourcePath);
+        console.log(`Loaded ${data.slides.length} slides from ${data.source}`);
+        setSlides(data.slides);
+        setSourcePath(data.source);
         setLoading(false);
       } catch (err) {
         console.error('Failed to load slides:', err);
@@ -87,7 +123,7 @@ export default function DynamicSlidesPage(): JSX.Element {
 
   // Keyboard navigation
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
-    if (loading || slideCount === 0) return;
+    if (loading) return;
     
     switch (event.key) {
       case 'ArrowRight':
@@ -95,7 +131,7 @@ export default function DynamicSlidesPage(): JSX.Element {
       case ' ':
       case 'PageDown':
         event.preventDefault();
-        setCurrentSlide(prev => Math.min(prev + 1, slideCount - 1));
+        setCurrentSlide(prev => Math.min(prev + 1, slides.length - 1));
         break;
       case 'ArrowLeft':
       case 'ArrowUp':
@@ -109,10 +145,10 @@ export default function DynamicSlidesPage(): JSX.Element {
         break;
       case 'End':
         event.preventDefault();
-        setCurrentSlide(slideCount - 1);
+        setCurrentSlide(slides.length - 1);
         break;
     }
-  }, [loading, slideCount]);
+  }, [loading, slides.length]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
@@ -139,7 +175,7 @@ export default function DynamicSlidesPage(): JSX.Element {
           <h1 className="text-2xl text-red-500 mb-4">Failed to Load Slides</h1>
           <p className="text-slate-400 mb-4">{error}</p>
           <p className="text-slate-500 text-sm">
-            Path: output/{outputPath}/slides.mdx
+            Path: output/{outputPath}/state.json
           </p>
         </div>
       </div>
@@ -147,19 +183,22 @@ export default function DynamicSlidesPage(): JSX.Element {
   }
 
   return (
-    <SlideContainer currentSlide={currentSlide}>
-      <SlideProvider currentSlide={currentSlide}>
-        {mdxSource && (
-          <MDXRemote {...mdxSource} components={mdxComponents} />
-        )}
-      </SlideProvider>
+    <SlideContainer
+      currentSlide={currentSlide}
+    >
+      {slides.map((slide, index) => (
+        <SlideRenderer
+          key={index}
+          slide={slide}
+          index={index}
+          isActive={index === currentSlide}
+        />
+      ))}
       <SlideNavigation
         currentSlide={currentSlide}
-        totalSlides={slideCount}
+        totalSlides={slides.length}
         onSlideChange={setCurrentSlide}
       />
-      {/* Theme selector - toggle with Shift+T to override theme */}
-      <ThemeSelector />
       {/* Source path indicator */}
       <div className="fixed bottom-2 left-2 text-xs text-slate-600 opacity-50 hover:opacity-100">
         {sourcePath}

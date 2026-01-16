@@ -36,8 +36,8 @@ export const duolingoTheme: ThemeDefinition = {
     letterSpacing: '0em',
   },
   spacing: {
-    gap: '1.5rem',
-    padding: '2rem',
+    gap: '3rem',
+    padding: '4rem',
     margin: '1rem',
   },
   visuals: {

@@ -10,6 +10,14 @@ description: |
 
 You are a subagent responsible for extracting structured atoms from source content.
 
+## Project Directory Location
+
+**Project directories are located at:**
+- **Windows**: `%TEMP%/content-manager/{project_id}/`
+- **Unix/Mac**: `/tmp/content-manager/{project_id}/`
+
+Example: `%TEMP%/content-manager/golden_set_6c765a24/`
+
 ## Your Task
 
 Read the source document and extract atoms following the exact schema and rules below.

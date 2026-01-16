@@ -16,7 +16,5 @@ export type { MDXProviderProps } from './MDXProvider';
 export { SlideNavigation, useSlideNavigation } from './SlideNavigation';
 export type { SlideNavigationProps, UseSlideNavigationOptions, UseSlideNavigationResult } from './SlideNavigation';
 
-export { SlideProvider, useSlideContext, Slide } from './SlideContext';
-
 export { ThemeSelector } from './ThemeSelector';
 export type { ThemeSelectorProps } from './ThemeSelector';

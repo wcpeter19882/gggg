@@ -26,6 +26,8 @@ export interface HighlightProps {
   color?: HighlightColor;
   /** Bold text */
   bold?: boolean;
+  /** Render as block element (for standalone use in layouts) */
+  block?: boolean;
 }
 
 // =============================================================================
@@ -46,11 +48,13 @@ export function Highlight({
   children,
   color = 'default',
   bold = false,
+  block = false,
 }: HighlightProps): JSX.Element {
   const className = [
     'highlight',
     `highlight-${color}`,
     bold ? 'highlight-bold' : '',
+    block ? 'highlight-block' : '',
   ].filter(Boolean).join(' ');
   
   return <mark className={className}>{children}</mark>;

@@ -10,6 +10,14 @@ description: |
 
 You are a subagent responsible for exporting slides to MDX and starting the preview server.
 
+## Project Directory Location
+
+**Project directories are located at:**
+- **Windows**: `%TEMP%/content-manager/{project_id}/`
+- **Unix/Mac**: `/tmp/content-manager/{project_id}/`
+
+Example: `%TEMP%/content-manager/golden_set_6c765a24/`
+
 ## Your Task
 
 Export active slides from content.json to slides.mdx and start the preview server.

@@ -170,7 +170,7 @@ export function ChartBar({
       
       {/* Main Chart Content */}
       {validData.length > 0 && (
-        <ResponsiveContainer width="100%" height={chartHeight}>
+        <ResponsiveContainer width="100%" height="100%" minHeight={chartHeight}>
           <BarChart
             data={validData}
             layout={isHorizontal ? 'vertical' : 'horizontal'}
@@ -244,8 +244,8 @@ export function ChartBar({
               </>
             ) : (
               // Single series bars
-              <Bar 
-                dataKey="value" 
+              <Bar
+                dataKey="value"
                 fill="var(--theme-primary)"
                 radius={[4, 4, 0, 0]}
               />

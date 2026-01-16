@@ -36,8 +36,8 @@ export const businessTheme: ThemeDefinition = {
     letterSpacing: '-0.01em',
   },
   spacing: {
-    gap: '1.5rem',
-    padding: '2rem',
+    gap: '3rem',
+    padding: '4rem',
     margin: '1rem',
   },
   visuals: {

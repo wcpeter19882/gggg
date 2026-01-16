@@ -8,10 +8,73 @@
 // import type { StylesheetCSS } from 'cytoscape';
 
 /**
- * Base diagram theme - professional, clean aesthetic
+ * Calculate effective dimension based on aspect ratio
+ * For horizontal layouts (wide), weight width more heavily
+ * For vertical layouts (tall), weight height more heavily
  */
-// Use 'any' to avoid type issues with different cytoscape versions
-export const diagramTheme: any[] = [
+function getEffectiveDimension(containerWidth: number, containerHeight: number): number {
+  const aspectRatio = containerWidth / containerHeight;
+  
+  if (aspectRatio > 1.5) {
+    // Very wide: weight width 70%, height 30%
+    return containerWidth * 0.7 + containerHeight * 0.3;
+  } else if (aspectRatio > 1.1) {
+    // Wide: weight width 60%, height 40%
+    return containerWidth * 0.6 + containerHeight * 0.4;
+  } else if (aspectRatio < 0.67) {
+    // Very tall: weight height 70%, width 30%
+    return containerHeight * 0.7 + containerWidth * 0.3;
+  } else if (aspectRatio < 0.9) {
+    // Tall: weight height 60%, width 40%
+    return containerHeight * 0.6 + containerWidth * 0.4;
+  } else {
+    // Square-ish: use average
+    return (containerWidth + containerHeight) / 2;
+  }
+}
+
+/**
+ * Calculate responsive font size based on container dimensions and aspect ratio
+ * Priority: Keep text readable, reduce spacing instead of shrinking text too much
+ */
+export function getResponsiveFontSize(containerWidth: number, containerHeight: number): number {
+  const effectiveDim = getEffectiveDimension(containerWidth, containerHeight);
+  
+  // Base font size from theme caption (24px default)
+  // For small containers, use minimum readable size
+  // For medium/large containers, scale up appropriately
+  if (effectiveDim < 300) return 14;       // Small: minimum readable
+  if (effectiveDim < 400) return 16;       // Small-medium
+  if (effectiveDim < 500) return 18;       // Medium
+  if (effectiveDim < 600) return 20;       // Medium-large
+  return 22;                                // Large: approaching theme caption
+}
+
+/**
+ * Calculate responsive node dimensions
+ * Priority: Keep nodes as large as possible, especially in small containers
+ */
+export function getResponsiveNodeSize(containerWidth: number, containerHeight: number) {
+  const effectiveDim = getEffectiveDimension(containerWidth, containerHeight);
+  
+  // Keep nodes larger in small containers, reduce less aggressively
+  if (effectiveDim < 300) return { width: 120, height: 38, padding: 5 };
+  if (effectiveDim < 400) return { width: 130, height: 40, padding: 6 };
+  if (effectiveDim < 500) return { width: 135, height: 41, padding: 8 };
+  if (effectiveDim < 600) return { width: 140, height: 42, padding: 10 };
+  return { width: 145, height: 44, padding: 12 };
+}
+
+/**
+ * Generate responsive diagram theme based on container size
+ */
+export function getResponsiveDiagramTheme(containerWidth: number, containerHeight: number): any[] {
+  const fontSize = getResponsiveFontSize(containerWidth, containerHeight);
+  const edgeFontSize = Math.max(12, fontSize - 4); // Edge labels slightly smaller
+  const parentFontSize = Math.max(14, fontSize + 2); // Parent labels slightly larger
+  const nodeSize = getResponsiveNodeSize(containerWidth, containerHeight);
+  
+  return [
   // ==========================================================================
   // Global Node Styles
   // ==========================================================================
@@ -22,17 +85,18 @@ export const diagramTheme: any[] = [
       'text-valign': 'center',
       'text-halign': 'center',
       'text-wrap': 'wrap',
-      'text-max-width': '120px',
+      'text-max-width': `${nodeSize.width - 20}px`,
       'background-color': '#ffffff',
       'border-width': 1.5,
       'border-color': '#cbd5e1',
       'shape': 'round-rectangle',
       'font-family': 'Inter, system-ui, -apple-system, sans-serif',
-      'font-size': '12px',
+      'font-size': `${fontSize}px`,
+      'font-weight': 'normal',
       'color': '#1e293b',
-      'width': 140,  // Fixed width instead of deprecated 'label'
-      'height': 40,  // Fixed height instead of deprecated 'label'
-      'padding': '12px',
+      'width': nodeSize.width,
+      'height': 'label',  // Auto-size height to fit wrapped text content
+      'padding': `${nodeSize.padding}px`,
     }
   },
 
@@ -49,7 +113,7 @@ export const diagramTheme: any[] = [
       'target-arrow-shape': 'triangle',
       'arrow-scale': 1.2,
       'label': 'data(label)',
-      'font-size': '10px',
+      'font-size': `${edgeFontSize}px`,
       'font-family': 'Inter, system-ui, sans-serif',
       'color': '#64748b',
       'text-background-opacity': 1,
@@ -72,9 +136,9 @@ export const diagramTheme: any[] = [
       'border-color': '#e2e8f0',
       'border-style': 'dashed',
       'border-width': 2,
-      'font-weight': 'bold',
-      'font-size': '13px',
-      'padding': '24px',
+      'font-weight': '600',  // Semi-bold instead of bold
+      'font-size': `${parentFontSize}px`,
+      'padding': `${Math.max(16, nodeSize.padding * 2)}px`,
       'shape': 'round-rectangle',
     }
   },
@@ -310,6 +374,13 @@ export const diagramTheme: any[] = [
     }
   },
 ];
+}
+
+/**
+ * Base diagram theme for backward compatibility
+ * @deprecated Use getResponsiveDiagramTheme() instead
+ */
+export const diagramTheme = getResponsiveDiagramTheme(800, 600);
 
 /**
  * Dark theme variant
@@ -329,7 +400,7 @@ export const diagramThemeDark: any[] = [
       'border-color': '#475569',
       'shape': 'round-rectangle',
       'font-family': 'Inter, system-ui, sans-serif',
-      'font-size': '12px',
+      'font-size': '100px',
       'color': '#f1f5f9',
       'width': 'label',
       'height': 'label',
@@ -345,7 +416,7 @@ export const diagramThemeDark: any[] = [
       'target-arrow-color': '#64748b',
       'target-arrow-shape': 'triangle',
       'label': 'data(label)',
-      'font-size': '10px',
+      'font-size': 'var(--theme-size-caption)',
       'color': '#94a3b8',
       'text-background-opacity': 1,
       'text-background-color': '#0f172a',
@@ -367,4 +438,4 @@ export const diagramThemeDark: any[] = [
   },
 ];
 
-export default diagramTheme;
+export default getResponsiveDiagramTheme;

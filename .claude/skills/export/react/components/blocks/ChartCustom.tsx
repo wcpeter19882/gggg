@@ -2,29 +2,29 @@
 
 /**
  * ChartCustom Component (L2 Block)
- * 
+ *
  * Flexible custom chart component supporting multiple visualization paradigms.
  * Users can specify both the chart type (bar, line, area, pie, scatter) and
  * custom visual styles (shapes, patterns) via natural language descriptions.
- * 
+ *
  * Usage:
  * ```mdx
  * // Scatter with custom shapes
- * <ChartCustom 
+ * <ChartCustom
  *   type="scatter"
  *   shape="water droplet"
  *   data={[{ label: "Jan", value: 100 }, { label: "Feb", value: 150 }]}
  * />
- * 
+ *
  * // Bar chart with rounded/pill style
- * <ChartCustom 
+ * <ChartCustom
  *   type="bar"
  *   style="rounded"
  *   data={[{ label: "A", value: 50 }, { label: "B", value: 80 }]}
  * />
- * 
+ *
  * // Pictogram/icon chart
- * <ChartCustom 
+ * <ChartCustom
  *   type="pictogram"
  *   shape="person"
  *   data={[{ label: "Team A", value: 5 }, { label: "Team B", value: 8 }]}
@@ -53,8 +53,8 @@ import {
   LabelList,
 } from 'recharts';
 import type { ChartDataPoint, Size } from '@/utils/types';
-import { 
-  heightMap, 
+import {
+  heightMap,
   normalizeChartData,
   tooltipStyle,
   axisStyle,
@@ -65,7 +65,7 @@ import {
 // Types
 // =============================================================================
 
-export type ChartParadigm = 
+export type ChartParadigm =
   | 'scatter'      // Points with custom shapes
   | 'bar'          // Vertical bars with custom styles
   | 'horizontal-bar' // Horizontal bars
@@ -122,9 +122,9 @@ export interface ChartCustomProps {
  * Get theme colors using CSS variables
  * Falls back to provided colorScheme for multi-color charts (gradients)
  */
-function getThemeColors(colorScheme?: string): { 
-  primary: string; 
-  secondary: string; 
+function getThemeColors(colorScheme?: string): {
+  primary: string;
+  secondary: string;
   gradient: string[];
   textMuted: string;
   border: string;
@@ -186,7 +186,7 @@ interface CustomShapeProps {
 const WaterDroplet: React.FC<CustomShapeProps> = ({ cx, cy, fill, payload, size = 20 }) => {
   const scale = Math.max(0.5, Math.min(2, (payload.value || 50) / 100));
   const s = size * scale;
-  
+
   return (
     <svg x={cx - s/2} y={cy - s * 1.2} width={s} height={s * 1.5} overflow="visible">
       <defs>
@@ -196,7 +196,7 @@ const WaterDroplet: React.FC<CustomShapeProps> = ({ cx, cy, fill, payload, size 
         </radialGradient>
       </defs>
       <path
-        d={`M ${s/2} 0 
+        d={`M ${s/2} 0
             Q ${s} ${s * 0.6}, ${s/2} ${s * 1.4}
             Q 0 ${s * 0.6}, ${s/2} 0`}
         fill={`url(#droplet-grad-${payload.label})`}
@@ -216,7 +216,7 @@ const Star: React.FC<CustomShapeProps> = ({ cx, cy, fill, payload, size = 20 }) 
   const points = 5;
   const outerR = s / 2;
   const innerR = outerR * 0.4;
-  
+
   let path = '';
   for (let i = 0; i < points * 2; i++) {
     const r = i % 2 === 0 ? outerR : innerR;
@@ -226,7 +226,7 @@ const Star: React.FC<CustomShapeProps> = ({ cx, cy, fill, payload, size = 20 }) 
     path += (i === 0 ? 'M' : 'L') + ` ${x} ${y}`;
   }
   path += 'Z';
-  
+
   return <path d={path} fill={fill} opacity={0.85} />;
 };
 
@@ -236,7 +236,7 @@ const Star: React.FC<CustomShapeProps> = ({ cx, cy, fill, payload, size = 20 }) 
 const Heart: React.FC<CustomShapeProps> = ({ cx, cy, fill, payload, size = 20 }) => {
   const scale = Math.max(0.5, Math.min(2, (payload.value || 50) / 100));
   const s = size * scale;
-  
+
   return (
     <svg x={cx - s/2} y={cy - s/2} width={s} height={s} viewBox="0 0 24 24" overflow="visible">
       <path
@@ -254,7 +254,7 @@ const Heart: React.FC<CustomShapeProps> = ({ cx, cy, fill, payload, size = 20 })
 const Cloud: React.FC<CustomShapeProps> = ({ cx, cy, fill, payload, size = 24 }) => {
   const scale = Math.max(0.5, Math.min(2, (payload.value || 50) / 100));
   const s = size * scale;
-  
+
   return (
     <svg x={cx - s/2} y={cy - s/3} width={s} height={s * 0.7} viewBox="0 0 64 40" overflow="visible">
       <path
@@ -272,7 +272,7 @@ const Cloud: React.FC<CustomShapeProps> = ({ cx, cy, fill, payload, size = 24 })
 const Flame: React.FC<CustomShapeProps> = ({ cx, cy, fill, payload, size = 22 }) => {
   const scale = Math.max(0.5, Math.min(2, (payload.value || 50) / 100));
   const s = size * scale;
-  
+
   return (
     <svg x={cx - s/2} y={cy - s} width={s} height={s * 1.3} viewBox="0 0 24 32" overflow="visible">
       <defs>
@@ -297,7 +297,7 @@ const Flame: React.FC<CustomShapeProps> = ({ cx, cy, fill, payload, size = 22 })
 const Leaf: React.FC<CustomShapeProps> = ({ cx, cy, fill, payload, size = 20 }) => {
   const scale = Math.max(0.5, Math.min(2, (payload.value || 50) / 100));
   const s = size * scale;
-  
+
   return (
     <svg x={cx - s/2} y={cy - s/2} width={s} height={s} viewBox="0 0 24 24" overflow="visible">
       <path
@@ -315,7 +315,7 @@ const Leaf: React.FC<CustomShapeProps> = ({ cx, cy, fill, payload, size = 20 }) 
 const Diamond: React.FC<CustomShapeProps> = ({ cx, cy, fill, payload, size = 18 }) => {
   const scale = Math.max(0.5, Math.min(2, (payload.value || 50) / 100));
   const s = size * scale;
-  
+
   return (
     <polygon
       points={`${cx},${cy - s/2} ${cx + s/2},${cy} ${cx},${cy + s/2} ${cx - s/2},${cy}`}
@@ -331,12 +331,12 @@ const Diamond: React.FC<CustomShapeProps> = ({ cx, cy, fill, payload, size = 18 
 const Hexagon: React.FC<CustomShapeProps> = ({ cx, cy, fill, payload, size = 18 }) => {
   const scale = Math.max(0.5, Math.min(2, (payload.value || 50) / 100));
   const r = (size * scale) / 2;
-  
+
   const points = Array.from({ length: 6 }, (_, i) => {
     const angle = (Math.PI / 3) * i - Math.PI / 2;
     return `${cx + r * Math.cos(angle)},${cy + r * Math.sin(angle)}`;
   }).join(' ');
-  
+
   return <polygon points={points} fill={fill} opacity={0.85} />;
 };
 
@@ -346,7 +346,7 @@ const Hexagon: React.FC<CustomShapeProps> = ({ cx, cy, fill, payload, size = 18 
 const Circle: React.FC<CustomShapeProps> = ({ cx, cy, fill, payload, size = 16 }) => {
   const scale = Math.max(0.5, Math.min(2, (payload.value || 50) / 100));
   const r = (size * scale) / 2;
-  
+
   return <circle cx={cx} cy={cy} r={r} fill={fill} opacity={0.85} />;
 };
 
@@ -377,19 +377,19 @@ const shapeRegistry: Record<string, React.FC<CustomShapeProps>> = {
  */
 function getShapeComponent(shapeName: string): React.FC<CustomShapeProps> {
   const normalized = shapeName.toLowerCase().trim();
-  
+
   // Direct match
   if (shapeRegistry[normalized]) {
     return shapeRegistry[normalized];
   }
-  
+
   // Partial match
   for (const [key, component] of Object.entries(shapeRegistry)) {
     if (normalized.includes(key) || key.includes(normalized)) {
       return component;
     }
   }
-  
+
   // Default to circle
   return Circle;
 }
@@ -404,7 +404,7 @@ function getShapeComponent(shapeName: string): React.FC<CustomShapeProps> {
  */
 function parseChartType(description: string): { paradigm: ChartParadigm; confidence: number; originalRequest: string } {
   const desc = description.toLowerCase();
-  
+
   // Keyword to paradigm mapping with confidence scores
   const keywordMap: Array<{ keywords: string[]; paradigm: ChartParadigm; confidence: number }> = [
     // High confidence - exact matches
@@ -418,7 +418,7 @@ function parseChartType(description: string): { paradigm: ChartParadigm; confide
     { keywords: ['radial bar', 'circular bar', 'progress ring', 'progress bar'], paradigm: 'radial', confidence: 1.0 },
     { keywords: ['horizontal bar', 'bar horizontal'], paradigm: 'horizontal-bar', confidence: 1.0 },
     { keywords: ['bubble'], paradigm: 'bubble', confidence: 1.0 },
-    
+
     // Medium confidence - common terms
     { keywords: ['bar', 'column', 'histogram'], paradigm: 'bar', confidence: 0.9 },
     { keywords: ['line', 'trend', 'time series'], paradigm: 'line', confidence: 0.9 },
@@ -427,10 +427,10 @@ function parseChartType(description: string): { paradigm: ChartParadigm; confide
     { keywords: ['scatter', 'point', 'dot plot', 'xy plot'], paradigm: 'scatter', confidence: 0.9 },
     { keywords: ['radial', 'circular', 'ring'], paradigm: 'radial', confidence: 0.7 },
   ];
-  
+
   // Find best match
   let bestMatch: { paradigm: ChartParadigm; confidence: number } = { paradigm: 'unknown', confidence: 0 };
-  
+
   for (const mapping of keywordMap) {
     for (const keyword of mapping.keywords) {
       if (desc.includes(keyword)) {
@@ -440,7 +440,7 @@ function parseChartType(description: string): { paradigm: ChartParadigm; confide
       }
     }
   }
-  
+
   // If no match found, try to infer from context
   if (bestMatch.paradigm === 'unknown') {
     // Check for chart-like terms to at least show something
@@ -448,11 +448,11 @@ function parseChartType(description: string): { paradigm: ChartParadigm; confide
       bestMatch = { paradigm: 'bar', confidence: 0.3 }; // Default fallback with low confidence
     }
   }
-  
-  return { 
-    paradigm: bestMatch.paradigm, 
+
+  return {
+    paradigm: bestMatch.paradigm,
     confidence: bestMatch.confidence,
-    originalRequest: description 
+    originalRequest: description
   };
 }
 
@@ -461,7 +461,7 @@ function parseChartType(description: string): { paradigm: ChartParadigm; confide
  */
 function parseBarStyle(description: string): BarStyle {
   const desc = description.toLowerCase();
-  
+
   if (desc.includes('round') || desc.includes('pill') || desc.includes('capsule')) {
     return 'rounded';
   }
@@ -474,7 +474,7 @@ function parseBarStyle(description: string): BarStyle {
   if (desc.includes('3d') || desc.includes('shadow') || desc.includes('depth')) {
     return '3d';
   }
-  
+
   return 'default';
 }
 
@@ -484,9 +484,9 @@ function parseBarStyle(description: string): BarStyle {
 
 interface ParadigmProps {
   data: Array<{ label: string; value: number }>;
-  colors: { 
-    primary: string; 
-    secondary: string; 
+  colors: {
+    primary: string;
+    secondary: string;
     gradient: string[];
     textMuted: string;
     border: string;
@@ -502,91 +502,104 @@ interface ParadigmProps {
 
 /**
  * Scatter Chart with Custom Shapes
- * Uses fixed dimensions to avoid ResponsiveContainer sizing issues
  */
 const ScatterParadigm: React.FC<ParadigmProps> = ({ data, colors, showGrid, ShapeComponent }) => {
   // Transform data for scatter chart - needs numeric x and y
-  const scatterData = data.map((d, i) => ({ 
-    ...d, 
-    x: i + 1, 
+  const scatterData = data.map((d, i) => ({
+    ...d,
+    x: i + 1,
     y: d.value,
   }));
-  
+
   // Custom shape renderer
-  const renderShape = (props: any) => {
+  const renderShape = (props: any): JSX.Element => {
     const { cx, cy, payload } = props;
-    if (typeof cx !== 'number' || typeof cy !== 'number') return null;
+    if (typeof cx !== 'number' || typeof cy !== 'number') return <></>;
     const colorIndex = scatterData.findIndex(d => d.label === payload?.label);
     return (
-      <ShapeComponent 
-        cx={cx} 
-        cy={cy} 
-        fill={colors.gradient[Math.max(0, colorIndex) % colors.gradient.length]} 
-        payload={payload} 
-        size={20} 
+      <ShapeComponent
+        cx={cx}
+        cy={cy}
+        fill={colors.gradient[Math.max(0, colorIndex) % colors.gradient.length]}
+        payload={payload}
+        size={24}
       />
     );
   };
 
   return (
-    <ScatterChart 
-      width={320} 
-      height={200} 
-      margin={{ top: 20, right: 30, bottom: 20, left: 20 }}
-    >
-      {showGrid && <CartesianGrid {...gridStyle} />}
-      <XAxis 
-        dataKey="x" 
-        type="number"
-        domain={[0, 'dataMax + 1']}
-        tickFormatter={(value) => {
-          const item = scatterData.find(d => d.x === value);
-          return item?.label || '';
-        }}
-        {...axisStyle}
-      />
-      <YAxis 
-        dataKey="y" 
-        type="number"
-        {...axisStyle} 
-      />
-      <Tooltip 
-        content={({ active, payload }) => {
-          if (active && payload?.length) {
-            const d = payload[0].payload;
-            return (
-              <div style={tooltipStyle.contentStyle}>
-                <p className="font-medium">{d.label}</p>
-                <p className="text-sm">Value: {d.value}</p>
-              </div>
-            );
-          }
-          return null;
-        }} 
-      />
-      <Scatter 
-        data={scatterData} 
-        shape={renderShape}
-        fill={colors.primary}
-      />
-    </ScatterChart>
+    <ResponsiveContainer height="100%" width="50%" minHeight={300}>
+      <ScatterChart
+        margin={{ top: 20, right: 40, bottom: 80, left: 40 }}
+      >
+        {showGrid && (
+          <CartesianGrid
+            strokeDasharray="3 3"
+            stroke="var(--theme-border)"
+            strokeOpacity={0.8}
+            vertical={true}
+            horizontal={true}
+          />
+        )}
+        <XAxis
+          dataKey="x"
+          type="number"
+          domain={[0, scatterData.length + 1]}
+          ticks={scatterData.map(d => d.x)}
+          tickFormatter={(value) => {
+            const item = scatterData.find(d => d.x === value);
+            return item?.label || '';
+          }}
+          {...axisStyle}
+          angle={-45}
+          textAnchor="end"
+          interval={0}
+          height={70}
+          tick={{ fontSize: 12 }}
+        />
+        <YAxis
+          dataKey="y"
+          type="number"
+          {...axisStyle}
+        />
+        <Tooltip
+          content={({ active, payload }) => {
+            if (active && payload?.length) {
+              const d = payload[0].payload;
+              return (
+                <div style={tooltipStyle.contentStyle}>
+                  <p className="font-medium">{d.label}</p>
+                  <p className="text-sm">Value: {d.value}</p>
+                </div>
+              );
+            }
+            return null;
+          }}
+        />
+        <Scatter
+          data={scatterData}
+          shape={renderShape as any}
+          fill={colors.primary}
+        />
+      </ScatterChart>
+    </ResponsiveContainer>
   );
 };
 
 /**
  * Bar Chart with Custom Styles
  */
-const BarParadigm: React.FC<ParadigmProps & { horizontal?: boolean }> = ({ 
-  data, colors, style, showGrid, showValues, horizontal = false 
+const BarParadigm: React.FC<ParadigmProps & { horizontal?: boolean }> = ({
+  data, colors, style, showGrid, showValues, horizontal = false
 }) => {
   const radius: [number, number, number, number] = style === 'rounded' || style === 'pill' ? [8, 8, 0, 0] : [0, 0, 0, 0];
   const horizontalRadius: [number, number, number, number] = style === 'rounded' || style === 'pill' ? [0, 8, 8, 0] : [0, 0, 0, 0];
-  
+
   const Chart = horizontal ? BarChart : BarChart;
-  
+
   return (
-    <BarChart 
-      data={data} 
+    <BarChart
+      data={data}
       layout={horizontal ? 'vertical' : 'horizontal'}
       margin={{ top: 20, right: 30, bottom: 20, left: horizontal ? 80 : 20 }}
     >
@@ -603,8 +616,8 @@ const BarParadigm: React.FC<ParadigmProps & { horizontal?: boolean }> = ({
         </>
       )}
       <Tooltip contentStyle={tooltipStyle.contentStyle} />
-      <Bar 
-        dataKey="value" 
+      <Bar
+        dataKey="value"
         radius={horizontal ? horizontalRadius : radius}
         fill={colors.primary}
       >
@@ -632,9 +645,9 @@ const LineParadigm: React.FC<ParadigmProps> = ({ data, colors, showGrid, ShapeCo
       <XAxis dataKey="label" {...axisStyle} />
       <YAxis {...axisStyle} />
       <Tooltip contentStyle={tooltipStyle.contentStyle} />
-      <Line 
-        type="monotone" 
-        dataKey="value" 
+      <Line
+        type="monotone"
+        dataKey="value"
         stroke={colors.primary}
         strokeWidth={2}
         dot={renderDot}
@@ -649,7 +662,7 @@ const LineParadigm: React.FC<ParadigmProps> = ({ data, colors, showGrid, ShapeCo
  */
 const AreaParadigm: React.FC<ParadigmProps> = ({ data, colors, showGrid, ShapeComponent }) => {
   const gradientId = `area-gradient-${Math.random().toString(36).substr(2, 9)}`;
-  
+
   const renderDot = (props: any) => {
     const { cx, cy, payload } = props;
     return <ShapeComponent cx={cx} cy={cy} fill={colors.primary} payload={payload} size={14} />;
@@ -667,9 +680,9 @@ const AreaParadigm: React.FC<ParadigmProps> = ({ data, colors, showGrid, ShapeCo
       <XAxis dataKey="label" {...axisStyle} />
       <YAxis {...axisStyle} />
       <Tooltip contentStyle={tooltipStyle.contentStyle} />
-      <Area 
-        type="monotone" 
-        dataKey="value" 
+      <Area
+        type="monotone"
+        dataKey="value"
         stroke={colors.primary}
         strokeWidth={2}
         fill={`url(#${gradientId})`}
@@ -732,7 +745,7 @@ const LollipopParadigm: React.FC<ParadigmProps> = ({ data, colors, ShapeComponen
 const PictogramParadigm: React.FC<ParadigmProps> = ({ data, colors, ShapeComponent }) => {
   const maxValue = Math.max(...data.map(d => d.value));
   const unitValue = maxValue > 10 ? Math.ceil(maxValue / 10) : 1;
-  
+
   return (
     <div className="flex flex-col gap-4 p-4">
       {data.map((item, rowIndex) => {
@@ -743,10 +756,10 @@ const PictogramParadigm: React.FC<ParadigmProps> = ({ data, colors, ShapeCompone
             <div className="flex flex-wrap gap-1">
               {Array.from({ length: iconCount }).map((_, i) => (
                 <svg key={i} width="24" height="24" viewBox="-12 -12 24 24">
-                  <ShapeComponent 
-                    cx={0} 
-                    cy={0} 
-                    fill={colors.gradient[rowIndex % colors.gradient.length]} 
+                  <ShapeComponent
+                    cx={0}
+                    cy={0}
+                    fill={colors.gradient[rowIndex % colors.gradient.length]}
                     payload={{ label: item.label, value: item.value, x: 0, y: 0 }}
                     size={20}
                   />
@@ -769,17 +782,17 @@ const WaffleParadigm: React.FC<ParadigmProps> = ({ data, colors }) => {
   const total = data.reduce((sum, d) => sum + d.value, 0);
   const gridSize = 10; // 10x10 = 100 cells
   const cells: Array<{ color: string; label: string }> = [];
-  
+
   data.forEach((item, dataIndex) => {
     const cellCount = Math.round((item.value / total) * 100);
     for (let i = 0; i < cellCount && cells.length < 100; i++) {
-      cells.push({ 
+      cells.push({
         color: colors.gradient[dataIndex % colors.gradient.length],
-        label: item.label 
+        label: item.label
       });
     }
   });
-  
+
   // Fill remaining cells
   while (cells.length < 100) {
     cells.push({ color: colors.border, label: 'empty' });
@@ -800,8 +813,8 @@ const WaffleParadigm: React.FC<ParadigmProps> = ({ data, colors }) => {
       <div className="flex flex-wrap gap-4 justify-center">
         {data.map((item, index) => (
           <div key={item.label} className="flex items-center gap-2">
-            <div 
-              className="w-3 h-3 rounded-sm" 
+            <div
+              className="w-3 h-3 rounded-sm"
               style={{ backgroundColor: colors.gradient[index % colors.gradient.length] }}
             />
             <span className="text-xs" style={{ color: 'var(--theme-text-muted)' }}>{item.label} ({item.value})</span>
@@ -817,7 +830,7 @@ const WaffleParadigm: React.FC<ParadigmProps> = ({ data, colors }) => {
  */
 const RadialParadigm: React.FC<ParadigmProps> = ({ data, colors }) => {
   const maxValue = Math.max(...data.map(d => d.value));
-  
+
   return (
     <div className="flex flex-col items-center gap-4">
       <div className="relative" style={{ width: 200, height: 200 }}>
@@ -826,7 +839,7 @@ const RadialParadigm: React.FC<ParadigmProps> = ({ data, colors }) => {
           const radius = 80 - index * 18;
           const circumference = 2 * Math.PI * radius;
           const strokeDashoffset = circumference - (percentage / 100) * circumference;
-          
+
           return (
             <svg key={item.label} className="absolute inset-0" width="200" height="200">
               {/* Background circle */}
@@ -858,8 +871,8 @@ const RadialParadigm: React.FC<ParadigmProps> = ({ data, colors }) => {
       <div className="flex flex-wrap gap-4 justify-center">
         {data.map((item, index) => (
           <div key={item.label} className="flex items-center gap-2">
-            <div 
-              className="w-3 h-3 rounded-full" 
+            <div
+              className="w-3 h-3 rounded-full"
               style={{ backgroundColor: colors.gradient[index % colors.gradient.length] }}
             />
             <span className="text-xs" style={{ color: 'var(--theme-text-muted)' }}>{item.label}: {item.value}</span>
@@ -879,7 +892,7 @@ const RoseParadigm: React.FC<ParadigmProps> = ({ data, colors }) => {
   const centerY = 100;
   const maxRadius = 80;
   const anglePerSlice = (2 * Math.PI) / data.length;
-  
+
   return (
     <div className="flex flex-col items-center gap-4">
       <svg width="200" height="200" viewBox="0 0 200 200">
@@ -887,21 +900,21 @@ const RoseParadigm: React.FC<ParadigmProps> = ({ data, colors }) => {
           const radius = (item.value / maxValue) * maxRadius;
           const startAngle = index * anglePerSlice - Math.PI / 2;
           const endAngle = (index + 1) * anglePerSlice - Math.PI / 2;
-          
+
           const x1 = centerX + radius * Math.cos(startAngle);
           const y1 = centerY + radius * Math.sin(startAngle);
           const x2 = centerX + radius * Math.cos(endAngle);
           const y2 = centerY + radius * Math.sin(endAngle);
-          
+
           const largeArc = anglePerSlice > Math.PI ? 1 : 0;
-          
+
           const path = `
             M ${centerX} ${centerY}
             L ${x1} ${y1}
             A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2}
             Z
           `;
-          
+
           return (
             <path
               key={item.label}
@@ -921,8 +934,8 @@ const RoseParadigm: React.FC<ParadigmProps> = ({ data, colors }) => {
       <div className="flex flex-wrap gap-4 justify-center">
         {data.map((item, index) => (
           <div key={item.label} className="flex items-center gap-2">
-            <div 
-              className="w-3 h-3 rounded-sm" 
+            <div
+              className="w-3 h-3 rounded-sm"
               style={{ backgroundColor: colors.gradient[index % colors.gradient.length] }}
             />
             <span className="text-xs" style={{ color: 'var(--theme-text-muted)' }}>{item.label}: {item.value}</span>
@@ -945,18 +958,18 @@ const FunnelParadigm: React.FC<ParadigmProps> = ({ data, colors, showValues }) =
   const topWidth = 280;
   const bottomWidth = 60;
   const sectionHeight = totalHeight / sortedData.length;
-  
+
   // Calculate the width at each level (linear taper from top to bottom)
   const getWidthAtLevel = (level: number) => {
     const ratio = level / sortedData.length;
     return topWidth - (topWidth - bottomWidth) * ratio;
   };
-  
+
   return (
     <div className="flex flex-col items-center p-4">
-      <svg 
-        width={topWidth + 40} 
-        height={totalHeight + 20} 
+      <svg
+        width={topWidth + 40}
+        height={totalHeight + 20}
         viewBox={`0 0 ${topWidth + 40} ${totalHeight + 20}`}
         className="overflow-visible"
       >
@@ -966,7 +979,7 @@ const FunnelParadigm: React.FC<ParadigmProps> = ({ data, colors, showValues }) =
           const topWidthAtLevel = getWidthAtLevel(index);
           const bottomWidthAtLevel = getWidthAtLevel(index + 1);
           const centerX = (topWidth + 40) / 2;
-          
+
           // Create trapezoid path for this section
           const path = `
             M ${centerX - topWidthAtLevel / 2} ${topY + 10}
@@ -975,9 +988,9 @@ const FunnelParadigm: React.FC<ParadigmProps> = ({ data, colors, showValues }) =
             L ${centerX - bottomWidthAtLevel / 2} ${bottomY + 10}
             Z
           `;
-          
+
           const percentage = ((item.value / maxValue) * 100).toFixed(0);
-          
+
           return (
             <g key={item.label}>
               {/* Section fill - uses theme gradient colors */}
@@ -995,7 +1008,7 @@ const FunnelParadigm: React.FC<ParadigmProps> = ({ data, colors, showValues }) =
                 textAnchor="middle"
                 dominantBaseline="middle"
                 className="text-xs font-medium"
-                style={{ 
+                style={{
                   fontSize: '11px',
                   fill: 'white',
                   filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))',
@@ -1020,7 +1033,7 @@ const GaugeParadigm: React.FC<ParadigmProps> = ({ data, colors }) => {
   const item = data[0] || { label: 'Value', value: 0 };
   const maxValue = data.length > 1 ? Math.max(...data.map(d => d.value)) : 100;
   const percentage = Math.min((item.value / maxValue) * 100, 100);
-  
+
   const centerX = 100;
   const centerY = 100;
   const radius = 70;
@@ -1028,7 +1041,7 @@ const GaugeParadigm: React.FC<ParadigmProps> = ({ data, colors }) => {
   const endAngle = -45 * (Math.PI / 180);
   const totalAngle = endAngle - startAngle;
   const currentAngle = startAngle + (percentage / 100) * totalAngle;
-  
+
   // Arc path
   const arcStart = {
     x: centerX + radius * Math.cos(startAngle),
@@ -1042,7 +1055,7 @@ const GaugeParadigm: React.FC<ParadigmProps> = ({ data, colors }) => {
     x: centerX + radius * Math.cos(currentAngle),
     y: centerY + radius * Math.sin(currentAngle),
   };
-  
+
   // Needle
   const needleLength = 55;
   const needleEnd = {
@@ -1100,7 +1113,7 @@ const GaugeParadigm: React.FC<ParadigmProps> = ({ data, colors }) => {
 const TreemapParadigm: React.FC<ParadigmProps> = ({ data, colors }) => {
   const total = data.reduce((sum, d) => sum + d.value, 0);
   const sortedData = [...data].sort((a, b) => b.value - a.value);
-  
+
   // Simple squarified treemap layout
   const width = 280;
   const height = 180;
@@ -1109,11 +1122,11 @@ const TreemapParadigm: React.FC<ParadigmProps> = ({ data, colors }) => {
   let remainingWidth = width;
   let remainingHeight = height;
   let isHorizontal = true;
-  
+
   const rects = sortedData.map((item, index) => {
     const ratio = item.value / total;
     let rectWidth, rectHeight, rectX, rectY;
-    
+
     if (isHorizontal) {
       rectWidth = remainingWidth * ratio * (total / sortedData.slice(index).reduce((s, d) => s + d.value, 0));
       rectHeight = remainingHeight;
@@ -1135,7 +1148,7 @@ const TreemapParadigm: React.FC<ParadigmProps> = ({ data, colors }) => {
         remainingHeight = height - y;
       }
     }
-    
+
     return { ...item, x: rectX, y: rectY, width: rectWidth, height: rectHeight, index };
   });
 
@@ -1173,8 +1186,8 @@ const TreemapParadigm: React.FC<ParadigmProps> = ({ data, colors }) => {
       <div className="flex flex-wrap gap-3 justify-center">
         {data.map((item, index) => (
           <div key={item.label} className="flex items-center gap-2">
-            <div 
-              className="w-3 h-3 rounded-sm" 
+            <div
+              className="w-3 h-3 rounded-sm"
               style={{ backgroundColor: colors.gradient[index % colors.gradient.length] }}
             />
             <span className="text-xs" style={{ color: 'var(--theme-text-muted)' }}>{item.label}: {item.value}</span>
@@ -1188,13 +1201,13 @@ const TreemapParadigm: React.FC<ParadigmProps> = ({ data, colors }) => {
 /**
  * Unknown/Fallback Chart - renders data in a generic way with a note
  */
-const UnknownParadigm: React.FC<ParadigmProps & { originalRequest?: string }> = ({ 
-  data, colors, originalRequest 
+const UnknownParadigm: React.FC<ParadigmProps & { originalRequest?: string }> = ({
+  data, colors, originalRequest
 }) => {
   return (
     <div className="flex flex-col items-center gap-4 p-4">
       {/* Warning banner */}
-      <div style={{ 
+      <div style={{
         backgroundColor: 'color-mix(in srgb, var(--theme-warning, #F59E0B) 15%, transparent)',
         border: '1px solid color-mix(in srgb, var(--theme-warning, #F59E0B) 50%, transparent)',
         borderRadius: 'var(--theme-radius, 8px)',
@@ -1214,7 +1227,7 @@ const UnknownParadigm: React.FC<ParadigmProps & { originalRequest?: string }> = 
           Showing data as a simple bar chart. Consider using: bar, line, area, pie, scatter, waffle, radial, rose, funnel, gauge, treemap, pictogram, or lollipop.
         </p>
       </div>
-      
+
       {/* Fallback: simple horizontal bars */}
       <div className="w-full max-w-md space-y-2">
         {data.map((item, index) => {
@@ -1247,7 +1260,7 @@ const UnknownParadigm: React.FC<ParadigmProps & { originalRequest?: string }> = 
 
 /**
  * ChartCustom Component
- * 
+ *
  * Flexible chart component supporting multiple visualization paradigms.
  * Can render scatter, bar, line, area, pie, pictogram, lollipop, waffle, and radial charts
  * with customizable shapes and styles.
@@ -1271,17 +1284,17 @@ export function ChartCustom({
     label: d.label,
     value: d.value ?? 0,
   }));
-  
+
   // Determine chart paradigm
   const parseResult = parseChartType(shape + ' ' + (style || ''));
   const paradigm: ChartParadigm = type || parseResult.paradigm;
   const originalRequest = parseResult.originalRequest;
   const barStyle = typeof style === 'string' ? parseBarStyle(style) : style;
-  
+
   // Get theme-aware colors and shape component
   const colors = getThemeColors(colorScheme === 'rainbow' ? 'rainbow' : 'default');
   const ShapeComponent = getShapeComponent(shape);
-  
+
   // Common props for paradigm renderers
   const paradigmProps: ParadigmProps = {
     data: normalizedData,
@@ -1333,9 +1346,8 @@ export function ChartCustom({
   };
 
   // Some paradigms render their own custom SVG/HTML layouts (not Recharts)
-  // 'scatter' uses custom SVG to avoid ResponsiveContainer sizing issues with Recharts ScatterChart
   const isCustomRendered = ['scatter', 'pictogram', 'waffle', 'radial', 'rose', 'funnel', 'gauge', 'treemap', 'unknown'].includes(paradigm);
-  
+
   // Get explicit pixel height
   const chartHeight = heightMap[height] || 250;
 
@@ -1347,7 +1359,7 @@ export function ChartCustom({
           {subtitle && <p className="text-sm" style={{ color: 'var(--theme-text-muted)' }}>{subtitle}</p>}
         </div>
       )}
-      
+
       {isCustomRendered ? (
         <div style={{ minHeight: chartHeight }} className="flex items-center justify-center">
           {renderParadigm()}
@@ -1357,11 +1369,6 @@ export function ChartCustom({
           {renderParadigm()}
         </ResponsiveContainer>
       )}
-      
-      {/* Chart type indicator */}
-      <div className="mt-2 text-xs text-center" style={{ color: 'var(--theme-text-muted)' }}>
-        {paradigm}{shape !== 'circle' ? ` • ${shape}` : ''}{barStyle !== 'default' ? ` • ${barStyle}` : ''}
-      </div>
     </div>
   );
 }

@@ -9,7 +9,7 @@
  * Internal component - not exposed to Agent.
  */
 
-import React, { type ReactNode } from 'react';
+import React, { type ReactNode, useEffect, useRef } from 'react';
 import { useTheme, ThemedContainer } from './ThemeContext';
 import type { ThemeName, VibeLevel } from '@/utils/types';
 
@@ -109,13 +109,38 @@ export interface SlideContainerProps {
  * SlideContainer Component
  * 
  * The outermost container that handles fullscreen presentation mode.
+ * Calculates and applies proper scaling to fit slides within the viewport.
  */
 export function SlideContainer({
   children,
   currentSlide = 0,
 }: SlideContainerProps): JSX.Element {
+  const containerRef = useRef<HTMLDivElement>(null);
+  
+  useEffect(() => {
+    const updateScale = () => {
+      if (!containerRef.current) return;
+      
+      // Calculate scale to fit viewport while maintaining 16:9 aspect ratio
+      const scale = Math.min(
+        window.innerWidth / 1920,
+        window.innerHeight / 1080
+      );
+      
+      // Apply scale directly to all .slide elements (inline style has highest priority)
+      containerRef.current.querySelectorAll<HTMLElement>('.slide').forEach((slide) => {
+        slide.style.transform = `scale(${scale})`;
+      });
+    };
+    
+    updateScale();
+    window.addEventListener('resize', updateScale);
+    return () => window.removeEventListener('resize', updateScale);
+  }, []);
+  
   return (
     <div 
+      ref={containerRef}
       className="slide-container"
       data-current-slide={currentSlide}
       role="application"
