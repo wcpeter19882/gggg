@@ -959,9 +959,9 @@ li {
   align-items: flex-start;
   gap: 1.25rem;
   
-  /* Modern "Glass" style - distinct but elegant */
-  border-left: 5px solid var(--theme-accent, #7c3aed);
-  background: linear-gradient(90deg, rgba(124, 58, 237, 0.08) 0%, rgba(124, 58, 237, 0.02) 100%);
+  /* Modern "Glass" style - uses theme-aware accent color */
+  border-left: 5px solid var(--theme-accent, #3b82f6);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--theme-accent, #3b82f6) 8%, transparent) 0%, color-mix(in srgb, var(--theme-accent, #3b82f6) 2%, transparent) 100%);
   border-radius: 0 0.75rem 0.75rem 0;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
   backdrop-filter: blur(8px);
@@ -978,18 +978,17 @@ li {
 /* Arrow icon - the visual anchor */
 .callout-icon {
   flex-shrink: 0;
-  font-size: 1.5rem;
-  font-weight: 800;
-  line-height: 1.4;
-  color: var(--theme-accent, #7c3aed);
-  background: color-mix(in srgb, var(--theme-accent, #7c3aed) 10%, transparent);
-  width: 2.25rem;
-  height: 2.25rem;
+  font-size: 1.75rem;
+  font-weight: 900;
+  line-height: 1;
+  color: var(--theme-accent, #3b82f6);
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
-  margin-top: -0.125rem;
+  text-shadow: 0 0 0 currentColor, 0.5px 0 0 currentColor, -0.5px 0 0 currentColor;
+  /* Align arrow center with middle of gap between label and body:
+     label height (~1rem) + half gap (0.1875rem) - arrow visual center (0.875rem) */
+  margin-top: 0.3rem;
 }
 
 /* Content wrapper */
@@ -1006,7 +1005,7 @@ li {
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  color: var(--theme-accent, #7c3aed);
+  color: var(--theme-accent, #3b82f6);
   opacity: 1.0;
 }
 
@@ -1021,7 +1020,7 @@ li {
   text-align: center;
   justify-content: center;
   border-left: none;
-  border-top: 5px solid var(--theme-accent, #7c3aed);
+  border-top: 5px solid var(--theme-accent, #3b82f6);
   border-radius: 0.75rem;
   flex-direction: column;
   align-items: center;
@@ -1031,8 +1030,8 @@ li {
   text-align: right;
   flex-direction: row-reverse;
   border-left: none;
-  border-right: 5px solid var(--theme-accent, #7c3aed);
-  background: linear-gradient(270deg, rgba(124, 58, 237, 0.08) 0%, rgba(124, 58, 237, 0.02) 100%);
+  border-right: 5px solid var(--theme-accent, #3b82f6);
+  background: linear-gradient(270deg, color-mix(in srgb, var(--theme-accent, #3b82f6) 8%, transparent) 0%, color-mix(in srgb, var(--theme-accent, #3b82f6) 2%, transparent) 100%);
   border-radius: 0.75rem 0 0 0.75rem;
 }
 
@@ -1042,23 +1041,23 @@ li {
 
 /* Variant: default - balanced, professional */
 .callout-default {
-  border-left-color: var(--theme-accent, #7c3aed);
+  border-left-color: var(--theme-accent, #3b82f6);
 }
 
 /* Variant: accent - emphasized, high-impact */
 .callout-accent {
   border-left-width: 6px;
-  border-left-color: var(--theme-accent, #7c3aed);
-  background: linear-gradient(135deg, color-mix(in srgb, var(--theme-accent, #7c3aed) 12%, transparent) 0%, color-mix(in srgb, var(--theme-accent, #7c3aed) 4%, transparent) 100%);
-  border-right: 1px solid color-mix(in srgb, var(--theme-accent, #7c3aed) 10%, transparent);
-  border-top: 1px solid color-mix(in srgb, var(--theme-accent, #7c3aed) 10%, transparent);
-  border-bottom: 1px solid color-mix(in srgb, var(--theme-accent, #7c3aed) 10%, transparent);
+  border-left-color: var(--theme-accent, #3b82f6);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--theme-accent, #3b82f6) 12%, transparent) 0%, color-mix(in srgb, var(--theme-accent, #3b82f6) 4%, transparent) 100%);
+  border-right: 1px solid color-mix(in srgb, var(--theme-accent, #3b82f6) 10%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--theme-accent, #3b82f6) 10%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--theme-accent, #3b82f6) 10%, transparent);
 }
 
 .callout-accent .callout-icon {
-  background: var(--theme-accent);
+  background: var(--theme-accent, #3b82f6);
   color: white;
-  box-shadow: 0 2px 6px color-mix(in srgb, var(--theme-accent, #7c3aed) 30%, transparent);
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--theme-accent, #3b82f6) 30%, transparent);
 }
 
 .callout-accent .callout-body {

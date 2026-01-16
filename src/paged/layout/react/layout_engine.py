@@ -291,6 +291,7 @@ Use when context is needed to INTERPRET the data:
 **📌 CALLOUT - SLIDE CONCLUSION ANCHOR**:
 - **Purpose**: The "so what?" - distill slide message into one memorable takeaway
 - **Placement**: Bottom of LayoutStacked, Main slot of Dashboard, Left side of Split
+- **QUANTITY**: **STRICTLY MAX ONE PER SLIDE**. Never use multiple Callouts. Choose the single most effective location.
 - **Style**: Minimal (top border only, no colored backgrounds) - designed to complement, not compete
 - **Syntax**: `<Callout label="Takeaway">Key insight here.</Callout>` or just `<Callout>...</Callout>`
 - **Labels**: "Takeaway", "Implication", "Key Insight", "Bottom Line" - or omit for subtle emphasis
