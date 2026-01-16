@@ -65,5 +65,6 @@ dist/
 out/
 slidev_build/
 
-# Claude
-.claude/
+# Claude - ignore settings but keep skills
+.claude/*
+!.claude/skills/

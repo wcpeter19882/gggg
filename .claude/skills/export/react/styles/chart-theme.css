@@ -1,0 +1,202 @@
+/**
+ * Chart Theme - Extended Chart Types Styling
+ * Feature: 003-extended-chart-types
+ * 
+ * Earthy, organic color palette with soft styling for all chart types.
+ * Ensures visual consistency across area, bar, barStats, bubble, doughnut,
+ * pie, polarArea, and radar charts.
+ */
+
+/* =============================================================================
+   EARTHY COLOR PALETTE
+   Warm, harmonious tones: terracotta, sage, sand, muted teal
+   ============================================================================= */
+
+:root {
+  /* Primary chart colors - warm earthy tones */
+  --chart-color-1: #8B7355;  /* Terracotta brown */
+  --chart-color-2: #9CAF88;  /* Sage green */
+  --chart-color-3: #D4A574;  /* Sand/tan */
+  --chart-color-4: #7C9082;  /* Muted teal */
+  --chart-color-5: #C4A77D;  /* Warm gold */
+  --chart-color-6: #A69076;  /* Dusty rose-brown */
+  --chart-color-7: #B8C4A8;  /* Light sage */
+  --chart-color-8: #D9C4B1;  /* Cream */
+  
+  /* Chart styling variables */
+  --chart-border-radius: 8px;
+  --chart-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --chart-fill-opacity: 0.7;
+  --chart-stroke-width: 2px;
+  
+  /* Gradient definitions for area charts */
+  --chart-gradient-start-opacity: 0.8;
+  --chart-gradient-end-opacity: 0.1;
+  
+  /* Bubble chart specifics */
+  --chart-bubble-opacity: 0.65;
+  --chart-bubble-stroke-opacity: 0.9;
+  
+  /* Radar chart specifics */
+  --chart-radar-fill-opacity: 0.35;
+  --chart-radar-stroke-width: 2px;
+  
+  /* Polar area specifics */
+  --chart-polar-inner-radius: 30%;
+  --chart-polar-segment-gap: 2px;
+}
+
+/* =============================================================================
+   CHART CONTAINER STYLES
+   Soft border-radius, subtle shadows, consistent spacing
+   ============================================================================= */
+
+.chart-block {
+  border-radius: var(--chart-border-radius);
+  box-shadow: var(--chart-shadow);
+  padding: 1rem;
+  background: var(--theme-surface, #ffffff);
+}
+
+.chart-block .block-header {
+  margin-bottom: 0.75rem;
+}
+
+.chart-block .block-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--theme-text, #1a1a1a);
+  margin: 0 0 0.25rem 0;
+}
+
+.chart-block .block-subtitle {
+  font-size: 0.875rem;
+  color: var(--theme-text-muted, #666666);
+  margin: 0;
+}
+
+/* =============================================================================
+   AREA CHART STYLES
+   Soft gradient fills, smooth curves
+   ============================================================================= */
+
+.chart-area .recharts-area-area {
+  fill-opacity: var(--chart-fill-opacity);
+}
+
+.chart-area .recharts-area-curve {
+  stroke-width: var(--chart-stroke-width);
+}
+
+/* =============================================================================
+   BUBBLE CHART STYLES
+   Translucent bubbles with soft edges
+   ============================================================================= */
+
+.chart-bubble .recharts-scatter-symbol circle {
+  fill-opacity: var(--chart-bubble-opacity);
+  stroke-opacity: var(--chart-bubble-stroke-opacity);
+  stroke-width: 1.5px;
+}
+
+/* =============================================================================
+   RADAR CHART STYLES
+   Soft fill with configurable opacity
+   ============================================================================= */
+
+.chart-radar .recharts-radar-polygon {
+  fill-opacity: var(--chart-radar-fill-opacity);
+  stroke-width: var(--chart-radar-stroke-width);
+}
+
+.chart-radar .recharts-polar-grid-angle line,
+.chart-radar .recharts-polar-grid-concentric circle {
+  stroke: var(--theme-border, #e0e0e0);
+  stroke-opacity: 0.6;
+}
+
+/* =============================================================================
+   POLAR AREA CHART STYLES
+   Equal angles, varying radii
+   ============================================================================= */
+
+.chart-polar .recharts-radial-bar-sector {
+  stroke: var(--theme-surface, #ffffff);
+  stroke-width: var(--chart-polar-segment-gap);
+}
+
+/* =============================================================================
+   BAR STATS STYLES (Horizontal Bars)
+   Gentle emphasis, readable labels
+   ============================================================================= */
+
+.chart-bar-stats .recharts-bar-rectangle {
+  rx: 4;
+  ry: 4;
+}
+
+.chart-bar-stats .recharts-label {
+  font-size: 0.75rem;
+  fill: var(--theme-text-muted, #666666);
+}
+
+/* =============================================================================
+   TOOLTIP STYLES
+   Consistent across all chart types
+   ============================================================================= */
+
+.recharts-tooltip-wrapper {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.recharts-default-tooltip {
+  background: var(--theme-surface, #ffffff) !important;
+  border: 1px solid var(--theme-border, #e0e0e0) !important;
+  border-radius: var(--chart-border-radius) !important;
+  padding: 0.5rem 0.75rem !important;
+}
+
+/* =============================================================================
+   LEGEND STYLES
+   Consistent typography and spacing
+   ============================================================================= */
+
+.recharts-legend-wrapper {
+  font-size: 0.75rem;
+  color: var(--theme-text-muted, #666666);
+}
+
+.recharts-legend-item {
+  margin-right: 1rem !important;
+}
+
+/* =============================================================================
+   AXIS STYLES
+   Subtle grid, readable labels
+   ============================================================================= */
+
+.recharts-cartesian-grid line {
+  stroke: var(--theme-border, #e0e0e0);
+  stroke-opacity: 0.5;
+}
+
+.recharts-xAxis .recharts-text,
+.recharts-yAxis .recharts-text {
+  font-size: 0.75rem;
+  fill: var(--theme-text-muted, #666666);
+}
+
+/* =============================================================================
+   EMPTY STATE STYLES
+   When no data is available
+   ============================================================================= */
+
+.chart-empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 150px;
+  color: var(--theme-text-muted, #666666);
+  font-size: 0.875rem;
+  font-style: italic;
+}
