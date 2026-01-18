@@ -263,22 +263,40 @@ Each atom must follow this schema with all fields (use empty string "" or empty 
 
 ## Step 3: Save Atoms to content.json
 
-Use the `apply_patch` MCP tool (from `apply-patch` server):
+**Call the `mcp_apply-patch_apply_patch` tool directly** with atoms array:
 
-```json
+```
 mcp_apply-patch_apply_patch({
   "project_dir": "{project_dir}",
   "target": "atoms",
-  "data": {extracted_atoms_json}
+  "data": [
+    {
+      "id": "atom_001",
+      "type": "STAT",
+      "content": "136K monthly active users",
+      "value": "136K",
+      "unit": "users",
+      "visual": "big-number"
+    },
+    {
+      "id": "atom_002",
+      "type": "FACT",
+      "content": "Platform launched in Q1 2024",
+      "visual": "text"
+    }
+    // ... all atoms
+  ]
 })
 ```
 
+**IMPORTANT**: Generate this tool call directly with atoms inline. Do NOT output JSON first then call the tool separately.
+
 **If constitution.verbose=true**, include `patch_file`:
-```json
+```
 mcp_apply-patch_apply_patch({
   "project_dir": "{project_dir}",
   "target": "atoms",
-  "data": {extracted_atoms_json},
+  "data": [...atoms array...],
   "patch_file": "{project_dir}/patches/atoms.json"
 })
 ```

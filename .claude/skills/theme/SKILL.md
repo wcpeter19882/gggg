@@ -33,35 +33,57 @@ mcp_apply-patch_read_section({
 ```
 
 **Apply constitution rules during theme selection:**
-- If tone is "professional" → prefer corp_modern or similar
-- If tone is "creative" → consider more colorful themes
-- If tone is "technical" → prefer minimal_dark or clean styles
+- If constitution has `theme` field → load that preset directly
+- If tone is "professional" → prefer corp_modern, business_professional, slate_professional
+- If tone is "creative" → consider duolingo, warm_sunset, handdrawn
+- If tone is "technical" → prefer minimal_dark, cyber_neon
 - Check style_rules for specific theme hints
 
-## Step 1: Check Available Themes
+## Step 1: Check Available Preset Themes
 
-Available preset themes in `data/` directory:
-- `corp_modern` - Professional corporate blue
-- `minimal_dark` - Dark mode minimal
-- `editorial` - Clean editorial style
-- `duolingo` - Playful green/purple
+Available preset themes (supported by React renderer):
 
-## Step 2: Theme Selection Logic
+| Theme Name | Style | Best For |
+|------------|-------|----------|
+| `business` | Professional corporate style | Business presentations, executive briefings |
+| `cyber` | Futuristic tech aesthetic | Tech demos, developer content |
+| `minimal` | Clean, typography-focused | Reports, documentation |
+| `academic` | Scholarly presentation | Research, educational content |
+| `creative` | Bold artistic design | Creative presentations |
+| `duolingo` | Playful, friendly style | Casual, educational |
+| `dark` | Dark mode presentation | General dark mode |
+| `teamsDark` | Microsoft Teams dark mode | Teams meetings |
+| `teamsLight` | Microsoft Teams light mode | Teams meetings |
 
-1. **Check if specific theme requested by name**:
-   - If user mentions "corp_modern", "minimal_dark", etc. → load that theme
+## Step 2: Theme Selection Logic (Preset-First)
 
-2. **Check for create keywords**:
-   - "create theme", "generate theme", "new theme", "custom theme" → generate new
+**Priority Order:**
 
-3. **Check style keywords**:
-   - "dark theme", "light theme", "neon", "pastel", "vibrant", "colorful", "minimal" → generate new
+1. **Constitution specifies theme name** → Use that theme directly
 
-4. **Default**: Use `corp_modern` theme
+2. **User mentions preset by name** (e.g., "use dark", "business theme") → Use that preset
+
+3. **Match style keywords to preset**:
+   | Keyword | Recommended Preset |
+   |---------|-------------------|
+   | "dark", "dark mode" | `dark` |
+   | "professional", "corporate", "business" | `business` |
+   | "minimal", "clean", "simple" | `minimal` |
+   | "tech", "cyber", "futuristic" | `cyber` |
+   | "academic", "scholarly", "research" | `academic` |
+   | "creative", "bold", "artistic" | `creative` |
+   | "playful", "fun", "friendly" | `duolingo` |
+   | "teams", "microsoft" | `teamsDark` or `teamsLight` |
+
+4. **Custom generation keywords** → Generate new theme
+   - "create theme", "generate theme", "new theme", "custom theme"
+   - Specific color requests not matching presets
+
+5. **Default** → Use `business`
 
 ---
 
-## Theme Generation (For Custom Themes)
+## Theme Generation (Only When No Preset Matches)
 
 ### Design Principles
 
@@ -260,22 +282,37 @@ When modifying an existing theme:
 
 ## Step 3: Save Theme to content.json
 
-Use the `apply_patch` MCP tool (from `apply-patch` server):
+**Call the `mcp_apply-patch_apply_patch` tool directly** with theme object:
 
-```json
+```
 mcp_apply-patch_apply_patch({
   "project_dir": "{project_dir}",
   "target": "theme",
-  "data": {theme_json}
+  "data": {
+    "id": "theme_id",
+    "name": "Theme Name",
+    "colors": {
+      "primary": "#0066CC",
+      "background": "#FFFFFF",
+      "text": "#1A1A1A",
+      "accent": "#FF6B35",
+      "surface": "#F5F5F5",
+      "muted": "#6B7280"
+    },
+    "fonts": {...},
+    "spacing": {...}
+  }
 })
 ```
 
+**IMPORTANT**: Generate this tool call directly with theme inline. Do NOT output JSON first then call the tool separately.
+
 **If constitution.verbose=true**, include `patch_file`:
-```json
+```
 mcp_apply-patch_apply_patch({
   "project_dir": "{project_dir}",
   "target": "theme",
-  "data": {theme_json},
+  "data": {...theme object...},
   "patch_file": "{project_dir}/patches/theme.json"
 })
 ```

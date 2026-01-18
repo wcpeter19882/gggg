@@ -101,12 +101,77 @@ export function LayoutStacked({
     meaningful.push({ node, index });
   });
 
-  // Always split into header (first), body (middle), footer (last)
+  // Handle different element counts:
+  // - 1 element: show in content-body only (no header/footer)
+  // - 2 elements: header + body (no footer)
+  // - 3+ elements: header + body + footer
+  
+  if (meaningful.length === 1) {
+    // Single element: just show in content-body
+    return (
+      <div
+        className={`layout-stacked ${alignClass}`}
+        data-layout="stacked"
+        data-align={align}
+        data-theme={theme}
+        data-vibe={vibe}
+        style={{
+          padding: 'var(--theme-spacing-padding)',
+        }}
+      >
+        <div className="content-body">
+          {meaningful[0].node}
+        </div>
+      </div>
+    );
+  }
+  
+  if (meaningful.length === 2) {
+    // Two elements: header + body (no footer)
+    const header = meaningful[0].node;
+    const body = meaningful[1].node;
+    
+    let resolvedHeadline: string | null = null;
+    if (isHeadingLevel2(header)) {
+      const hText = nodeToText((header.props as { children?: ReactNode }).children).trim();
+      if (hText) resolvedHeadline = hText;
+    }
+    const useTimelineHeader = Boolean(resolvedHeadline);
+    
+    return (
+      <div
+        className={`layout-stacked ${alignClass}`}
+        data-layout="stacked"
+        data-align={align}
+        data-theme={theme}
+        data-vibe={vibe}
+        style={{
+          paddingTop: useTimelineHeader ? '0' : 'var(--theme-spacing-padding)',
+          paddingLeft: 'var(--theme-spacing-padding)',
+          paddingRight: 'var(--theme-spacing-padding)',
+          paddingBottom: 'var(--theme-spacing-padding)',
+        }}
+      >
+        <div className="layout-header">
+          {useTimelineHeader ? (
+            <div style={{ textAlign: 'left', marginBottom: 'var(--theme-spacing-gap)' }}>
+              <TimelineHeader headline={resolvedHeadline!} subtitle={null} />
+            </div>
+          ) : (
+            header
+          )}
+        </div>
+        <div className="content-body">
+          {body}
+        </div>
+      </div>
+    );
+  }
+  
+  // 3+ elements: header (first), body (middle), footer (last)
   if (meaningful.length >= 3) {
     const headerIndex = meaningful[0].index;
-    const footerIndex = meaningful[meaningful.length - 1].index;
     const header = childArray[headerIndex];
-    const footer = childArray[footerIndex];
 
     let resolvedHeadline: string | null = null;
     let resolvedSubtitle: string | null = null;
@@ -128,9 +193,23 @@ export function LayoutStacked({
     }
 
     const useTimelineHeader = Boolean(resolvedHeadline);
+    
+    // Calculate effective remaining elements after header extraction
+    // If subtitle is extracted, it doesn't count as a separate element
+    const effectiveRemaining = meaningful.filter((m, i) => {
+      if (i === 0) return false; // header
+      if (subtitleIndex !== null && m.index === subtitleIndex) return false; // subtitle merged into header
+      return true;
+    });
+    
+    // Determine footer: only use footer if we have 2+ effective remaining elements
+    const hasFooter = effectiveRemaining.length >= 2;
+    const footerIndex = hasFooter ? effectiveRemaining[effectiveRemaining.length - 1].index : -1;
+    const footer = hasFooter ? childArray[footerIndex] : null;
+    
     const body = childArray.filter((node, idx) => {
       if (idx === headerIndex) return false;
-      if (idx === footerIndex) return false;
+      if (hasFooter && idx === footerIndex) return false;
       if (subtitleIndex !== null && idx === subtitleIndex) return false;
       if (isWhitespaceNode(node)) return false;
       return true;
@@ -162,9 +241,11 @@ export function LayoutStacked({
         <div className="content-body">
           {body}
         </div>
-        <div className="layout-footer">
-          {footer}
-        </div>
+        {hasFooter && (
+          <div className="layout-footer">
+            {footer}
+          </div>
+        )}
       </div>
     );
   }

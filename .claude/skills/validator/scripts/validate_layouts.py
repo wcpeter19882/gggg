@@ -58,7 +58,12 @@ def validate_slides(content: Dict[str, Any]) -> Dict[str, Any]:
     Returns:
         Validation result dict with issues
     """
-    slides = content.get("slides", [])
+    slides_data = content.get("slides", {})
+    # Handle both direct list and nested {slides: [...]} structure
+    if isinstance(slides_data, dict):
+        slides = slides_data.get("slides", [])
+    else:
+        slides = slides_data
     
     # Filter to active slides with MDX
     active_slides = [

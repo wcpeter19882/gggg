@@ -1,8 +1,8 @@
 ---
 name: storyline-planner
 description: |
-  Plan narrative arc and create draft slides with story, atoms, density, visual_design.
-  Use when: Turning extracted atoms into a presentation structure.
+  Plan narrative arc and create draft slides with story, density, visual_design, and content.
+  Use when: Turning source content into a presentation structure using SCQA framework.
   Triggers: "plan storyline", "create draft slides", "narrative structure"
 ---
 
@@ -20,7 +20,7 @@ Example: `%TEMP%/content-manager/golden_set_6c765a24/`
 
 ## Your Task
 
-Read atoms and create draft slides with story, density, and visual_design fields.
+Read source files and create draft slides with story, density, visual_design, and content fields using the SCQA framework.
 
 ## Step 0: Read Constitution
 
@@ -43,11 +43,11 @@ mcp_apply-patch_read_section({
 
 ## Step 1: Read Context
 
-Use the MCP tool:
+Use the MCP tool to read source files and theme:
 ```
 mcp_apply-patch_read_section({
   project_dir: "{project_dir}",
-  section: "atoms"
+  section: "source"
 })
 mcp_apply-patch_read_section({
   project_dir: "{project_dir}",
@@ -55,57 +55,11 @@ mcp_apply-patch_read_section({
 })
 ```
 
----
-
-## MODE A: Atom-Based Story Generation
-
-Use this mode when atoms are available.
-
-### STORY STRUCTURE (4-part framework per slide)
-
-- **HEADLINE**: Conclusion-first (e.g., "Revenue grew 20%", not "Revenue")
-- **NARRATIVE**: Why it matters (speaker's voice)
-- **EVIDENCE**: Supporting data/facts
-- **TAKEAWAY**: Key implication
-
-### DENSITY GUIDE
-
-| Density | Focus | Elements | Use When |
-|---------|-------|----------|----------|
-| sparse | Single hero element | 1-2 blocks | Opening, impact moments, key stats |
-| moderate | Balanced content | 3-4 blocks | Most body slides |
-| dense | Detailed breakdown | 5+ blocks | Data-heavy, comparison slides |
-
-### VISUAL_DESIGN (CRITICAL - content generator follows this)
-
-Specify layout + content approach. Content generator MUST follow this.
-
-Examples:
-- `"LayoutCover"` (opening only)
-- `"LayoutSplit5050: left=narrative+list, right=BigNum+context"`
-- `"LayoutDashboard: main=chart+metrics, sidebar=key-points"`
-- `"LayoutStacked: text-focused with supporting callout"`
-- `"LayoutSplit5050: left=diagram(process flow), right=explanation"`
-
-### SLIDE PACING
-
-1. **SLIDE 1**: Opening. density=sparse, visual_design="LayoutCover"
-2. **BODY SLIDES**: Vary density. Use "sparse" for impact, "moderate" for content, "dense" for data.
-3. **FINAL SLIDE**: Closing. density=moderate, visual_design includes "SmartList+Callout"
-
-### VISUAL SELECTION RULES
-
-- Use diagram ONLY for process/flow with ≥4 connected steps
-- Use chart for comparisons/trends with ≥3 data points
-- Use BigNum/MetricGroup for key numbers
-- Use SmartList/Text for narrative/recommendations
-- Do NOT force visuals where text is clearer
+The `source` section reads all files from the `files/` directory in the project.
 
 ---
 
-## MODE B: SCQA Source-Based Story Generation (Executive Presentations)
-
-Use this mode when generating directly from source content (VTT, TXT, MD, etc.) without pre-extracted atoms. This mode uses the SCQA framework for executive-level presentations.
+## SCQA Source-Based Story Generation (Executive Presentations)
 
 ### I. Narrative Blueprint (strict)
 
@@ -230,74 +184,37 @@ Examples:
 When refining existing story based on user instructions:
 
 ### Common operations:
-- Merge slides: Combine story/atoms/content from multiple slides into one
+- Merge slides: Combine story/content from multiple slides into one
 - Split slide: Divide one slide's content into multiple
-- Add slide: Insert new slide with atoms/content and story
-- Remove slide: Delete slide (don't reassign its atoms/content elsewhere)
+- Add slide: Insert new slide with content and story
+- Remove slide: Delete slide
 - Reorder: Change ranks to restructure flow
 
 ### IMPORTANT NOTES
 
-- Slides have BOTH atoms (list of IDs) AND content (embedded structured data)
-- Atoms and content are SYNCHRONIZED - they must reflect each other's changes:
-  * If you change atoms: Extract new atom content into the content field to reflect the new atoms
-  * If you change content: Update the atoms array to reference atoms that match the new content
-  * Atoms provide the data source, content provides the narrative structure
-- NEVER modify one without updating the other to maintain consistency
-- Both fields are required and must stay aligned during refinement
+- Slides have a `content` field with embedded structured data
+- When changing content, update the story field to reflect the change
 
 ### OUTPUT RULES
 
-1. For slides you DON'T change: Keep exactly as-is (preserve atoms AND content)
-2. For slides you CHANGE: Set state="draft" (they need new layout/widgets)
+1. For slides you DON'T change: Keep exactly as-is
+2. For slides you CHANGE: Set state="draft" (they need new layout/mdx)
 3. Return the COMPLETE slide list (not just changed ones)
-4. Keep layout="" and widgets={} for all draft slides
-5. **CRITICAL**: ALWAYS include BOTH "atoms" and "content" fields in output, even if unchanged
+4. Keep layout="" and mdx="" for all draft slides
 
 ---
 
-## Step 3: Output Format
+## Step 2: Save Slides Directly via Tool Call
 
-For **Mode A** (atom-based):
-```json
-[
-  {
-    "id": "slide_001",
-    "rank": 1,
-    "state": "draft",
-    "story": "HEADLINE: Teams Speech Platform drives enterprise communication. NARRATIVE: Mission-critical infrastructure for real-time meetings. EVIDENCE: 136k MAU, 99.38% reliability. TAKEAWAY: Foundation for interpreter and captions.",
-    "atoms": ["stat_001", "stat_002"],
-    "density": "sparse",
-    "visual_design": "LayoutCover",
-    "layout": "",
-    "mdx": ""
-  },
-  {
-    "id": "slide_002",
-    "rank": 2,
-    "state": "draft",
-    "story": "HEADLINE: Platform shows strong momentum. NARRATIVE: Key metrics trending up across the board. EVIDENCE: MAU +1.9%, meetings +5.4%, reliability 99.38%. TAKEAWAY: Solid foundation for growth.",
-    "atoms": ["stat_001", "stat_002", "stat_003", "stat_004"],
-    "density": "dense",
-    "visual_design": "LayoutDashboard: main=MetricGroup(4 cols)+Callout, sidebar=none",
-    "layout": "",
-    "mdx": ""
-  }
-]
+**IMPORTANT**: Generate the tool call directly with slides array as data. Do NOT wrap in `presentation_meta` object.
+
+Call the `mcp_apply-patch_apply_patch` tool with the slides array:
+
 ```
-
-For **Mode B** (SCQA source-based):
-```json
-{
-  "presentation_meta": {
-    "title": "string",
-    "subtitle": "string (optional)",
-    "audience": "string",
-    "focus": "string (main focus of the presentation)",
-    "total_slide": "int (actual total slide pages you decide)",
-    "scqa_design": "string (Design the storyline: specify S/C/Q/A sections and map body slides to each)"
-  },
-  "slides": [
+mcp_apply-patch_apply_patch({
+  "project_dir": "{project_dir}",
+  "target": "slides",
+  "data": [
     {
       "id": "slide_01",
       "rank": 1,
@@ -351,64 +268,67 @@ For **Mode B** (SCQA source-based):
         "subtitle": "string (optional)",
         "category": "ending"
       }
-    },
-    {
-      "id": "slide_N+1",
-      "rank": "N+1 (Include this slide ONLY if Strategic Unknowns exist. Omit otherwise.)",
-      "state": "draft",
-      "story": "data gap summary",
-      "density": "minimal",
-      "visual_design": "[visual description]",
-      "content": {
-        "headline": "Data Gap Summary",
-        "category": "data",
-        "sections": [
-          {
-            "title": "Critical Data Gaps",
-            "bullets": [
-              {
-                "text": "Identify specific missing data point (e.g., Year 3 CAGR) in slide [slide_id]"
-              }
-            ]
-          }
-        ]
-      }
     }
   ]
-}
-```
-
-## Step 4: Save Draft Slides to content.json
-
-Use the `apply_patch` MCP tool (from `apply-patch` server):
-
-```json
-mcp_apply-patch_apply_patch({
-  "project_dir": "{project_dir}",
-  "target": "slides",
-  "data": {draft_slides_json}
 })
 ```
 
 **If constitution.verbose=true**, include `patch_file`:
-```json
+```
 mcp_apply-patch_apply_patch({
   "project_dir": "{project_dir}",
   "target": "slides",
-  "data": {draft_slides_json},
+  "data": [...slides array...],
   "patch_file": "{project_dir}/patches/slides_draft.json"
 })
 ```
 
+### Slide Schema Reference
+
+Each slide in the array must have:
+- `id`: "slide_01", "slide_02", etc.
+- `rank`: integer (1, 2, 3...)
+- `state`: "draft" (always for new slides)
+- `story`: narrative purpose (e.g., "Situation: establish baseline metrics")
+- `density`: "minimal" | "moderate" | "dense"
+- `visual_design`: layout hint for content generator
+- `content`: structured content object with headline, category, sections
+
+### Optional: Data Gap Summary Slide
+
+Include ONLY if Strategic Unknowns exist:
+```json
+{
+  "id": "slide_N+1",
+  "rank": "N+1",
+  "state": "draft",
+  "story": "data gap summary",
+  "density": "minimal",
+  "visual_design": "[visual description]",
+  "content": {
+    "headline": "Data Gap Summary",
+    "category": "data",
+    "sections": [
+      {
+        "title": "Critical Data Gaps",
+        "bullets": [
+          { "text": "Identify specific missing data point in slide [slide_id]" }
+        ]
+      }
+    ]
+  }
+}
+```
+
 ## Example Output
 
-After planning, return:
+After saving via tool call, summarize:
 ```
 Planned 10 slides:
-- Slide 1: Cover (sparse) - Opening
+- Slide 1: Cover (minimal) - Opening
 - Slide 2: Dashboard (dense) - Platform Metrics
 - Slide 3: Split (moderate) - Customer Pain Points
-- Slide 4: FullBleed (sparse) - Key Question
+- Slide 4: FullBleed (minimal) - Key Question
 - ...
 - Slide 10: Stacked (moderate) - Call to Action
 ```

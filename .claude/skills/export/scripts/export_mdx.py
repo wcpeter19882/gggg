@@ -113,7 +113,14 @@ def main() -> int:
     
     # Read content
     content = json.loads(content_json_path.read_text(encoding="utf-8"))
-    slides = [s for s in content.get("slides", []) if s.get("state") == "active"]
+    
+    # Handle slides structure - may be a list or nested object
+    slides_data = content.get("slides", [])
+    if isinstance(slides_data, dict):
+        # Slides is an object with a nested "slides" array
+        slides_data = slides_data.get("slides", [])
+    
+    slides = [s for s in slides_data if isinstance(s, dict) and s.get("state") == "active"]
     
     if not slides:
         print(json.dumps({"error": "No active slides found"}))
