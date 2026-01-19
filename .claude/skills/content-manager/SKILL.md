@@ -28,6 +28,27 @@ Source Document → Storyline → Theme → Layout → Export
 
 Each stage is handled by a specialized subagent.
 
+## Completion Requirement (CRITICAL)
+
+When the user asks to "generate slides" / "produce a deck", you MUST run the pipeline end-to-end in the same turn:
+- Create Project → (Theme if needed) → Plan Storyline → Generate Layouts → Export & Preview
+- If `constitution.refinement_rounds > 0`, run the refinement loop (Validate → Fix → Re-export) until `status=="ok"` or rounds exhausted.
+
+Do NOT pause after project creation or theme selection waiting for user confirmation unless the user explicitly requests a pause or a choice.
+
+## CRITICAL RULES (DO NOT VIOLATE)
+
+**DO NOT:**
+- Read .tsx, .ts, .js, .jsx, .py files from src/, static/, or any solution code
+- Use file_search, grep_search, or semantic_search tools - all paths are deterministic
+- Search for component implementations - all component syntax is documented in SKILL files
+- Read files outside the project directory except SKILL files in .claude/skills/
+
+**DO:**
+- Use MCP tools (mcp_create-project, mcp_apply-patch, mcp_export-mdx) exclusively
+- Read only SKILL.md files from .claude/skills/ for subagent instructions
+- Trust the documentation in SKILL files - they contain all component syntax needed
+
 ## Todo Management
 
 Use the built-in `manage_todo_list` tool for tracking pipeline progress.
@@ -64,20 +85,26 @@ Update status as each step progresses: "not-started" → "in-progress" → "comp
 
 ## Step 1: Create Project
 
-```bash
-python .claude/skills/content-manager/scripts/create_project.py \
-  --source "{source_file_path}" \
-  --instruction "{user_instruction}"
+Use the MCP tool:
+```
+mcp_create-project_create_project({
+  "source_path": "{source_file_path}",
+  "instruction": "{user_instruction}",
+  "force": false
+})
 ```
 
-Note: Project name is derived from source filename. Use `--force` to overwrite existing.
+Note: Project name is derived from source filename. Set `force: true` to overwrite existing.
 
 Returns:
 ```json
 {
+  "status": "success",
   "project_id": "golden_set_7a783fe4",
   "project_dir": "C:/Users/.../content-manager/golden_set_7a783fe4",
-  "content_json": "C:/Users/.../content.json"
+  "content_json": "C:/Users/.../content.json",
+  "source_file": "C:/Users/.../files/golden_set.md",
+  "constitution": { "tone": "professional", ... }
 }
 ```
 
@@ -188,37 +215,61 @@ Generate MDX content for each draft slide.
 Use the slide's story, content, and visual_design fields to generate MDX.
 Follow the visual_design field exactly.
 Use correct component names: <Left>/<Right> for LayoutSplit, <LayoutFullBleed> not LayoutFocus.
+
+CRITICAL SYNTAX RULES:
+- SmartList uses items PROP: <SmartList items={["Point 1", "Point 2"]} />
+- ProcessStrip uses items PROP: <ProcessStrip items={["Step1", "Step2"]} />
+- StepList uses items PROP: <StepList items={[{label: "...", description: "..."}]} />
+- DO NOT use <li> or <Step> child components - they don't exist!
+
 Return a summary of generated layouts.`
 })
 ```
 
-## Step 5: Export & Preview (Subagent)
+## Step 5: Export & Preview
 
-Invoke the export subagent:
+**NOTE:** This step is ONLY export. Do NOT run validation here. Validation is Step 6 (Refinement).
 
+Use the MCP tool to export slides and start the preview server:
 ```
-runSubagent({
-  description: "Export slides",
-  prompt: `You are an export subagent.
-
-Read the SKILL file at .claude/skills/export/SKILL.md for complete instructions.
-
-Project directory: {project_dir}
-
-Export slides to MDX and start the preview server.
-Return the preview URL.`
+mcp_export-mdx_export_mdx({
+  "project_dir": "{project_dir}",
+  "start_server": true
 })
 ```
 
-After export, open the preview in Simple Browser.
+Returns:
+```json
+{
+  "status": "success",
+  "mdx_file": "C:/Users/.../slides.mdx",
+  "slide_count": 10,
+  "project_id": "golden_set_7a783fe4",
+  "server_url": "http://localhost:3000/slides/golden_set_7a783fe4",
+  "server_status": "started"
+}
+```
+
+After export, open the preview URL in Simple Browser using `open_simple_browser`.
+
+### If terminal execution is unavailable
+
+Some environments may not provide a terminal execution tool. If you cannot run the validator script in Step 6, you MUST:
+- Still export and open preview
+- Clearly state that automated validation/refinement could not be run due to tooling limits
+- Offer the exact validator command for the user to run locally to populate `issues` and enable refinement
 
 ---
 
 ## Step 6: Refinement Loop (Validate → Fix → Re-export)
 
-**Refinement is triggered when:**
+**This step is SEPARATE from Export (Step 5).** Do NOT run validation during export.
+
+**Refinement is triggered ONLY when:**
 1. `constitution.refinement_rounds > 0`, OR
 2. User explicitly requests refinement (e.g., "refine the slides", "fix the issues")
+
+**If neither condition is met, SKIP this step entirely.**
 
 **Each refinement round:**
 1. **Validate** - Run validator to identify issues
@@ -259,17 +310,12 @@ Return summary of fixes applied.`
 ```
 
 **Step 6c: Re-export**
+
+Use the MCP tool to re-export:
 ```
-runSubagent({
-  description: "Re-export slides",
-  prompt: `You are an export subagent.
-
-Read the SKILL file at .claude/skills/export/SKILL.md for complete instructions.
-
-Project directory: {project_dir}
-
-Re-export slides to MDX after refinement.
-Return the updated preview URL.`
+mcp_export-mdx_export_mdx({
+  "project_dir": "{project_dir}",
+  "start_server": true
 })
 ```
 

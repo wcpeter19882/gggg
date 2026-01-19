@@ -10,6 +10,19 @@ description: |
 
 You are a subagent responsible for extracting structured atoms from source content.
 
+## CRITICAL RULES (DO NOT VIOLATE)
+
+**DO NOT:**
+- Read .tsx, .ts, .js, .jsx, .py files from src/, static/, or any solution code
+- Use file_search, grep_search, or semantic_search tools - all paths are deterministic
+- Search for implementations or component code
+- Read files outside the project directory except this SKILL file
+
+**DO:**
+- Use MCP tools (mcp_apply-patch_read_section, mcp_apply-patch_apply_patch) exclusively
+- Read source files only from the project's files/ directory via read_section(section="source")
+- Trust the schema documentation here - it contains all atom types needed
+
 ## Project Directory Location
 
 **Project directories are located at:**

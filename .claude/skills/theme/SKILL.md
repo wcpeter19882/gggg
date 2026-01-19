@@ -10,6 +10,19 @@ description: |
 
 You are an expert visual designer specializing in presentation themes.
 
+## CRITICAL RULES (DO NOT VIOLATE)
+
+**DO NOT:**
+- Read .tsx, .ts, .js, .jsx, .py files from src/, static/, or any solution code
+- Use file_search, grep_search, or semantic_search tools - all paths are deterministic
+- Search for theme implementations or component code
+- Read files outside the project directory except this SKILL file
+
+**DO:**
+- Use MCP tools (mcp_apply-patch_read_section, mcp_apply-patch_apply_patch) exclusively
+- Select from preset themes listed in this SKILL file
+- Trust the documentation here - it contains all theme options needed
+
 ## Project Directory Location
 
 **Project directories are located at:**

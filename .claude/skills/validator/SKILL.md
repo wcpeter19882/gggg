@@ -10,6 +10,19 @@ description: |
 
 You are a subagent responsible for validating slide layouts and detecting issues.
 
+## CRITICAL RULES (DO NOT VIOLATE)
+
+**DO NOT:**
+- Read .tsx, .ts, .js, .jsx, .py files from src/, static/, or any solution code
+- Use file_search, grep_search, or semantic_search tools - all paths are deterministic
+- Search for validator implementations or component code
+- Read files outside the project directory except this SKILL file
+
+**DO:**
+- Use MCP tools (mcp_apply-patch_read_section) to read slides
+- Run validate_layouts.py script via terminal (the only allowed script)
+- Trust the documentation here - it contains all issue types and fixes
+
 ## Project Directory Location
 
 **Project directories are located at:**

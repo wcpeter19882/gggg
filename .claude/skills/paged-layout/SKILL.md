@@ -10,6 +10,24 @@ description: |
 
 You are a LAYOUT DESIGNER. Convert story drafts into MDX slides.
 
+## CRITICAL RULES (DO NOT VIOLATE)
+
+**DO NOT:**
+- Read .tsx, .ts, .js, .jsx, .py files from src/, static/, or any solution code
+- Use file_search, grep_search, or semantic_search tools - all paths are deterministic
+- Search for component implementations - all component syntax is documented in this SKILL file and LAYOUT.md
+- Read files outside the project directory except SKILL files in .claude/skills/
+- Call read_section multiple times - use section="all" once
+- Call apply_patch multiple times - generate ALL slides, save once
+- Generate one slide → save → generate next slide → save - this is ONE atomic operation
+
+**DO:**
+- Use MCP tools (mcp_apply-patch_read_section, mcp_apply-patch_apply_patch) exclusively
+- Read ALL context with ONE read_section(section="all") call
+- Generate MDX for ALL slides in memory
+- Save ALL slides with ONE apply_patch call
+- Return a brief summary of layouts used
+
 ## Project Directory Location
 
 **Project directories are located at:**
@@ -18,52 +36,22 @@ You are a LAYOUT DESIGNER. Convert story drafts into MDX slides.
 
 Example: `%TEMP%/content-manager/golden_set_6c765a24/`
 
-## Your Task
+## Your Task (SINGLE ATOMIC OPERATION)
 
-Read draft slides and generate MDX content following the exact component syntax and rules.
+**This is ONE step, not multiple steps.** You will:
+1. Read all context in a single batch (ONE read_section call)
+2. Generate MDX for ALL slides in memory
+3. Save ALL slides with ONE apply_patch call
 
-**IMPORTANT**: Before generating MDX, read the complete layout documentation:
-```
-read_file(".claude/skills/paged-layout/LAYOUT.md")
-```
+**Do NOT read → generate one slide → save → read → generate next slide → save. Process everything, then save once.**
 
-## Step 0: Read Constitution
+**Do NOT read .tsx component files.** All component syntax is documented below and in LAYOUT.md.
 
-**ALWAYS read constitution first** - it defines style and content rules.
+---
 
-Use the MCP tool:
-```
-mcp_apply-patch_read_section({
-  project_dir: "{project_dir}",
-  section: "constitution"
-})
-```
+## Read All Context First (ONE read_section call)
 
-**Apply constitution rules during layout generation:**
-- If tone is "professional" → use formal language in Heading/Text
-- If tone is "minimal" → prefer simpler layouts, fewer elements
-- If style_rules mention specific formatting → apply to MDX
-- If content_exclusions exist → don't include that content in MDX
-
-## Step 1: Read Context
-
-Use the MCP tool to read all needed sections:
-```
-mcp_apply-patch_read_section({
-  project_dir: "{project_dir}",
-  section: "slides"
-})
-mcp_apply-patch_read_section({
-  project_dir: "{project_dir}",
-  section: "theme"
-})
-mcp_apply-patch_read_section({
-  project_dir: "{project_dir}",
-  section: "issues"
-})
-```
-
-Or read all at once:
+Read everything you need in ONE call:
 ```
 mcp_apply-patch_read_section({
   project_dir: "{project_dir}",
@@ -71,8 +59,13 @@ mcp_apply-patch_read_section({
 })
 ```
 
-**If `issues` section has errors (from previous validation):**
-- Read the `issues.issues` array for specific problems per slide
+This returns constitution, theme, slides, and issues (if any). Use this data to:
+- Apply constitution rules (tone, style_rules, content_exclusions)
+- Read each draft slide's story, density, visual_design, content
+- Generate MDX for ALL slides
+- Fix any issues from previous validation
+
+**If `issues` section has errors:**
 - Each issue has: `slide_id`, `issue_type`, `description`, `suggestion`
 - Focus on fixing slides with `severity: "error"` first
 - Apply the `suggestion` from each issue to fix the MDX
@@ -88,7 +81,7 @@ mcp_apply-patch_read_section({
 
 ---
 
-## Step 2: Generate MDX Content
+## Generate MDX Content (ALL SLIDES AT ONCE)
 
 ### CORE PRINCIPLE
 
@@ -250,6 +243,144 @@ This table is the **SOURCE OF TRUTH** from `src/paged/layout/react/layout_engine
 
 ---
 
+## ⚠️ CRITICAL COMPONENT SYNTAX (MEMORIZE THIS)
+
+**ProcessStrip and StepList use `items` PROP, NOT child elements!**
+
+### ProcessStrip (horizontal flow)
+```mdx
+// Simple string items:
+<ProcessStrip items={["Plan", "Build", "Test", "Ship"]} />
+
+// With status and icons:
+<ProcessStrip items={[
+  {label: "Capture", status: "done"},
+  {label: "Process", status: "active"},
+  {label: "Deliver", status: "pending"}
+]} />
+```
+**❌ WRONG (will cause "Step not defined" error):**
+```mdx
+<ProcessStrip>
+  <Step title="Plan" />  <!-- WRONG! Step component doesn't exist -->
+</ProcessStrip>
+```
+
+### StepList (vertical numbered steps)
+```mdx
+// Simple string items:
+<StepList items={["Collect data", "Process", "Validate", "Deploy"]} />
+
+// With descriptions:
+<StepList items={[
+  {label: "Plan", description: "Define scope and goals"},
+  {label: "Build", description: "Implement core features"},
+  {label: "Ship", description: "Deploy to production"}
+]} />
+```
+**❌ WRONG:**
+```mdx
+<StepList>
+  <Step title="Plan" description="..." />  <!-- WRONG! -->
+</StepList>
+```
+
+### ProcessStripEx (card-based flow, ONLY in LayoutStacked/LayoutFullBleed)
+```mdx
+<ProcessStripEx items={[
+  {title: "Input", description: "Raw meeting audio", icon: "🎙️"},
+  {title: "Process", description: "Speech recognition", icon: "🔄"},
+  {title: "Output", description: "Structured transcript", icon: "📄", status: "success"}
+]} />
+```
+
+### SmartList (bullet/card lists)
+```mdx
+// Simple string items:
+<SmartList items={["First point", "Second point", "Third point"]} />
+
+// With variant (cards, highlight, checklist, timeline, compact):
+<SmartList variant="cards" items={[
+  "Key insight about the product",
+  "Another important finding",
+  "Critical recommendation"
+]} />
+
+// With highlight (for emphasizing key phrases):
+<SmartList variant="highlight" items={[
+  {text: "Revenue increased by 40%", highlight: "40%"},
+  {text: "Customer satisfaction at 85%", highlight: "85%"}
+]} />
+```
+**❌ WRONG (will cause "items.map undefined" error):**
+```mdx
+<SmartList>
+  <li>First point</li>  <!-- WRONG! Use items prop -->
+</SmartList>
+```
+
+---
+
+## ⚠️ LAYOUT SLOT COMPONENTS (COMPLETE REFERENCE)
+
+**Only these slot components exist in the renderer:**
+
+| Layout | Slot Components | ❌ Components that DON'T exist |
+|--------|-----------------|-------------------------------|
+| `LayoutSplit` | `<Left>`, `<Right>` | ~~Top, Bottom, Column~~ |
+| `LayoutDashboard` | `<Header>`, `<Main>`, `<Sidebar>`, `<Footer>` | ~~Top, Bottom, Left, Right~~ |
+| `LayoutStacked` | **NO SLOTS** — direct children only | ~~Top, Bottom~~ |
+| `LayoutCover` | **NO SLOTS** — direct children only | ~~Any slots~~ |
+| `LayoutFullBleed` | **NO SLOTS** — direct children only | ~~Any slots~~ |
+| `LayoutTimeline` | `<LayoutTimeline.Item year="...">` | ~~Top, Bottom~~ |
+
+### LayoutStacked (CORRECT)
+```mdx
+<LayoutStacked>
+  <Heading>Title</Heading>
+  <Text variant="lead">Introduction paragraph...</Text>
+  <SmartList items={["Point 1", "Point 2"]} />
+  <Callout label="Takeaway">Key insight here.</Callout>
+</LayoutStacked>
+```
+**❌ WRONG:**
+```mdx
+<LayoutStacked>
+  <Top>...</Top>      <!-- WRONG! Top doesn't exist -->
+  <Bottom>...</Bottom> <!-- WRONG! Bottom doesn't exist -->
+</LayoutStacked>
+```
+
+### LayoutSplit (CORRECT)
+```mdx
+<LayoutSplit>
+  <Left>
+    <Heading>Left content</Heading>
+    <Text>...</Text>
+  </Left>
+  <Right>
+    <Heading level={2}>Right content</Heading>
+    <SmartList items={[...]} />
+  </Right>
+</LayoutSplit>
+```
+
+### LayoutDashboard (CORRECT)
+```mdx
+<LayoutDashboard>
+  <Main>
+    <Heading>Main content</Heading>
+    <Text>...</Text>
+  </Main>
+  <Sidebar>
+    <Heading level={2}>Sidebar</Heading>
+    <SmartList items={[...]} />
+  </Sidebar>
+</LayoutDashboard>
+```
+
+---
+
 ## CALLOUT USAGE (TAKEAWAY ANCHOR)
 Callout is for **attention-worthy conclusions** - use when the slide has a critical insight that demands notice.
 - **Purpose**: Highlight a "So What?" that the audience must not miss.
@@ -341,16 +472,16 @@ QuoteBlock is for **distinct voices** - testimonials, leadership mandates, or ex
 
 ---
 
-## Step 3: Save Active Slides
+## Save ALL Slides (ONE apply_patch call)
 
-**CRITICAL**: Store generated MDX content in the `"mdx"` field (NOT `"widgets"`).
+**CRITICAL: This is the ONLY save operation. Generate MDX for ALL slides first, then save them ALL in ONE call.**
 
 Each slide should have:
 - `"state": "active"` (changed from "draft")
 - `"layout": "LayoutName"` (e.g., "LayoutSplit", "LayoutDashboard")
 - `"mdx": "<LayoutSplit>...</LayoutSplit>"` (the full MDX content)
 
-**Call the `mcp_apply-patch_apply_patch` tool directly** with slides array:
+**Call `mcp_apply-patch_apply_patch` ONCE with the complete slides array:**
 
 ```
 mcp_apply-patch_apply_patch({

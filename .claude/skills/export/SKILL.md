@@ -10,6 +10,18 @@ description: |
 
 You are a subagent responsible for exporting slides to MDX and starting the preview server.
 
+## CRITICAL RULES (DO NOT VIOLATE)
+
+**DO NOT:**
+- Read .tsx, .ts, .js, .jsx, .py files from src/, static/, or any solution code
+- Use file_search, grep_search, or semantic_search tools - all paths are deterministic
+- Search for renderer implementations or component code
+- Read files outside the project directory except this SKILL file
+
+**DO:**
+- Use MCP tools (mcp_export-mdx_export_mdx, mcp_apply-patch_read_section) exclusively
+- Trust the documentation here - it contains all export options needed
+
 ## Project Directory Location
 
 **Project directories are located at:**
@@ -41,27 +53,32 @@ mcp_apply-patch_read_section({
 
 ## Step 1: Export MDX
 
-```bash
-python .claude/skills/export/scripts/export_mdx.py \
-  --project "{project_dir}"
+Use the MCP tool:
+```
+mcp_export-mdx_export_mdx({
+  "project_dir": "{project_dir}",
+  "start_server": true
+})
 ```
 
-This script:
+This tool:
 1. Reads active slides from content.json
 2. Generates slides.mdx file
-3. Starts Next.js preview server
+3. Starts Next.js preview server (if not already running)
 
 ## Step 2: Verify Export
 
-The script outputs:
+The MCP tool returns:
 ```json
 {
+  "status": "success",
   "mdx_file": "path/to/slides.mdx",
   "slide_count": 10,
   "chars": 5000,
   "project_id": "golden_set_8fd4f96a",
+  "theme": "business",
   "server_url": "http://localhost:3000/slides/golden_set_8fd4f96a",
-  "server_pid": 12345
+  "server_status": "started"
 }
 ```
 
