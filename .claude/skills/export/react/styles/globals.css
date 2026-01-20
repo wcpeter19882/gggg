@@ -1,0 +1,1356 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Import shared component styles */
+@import './components.css';
+@import './chart-theme.css';
+
+/* =============================================================================
+ * CSS Custom Properties (Theme Variables)
+ * ============================================================================= */
+
+:root {
+  /* Default theme: Business - Modern Corporate */
+  --theme-bg: #ffffff;
+  --theme-surface: #f1f5f9;
+  --theme-primary: #2563eb;
+  --theme-secondary: #7c3aed;
+  --theme-accent: #f59e0b;
+  --theme-text: #0f172a;
+  --theme-text-muted: #475569;
+  --theme-border: #e2e8f0;
+
+  /* Intent colors */
+  --theme-info: #0ea5e9;
+  --theme-warning: #f59e0b;
+  --theme-success: #10b981;
+  --theme-danger: #ef4444;
+
+  /* Typography - larger for presentations */
+  --theme-font-display: 'Inter', system-ui, -apple-system, sans-serif;
+  --theme-font-body: 'Inter', system-ui, -apple-system, sans-serif;
+  --theme-font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  --theme-size-display: 80px;
+  --theme-size-heading: 56px;
+  --theme-size-subheading: 42px;
+  --theme-size-body: 32px;
+  --theme-size-caption: 24px;
+
+  --theme-line-height: 1.5;
+  --theme-letter-spacing: -0.02em;
+
+  /* Spacing - generous for presentations */
+  --theme-spacing-gap: 36px;
+  --theme-spacing-padding: 160px;
+  --theme-spacing-margin: 32px;
+
+  /* Visuals */
+  --theme-radius: 12px;
+  --theme-radius-sm: 4px;
+  --theme-radius-md: 12px;
+  --theme-radius-lg: 16px;
+  --theme-radius-xl: 24px;
+  --theme-radius-full: 9999px;
+
+  --theme-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  --theme-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --theme-shadow-md: 0 4px 20px rgba(0, 0, 0, 0.08);
+  --theme-shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.12);
+
+  --theme-border-width: 1px;
+
+  /* =============================================================================
+   * Vibe Variables (Default: balanced)
+   * ============================================================================= */
+  --vibe-intensity: 1;
+  --vibe-shadow-opacity: 1;
+  --vibe-border-opacity: 1;
+  --vibe-border-width-multiplier: 1;
+  --vibe-radius-multiplier: 1;
+  --vibe-accent-intensity: 1;
+  --vibe-animation-multiplier: 1;
+  --vibe-decoration-opacity: 0.5;
+  --vibe-gradient-intensity: 0.5;
+  --vibe-letter-spacing: -0.01em;
+  --vibe-heading-scale: 1;
+  --vibe-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --vibe-shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --vibe-radius: calc(var(--theme-radius) * 1);
+  --vibe-border-width: calc(var(--theme-border-width) * 1);
+  --vibe-animation-duration: 300ms;
+}
+
+/* =============================================================================
+ * Base Styles
+ * ============================================================================= */
+
+html {
+  font-family: var(--theme-font-body);
+  font-size: 16px;
+  line-height: var(--theme-line-height);
+  letter-spacing: var(--theme-letter-spacing);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--theme-bg);
+  color: var(--theme-text);
+}
+
+/* =============================================================================
+ * Slide Container - 1920x1080 canvas with responsive scaling
+ * ============================================================================= */
+
+.slide-container {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #0f0f0f;
+}
+
+.slide {
+  /* Fixed slide dimensions - 1920x1080 canvas (must override Tailwind preflight) */
+  width: 1920px !important;
+  height: 1080px !important;
+  min-width: 1920px !important;
+  min-height: 1080px !important;
+  max-width: none !important;
+  max-height: none !important;
+  aspect-ratio: 16 / 9;
+  background: linear-gradient(135deg, var(--theme-bg) 0%, color-mix(in srgb, var(--theme-bg) 95%, var(--theme-primary) 5%) 100%);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.5);
+  border-radius: 4px;
+  /* transform is applied via JavaScript for reliable cross-browser scaling */
+  transform-origin: center center;
+}
+
+/* Slide inner padding */
+.slide > * {
+  padding: 64px 80px;
+}
+
+/* =============================================================================
+ * Layout Primitives - Presentation-optimized
+ * ============================================================================= */
+
+.layout-cover {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: var(--theme-spacing-padding);
+  text-align: center;
+  gap: var(--theme-spacing-gap);
+  background: linear-gradient(180deg, var(--theme-bg) 0%, color-mix(in srgb, var(--theme-bg) 96%, var(--theme-primary) 4%) 100%);
+}
+
+.layout-cover .heading-1 {
+  font-size: var(--theme-size-display);
+  max-width: 1400px;
+  background: linear-gradient(135deg, var(--theme-text) 0%, var(--theme-primary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0;
+  line-height: 1.2;
+  padding: 0.1em 0;
+}
+
+.layout-cover .text-lead {
+  font-size: 1.5rem;
+  max-width: 1400px;
+  color: var(--theme-text-muted, #64748b);
+}
+
+.layout-cover .quote-block {
+  max-width: 800px;
+  margin: 1rem 0;
+}
+
+.layout-cover .text-caption {
+  font-size: 1.125rem;
+  color: var(--theme-text-muted, #64748b);
+  max-width: 900px;
+}
+
+/* Cover Presenter Info - metadata display for cover slides */
+.cover-presenter-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid color-mix(in srgb, var(--theme-text) 10%, transparent);
+}
+
+.cover-presenter-info .presenter-name {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--theme-text);
+  letter-spacing: 0.02em;
+}
+
+.cover-presenter-info .presenter-context {
+  font-size: 0.95rem;
+  color: var(--theme-text-muted, #64748b);
+  font-weight: 500;
+}
+
+.cover-presenter-info .presenter-date {
+  font-size: 0.875rem;
+  color: var(--theme-text-muted, #64748b);
+  opacity: 0.8;
+}
+
+/* Horizontal variant for compact display */
+.cover-presenter-info.horizontal {
+  flex-direction: row;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.cover-presenter-info.horizontal > span:not(:last-child)::after {
+  content: "·";
+  margin-left: 0.75rem;
+  color: var(--theme-text-muted, #64748b);
+  opacity: 0.5;
+}
+
+.layout-stacked {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: var(--theme-spacing-padding);
+  gap: var(--theme-spacing-margin);
+  align-items: center; /* Center-align by default */
+  text-align: center;
+}
+
+/* Layout header - fixed at top */
+.layout-stacked .layout-header {
+  flex-shrink: 0;
+  width: 100%;
+}
+
+/* Content body wrapper - centers middle content vertically */
+.layout-stacked .content-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  width: 100%;
+}
+
+/* Layout footer - fixed at bottom */
+.layout-stacked .layout-footer {
+  flex-shrink: 0;
+  width: 100%;
+}
+
+/* Nested layouts should not have extra padding */
+.layout-stacked .layout-split,
+.layout-stacked .layout-grid,
+.layout-split .layout-split,
+.layout-split .layout-grid,
+.layout-grid .layout-split {
+  padding: 0;
+  height: auto;
+  gap: 24px;
+}
+
+/* Nested layout split columns */
+.layout-stacked .layout-split-left,
+.layout-stacked .layout-split-right {
+  gap: 0.75rem;
+}
+
+.layout-split {
+  display: grid;
+  height: 100%;
+  gap: var(--theme-spacing-gap);
+  padding: var(--theme-spacing-padding);
+  align-items: start; /* Top-align left and right columns with each other */
+  align-content: center; /* Center the row vertically on the page */
+}
+
+/* LayoutSplit typography tweaks: reduce heading bottom whitespace in dense two-column layouts */
+.layout-split .heading-2 {
+  margin-bottom: 0.25rem;
+}
+
+.layout-split-left,
+.layout-split-right {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  justify-content: flex-start; /* Top-align content within each column */
+  height: auto; /* Allow natural height instead of forcing 100% */
+  max-height: 100%;
+}
+
+.layout-split-1-1 { grid-template-columns: 1fr 1fr; }
+.layout-split-2-1 { grid-template-columns: 2fr 1fr; }
+.layout-split-1-2 { grid-template-columns: 1fr 2fr; }
+.layout-split-3-1 { grid-template-columns: 3fr 1fr; }
+.layout-split-1-3 { grid-template-columns: 1fr 3fr; }
+
+/* LayoutSplit Sync Mode - grid-based component alignment */
+.layout-split-sync {
+  grid-auto-rows: auto;
+}
+
+.layout-split-sync .layout-split-row {
+  min-height: 0;
+}
+
+.layout-split-sync .layout-split-row-headline {
+  padding-bottom: 0rem;
+  margin-bottom:-1rem;
+}
+
+.layout-split-sync .layout-split-cell {
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.layout-split-sync .layout-split-cell-empty {
+  /* Empty placeholder cell */
+}
+
+.layout-split-sync .layout-split-cell-item {
+  min-height: 0;
+  position: relative;
+}
+
+.layout-split-cell-left[data-mirror="true"] .smart-list-card {
+  border-left: none;
+  border-right: 4px solid var(--theme-accent, #3b82f6);
+}
+
+.layout-split-cell-left[data-mirror="true"] .smart-list-card:hover {
+  transform: translateX(-4px); /* Flip hover direction */
+}
+
+.layout-split-cell-left[data-mirror="true"] .callout,
+.layout-split-cell-left[data-mirror="true"] .block-callout {
+  border-left: none;
+  border-right: 3px solid var(--theme-accent);
+}
+
+/* NoSync mode - traditional flex layout */
+.layout-split-nosync .layout-split-left,
+.layout-split-nosync .layout-split-right {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  justify-content: flex-start;
+  height: auto;
+  max-height: 100%;
+}
+
+.layout-grid {
+  display: grid;
+  height: 100%;
+  gap: var(--theme-spacing-gap);
+  padding: var(--theme-spacing-padding);
+  align-items: start;
+  align-content: space-between; /* Distribute content vertically */
+  grid-auto-rows: auto;
+}
+
+/* LayoutGrid heading should span full width */
+.layout-grid > h2,
+.layout-grid > [class*="heading-"] {
+  grid-column: 1 / -1;
+  margin-bottom: 0.5rem;
+}
+
+/* LayoutGrid content container spans full width by default */
+.layout-grid > .metric-group-block,
+.layout-grid > .card-group,
+.layout-grid > .callout {
+  grid-column: 1 / -1;
+  justify-self: stretch;
+}
+
+/* LayoutGrid caption at bottom */
+.layout-grid > .text-caption,
+.layout-grid > p:last-of-type {
+  grid-column: 1 / -1;
+  margin-top: 0.5rem;
+}
+
+.layout-grid-2 { grid-template-columns: repeat(2, 1fr); }
+.layout-grid-3 { grid-template-columns: repeat(3, 1fr); }
+.layout-grid-4 { grid-template-columns: repeat(4, 1fr); }
+
+.layout-grid-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.layout-dashboard {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 56px 96px;
+  gap: 28px;
+  overflow: hidden;
+}
+
+/* Dashboard header */
+.layout-dashboard > .dashboard-header {
+  flex-shrink: 0;
+}
+
+/* Dashboard body contains main and sidebar side by side */
+.layout-dashboard > .dashboard-body {
+  display: grid;
+  grid-template-columns: 1fr minmax(400px, 480px);
+  gap: 40px;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  align-items: start;
+}
+
+/* Dashboard main content area */
+.dashboard-main {
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+  min-height: 0;
+}
+
+/* Dashboard main inner content wrapper */
+.dashboard-main-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  width: 100%;
+}
+
+/* Dashboard sidebar container */
+.dashboard-sidebar {
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+  min-height: 0;
+}
+
+/* Dashboard sidebar inner wrapper - matches main content height */
+.dashboard-sidebar-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  background: var(--theme-surface, #f8fafc);
+  border-radius: 1rem;
+  padding: 1.25rem;
+  justify-content: flex-start;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Make children share space proportionally */
+.dashboard-sidebar-inner > * {
+  flex-shrink: 1;
+  min-height: 0;
+}
+
+/* Charts take flexible space but respect siblings */
+.dashboard-sidebar-inner > .chart-block {
+  flex: 1 1 auto;
+  min-height: 150px;
+  max-height: 60%;
+}
+
+/* Other content items take only what they need */
+.dashboard-sidebar-inner > .callout,
+.dashboard-sidebar-inner > .smart-list,
+.dashboard-sidebar-inner > .metric-group {
+  flex: 0 0 auto;
+}
+
+/* When sidebar has heading, top-align and remove top padding */
+.dashboard-sidebar-inner:has(> .heading-3:first-child) {
+  justify-content: flex-start;
+  padding-top: 0;
+}
+
+/* Dashboard typography balance - match section headers */
+.dashboard-main-content > .text-lead:first-child,
+.dashboard-sidebar-inner > .heading-3:first-child {
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--theme-text);
+  margin-bottom: 1rem;
+  line-height: 1.3;
+  width: 100%;
+  max-width: none;
+}
+
+/* Dashboard footer */
+.layout-dashboard > .dashboard-footer {
+  flex-shrink: 0;
+  padding-top: 0.5rem;
+}
+
+/* Dashboard Sync Mode */
+.layout-dashboard-sync .dashboard-body-sync {
+  overflow: visible;
+}
+
+.layout-dashboard-sync .dashboard-row {
+  min-height: 0;
+}
+
+.layout-dashboard-sync .dashboard-row-headline {
+  padding-bottom: 0.25rem;
+}
+
+.layout-dashboard-sync .dashboard-cell {
+  min-height: 0;
+  min-width: 0;
+}
+
+.layout-dashboard-sync .dashboard-cell-empty {
+  /* Empty placeholder cell */
+}
+
+.layout-dashboard-sync .dashboard-cell-item {
+  min-height: 0;
+}
+
+/* NoSync mode - center-aligned layout for visual-heavy sidebars */
+.layout-dashboard-nosync .dashboard-body {
+  display: grid;
+  grid-template-columns: minmax(400px, 640px) 1fr;
+  gap: 40px;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  align-items: center;
+}
+
+/* Fallback: when slots are used as direct children (standalone components) */
+.layout-dashboard > header,
+.layout-dashboard > [class*="Header"]:not(.dashboard-header) {
+  flex-shrink: 0;
+}
+
+.layout-dashboard > main,
+.layout-dashboard > [class*="Main"]:not(.dashboard-main) {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  flex: 1;
+  min-height: 0;
+}
+
+.layout-dashboard > aside,
+.layout-dashboard > [class*="Sidebar"]:not(.dashboard-sidebar) {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  background: var(--theme-surface, #f8fafc);
+  border-radius: 1rem;
+  padding: 1.25rem;
+}
+
+.layout-dashboard > footer,
+.layout-dashboard > [class*="Footer"]:not(.dashboard-footer) {
+  flex-shrink: 0;
+}
+
+/* Dashboard typography balance - match section headers */
+.dashboard-main > .text-lead:first-child,
+.dashboard-sidebar > .heading-3:first-child {
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--theme-text);
+  margin-bottom: 1rem;
+  line-height: 1.3;
+  width: 100%;
+  max-width: none;
+}
+
+.layout-fullbleed {
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.layout-fullbleed-bg {
+  position: absolute;
+  inset: 0;
+  object-fit: cover;
+  z-index: 0;
+}
+
+.layout-fullbleed-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.4) 100%);
+  z-index: 1;
+}
+
+.layout-fullbleed-content {
+  position: relative;
+  z-index: 2;
+  padding: 80px;
+  color: white;
+}
+
+/* =============================================================================
+ * Typography Classes - Presentation-optimized
+ * Uses vibe variables for visual intensity adjustments
+ * ============================================================================= */
+
+.heading-1 {
+  font-family: var(--theme-font-display);
+  font-size: var(--theme-size-display);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  margin: 0 0 32px 0;
+  color: var(--theme-text);
+  text-wrap: balance;
+}
+
+/* Gradient heading when theme defines heading gradient */
+[data-theme-gradient="true"] .heading-1 {
+  background: var(--theme-heading-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.heading-2 {
+  font-family: var(--theme-font-display);
+  font-size: var(--theme-size-heading);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  margin: 0 0 24px 0;
+  color: var(--theme-text);
+  text-wrap: balance;
+}
+
+.heading-3 {
+  font-family: var(--theme-font-display);
+  font-size: var(--theme-size-subheading);
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  margin: 0 0 20px 0;
+  color: var(--theme-text);
+}
+
+.heading-4, .heading-5, .heading-6 {
+  font-family: var(--theme-font-display);
+  font-size: 28px;
+  font-weight: 500;
+  line-height: 1.4;
+  margin: 0 0 16px 0;
+  color: var(--theme-text);
+}
+
+.text-default {
+  font-family: var(--theme-font-body);
+  font-size: var(--theme-size-body);
+  line-height: 1.6;
+  color: var(--theme-text);
+  margin: 0 0 16px 0;
+  max-width: 900px; /* Limit line length for readability */
+}
+
+.text-lead {
+  font-family: var(--theme-font-body);
+  font-size: 32px;
+  line-height: 1.4;
+  color: var(--theme-text-muted);
+  font-weight: 400;
+  max-width: 900px; /* Limit line length for readability (~65-75 chars) */
+}
+
+.text-caption {
+  font-family: var(--theme-font-body);
+  font-size: var(--theme-size-caption);
+  color: var(--theme-text-muted);
+  line-height: 1.5;
+}
+
+.text-code {
+  font-family: var(--theme-font-mono);
+  font-size: 0.9em;
+  background-color: var(--theme-surface);
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+/* =============================================================================
+ * Inline Highlight - Emphasize key text within sentences
+ * ============================================================================= */
+
+.highlight {
+  display: inline;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: inherit;
+  color: inherit;
+}
+
+/* Default highlight - subtle background */
+.highlight-default {
+  background: color-mix(in srgb, var(--theme-primary) 15%, transparent);
+  color: var(--theme-text);
+}
+
+/* Primary highlight - brand color */
+.highlight-primary {
+  background: color-mix(in srgb, var(--theme-primary) 20%, transparent);
+  color: var(--theme-primary);
+  font-weight: 600;
+}
+
+/* Success highlight - green/positive */
+.highlight-success {
+  background: color-mix(in srgb, var(--theme-success) 18%, transparent);
+  color: var(--theme-success);
+}
+
+/* Warning highlight - yellow/caution */
+.highlight-warning {
+  background: color-mix(in srgb, var(--theme-warning) 20%, transparent);
+  color: color-mix(in srgb, var(--theme-warning) 80%, var(--theme-text));
+}
+
+/* Info highlight - blue/informational */
+.highlight-info {
+  background: color-mix(in srgb, var(--theme-info) 18%, transparent);
+  color: var(--theme-info);
+}
+
+/* Accent highlight - secondary/decorative */
+.highlight-accent {
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--theme-primary) 15%, transparent),
+    color-mix(in srgb, var(--theme-secondary) 15%, transparent)
+  );
+  color: var(--theme-text);
+}
+
+/* Bold modifier */
+.highlight-bold {
+  font-weight: 700;
+}
+
+/* Block modifier - for standalone use in layouts */
+.highlight-block {
+  display: block;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+/* =============================================================================
+ * Navigation (Internal Only)
+ * ============================================================================= */
+
+.slide-navigation {
+  position: fixed;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 1rem;
+  background-color: var(--theme-surface);
+  border-radius: 9999px;
+  box-shadow: var(--vibe-shadow-lg);
+  border: var(--vibe-border-width) solid rgba(0, 0, 0, calc(0.05 * var(--vibe-border-opacity)));
+  z-index: 100;
+  transition: all var(--vibe-animation-duration) ease;
+}
+
+.slide-counter {
+  font-family: var(--theme-font-mono);
+  font-size: var(--theme-size-caption);
+  color: var(--theme-text-muted);
+}
+
+.slide-progress {
+  width: 100px;
+  height: 4px;
+  background-color: var(--theme-border);
+  border-radius: var(--vibe-radius);
+  overflow: hidden;
+}
+
+.slide-progress-bar {
+  height: 100%;
+  background-color: var(--theme-primary);
+  transition: width var(--vibe-animation-duration) ease;
+}
+
+/* =============================================================================
+ * Layout Alignment Modifiers
+ * ============================================================================= */
+
+.layout-stacked.align-left {
+  align-items: flex-start;
+  text-align: left;
+}
+
+.layout-stacked.align-center {
+  align-items: center;
+  text-align: center;
+}
+
+/* =============================================================================
+ * Timeline Layout - Dynamic Alternating Nodes
+ * A horizontal timeline with nodes alternating above/below the center line
+ * ============================================================================= */
+.layout-timeline {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 40px 56px;
+  gap: 24px;
+  overflow: hidden;
+}
+
+/* Timeline heading */
+.layout-timeline > h2,
+.layout-timeline > [class*="heading-"] {
+  flex-shrink: 0;
+  margin-bottom: 0;
+  font-size: 2.25rem;
+  text-align: center;
+}
+
+/* Timeline lead text */
+.layout-timeline > .text-lead {
+  flex-shrink: 0;
+  margin-bottom: 0;
+  font-size: 1.25rem;
+  text-align: center;
+  max-width: 800px;
+  margin-inline: auto;
+}
+
+/* Hidden - we use CSS to create the line */
+.layout-timeline > .timeline-line {
+  display: none;
+}
+
+/* Timeline items container - horizontal timeline strip */
+.layout-timeline > .timeline-items {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  position: relative;
+  min-height: 320px;
+  padding: 0 40px;
+}
+
+/* The central horizontal line */
+.layout-timeline > .timeline-items::before {
+  content: '';
+  position: absolute;
+  left: 60px;
+  right: 60px;
+  top: 50%;
+  height: 3px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--theme-primary) 3%,
+    var(--theme-primary) 97%,
+    transparent 100%
+  );
+  transform: translateY(-50%);
+  z-index: 0;
+}
+
+/* Individual timeline item */
+.layout-timeline .timeline-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: absolute;
+  width: 160px;
+  z-index: 1;
+}
+
+/* Alternating positioning: odd items go UP, even items go DOWN */
+.layout-timeline .timeline-item:nth-child(odd) {
+  bottom: calc(50% + 20px);
+  flex-direction: column-reverse;
+}
+
+.layout-timeline .timeline-item:nth-child(even) {
+  top: calc(50% + 20px);
+}
+
+/* The circle node on the timeline */
+.layout-timeline .timeline-item::before {
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  background: var(--theme-bg);
+  border: 3px solid var(--theme-primary);
+  border-radius: 50%;
+  z-index: 2;
+  box-shadow: 0 0 0 3px var(--theme-bg);
+}
+
+/* Circle position for odd (top) items - circle at bottom of content */
+.layout-timeline .timeline-item:nth-child(odd)::before {
+  bottom: -42px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* Circle position for even (bottom) items - circle at top of content */
+.layout-timeline .timeline-item:nth-child(even)::before {
+  top: -42px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* Connector line from content to circle */
+.layout-timeline .timeline-item::after {
+  content: '';
+  position: absolute;
+  width: 2px;
+  height: 28px;
+  background: var(--theme-primary);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1;
+}
+
+/* Connector for odd (top) items */
+.layout-timeline .timeline-item:nth-child(odd)::after {
+  bottom: -26px;
+}
+
+/* Connector for even (bottom) items */
+.layout-timeline .timeline-item:nth-child(even)::after {
+  top: -26px;
+}
+
+/* Year label styling */
+.layout-timeline .timeline-year {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--theme-primary);
+  letter-spacing: 0.05em;
+  background: color-mix(in srgb, var(--theme-primary) 12%, var(--theme-bg));
+  padding: 6px 14px;
+  border-radius: 10px;
+  margin-bottom: 14px;
+}
+
+/* Year at bottom for odd items (content reversed) */
+.layout-timeline .timeline-item:nth-child(odd) .timeline-year {
+  margin-bottom: 0;
+  margin-top: 14px;
+}
+
+/* Content box */
+.layout-timeline .timeline-content {
+  text-align: center;
+  width: 100%;
+  padding: 10px 14px;
+  background: color-mix(in srgb, var(--theme-primary) 5%, var(--theme-bg));
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--theme-primary) 15%, transparent);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+
+  /* Prevent horizontal overflow (no truncation) */
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+.layout-timeline .timeline-content h3,
+.layout-timeline .timeline-content [class*="heading-"] {
+  font-size: 2.0rem;
+  margin-bottom: 10px;
+  color: var(--theme-text);
+}
+
+.layout-timeline .timeline-content .text-default {
+  font-size: 1.5rem;
+  color: var(--theme-text);
+  margin: 0 0 10px 0;
+  line-height: 1.35;
+}
+
+.layout-timeline .timeline-content .text-caption {
+  display: block;
+  color: var(--theme-text-muted);
+  margin-top: 4px;
+  line-height: 1.25;
+  font-size: 1.2rem;
+}
+
+/* Highlighted item */
+.layout-timeline .timeline-item-highlighted::before {
+  background: var(--theme-primary);
+  border-color: var(--theme-primary);
+  width: 18px;
+  height: 18px;
+  box-shadow: 0 0 0 3px var(--theme-bg), 0 0 10px var(--theme-primary);
+}
+
+.layout-timeline .timeline-item-highlighted .timeline-content {
+  background: color-mix(in srgb, var(--theme-primary) 12%, var(--theme-bg));
+  border-color: var(--theme-primary);
+}
+
+/* Legacy support for timeline-steps (vertical variant) */
+.layout-timeline-title {
+  margin-bottom: 1.5rem;
+}
+
+.layout-timeline-steps {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  position: relative;
+  padding-left: 2rem;
+}
+
+.layout-timeline-steps::before {
+  content: '';
+  position: absolute;
+  left: 0.5rem;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(
+    to bottom,
+    var(--theme-primary),
+    var(--theme-secondary)
+  );
+}
+
+.timeline-step {
+  position: relative;
+  padding-left: 1rem;
+}
+
+.timeline-step::before {
+  content: '';
+  position: absolute;
+  left: -1.5rem;
+  top: 0.5rem;
+  width: 12px;
+  height: 12px;
+  background: var(--theme-primary);
+  border-radius: 50%;
+  border: 3px solid var(--theme-bg);
+  box-shadow: 0 0 0 2px var(--theme-primary);
+}
+
+
+/* =============================================================================
+ * Utility Classes
+ * ============================================================================= */
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* =============================================================================
+ * StepList Component Styles
+ * ============================================================================= */
+
+.step-list-block {
+  width: 100%;
+  max-width: 600px;
+}
+
+.step-list-title {
+  font-family: var(--theme-font-display);
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0 0 16px 0;
+  color: var(--theme-text);
+}
+
+.step-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.step-list-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  position: relative;
+  padding-bottom: 24px;
+}
+
+.step-list-item:last-child {
+  padding-bottom: 0;
+}
+
+/* Vertical connector line */
+.step-list-item:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: 18px;
+  top: 40px;
+  width: 2px;
+  height: calc(100% - 40px);
+  background: var(--theme-border, #e2e8f0);
+}
+
+.step-number {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--theme-primary, #3b82f6);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--theme-font-display);
+  font-size: 16px;
+  font-weight: 700;
+  z-index: 1;
+}
+
+.step-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 6px;
+}
+
+.step-label {
+  font-family: var(--theme-font-body);
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--theme-text);
+  line-height: 1.3;
+}
+
+.step-description {
+  font-family: var(--theme-font-body);
+  font-size: 16px;
+  color: var(--theme-text-muted);
+  line-height: 1.4;
+}
+
+/* =============================================================================
+ * ProcessStrip Component Styles
+ * ============================================================================= */
+
+.process-strip-block {
+  width: 100%;
+}
+
+.process-strip-title {
+  font-family: var(--theme-font-display);
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0 0 16px 0;
+  color: var(--theme-text);
+}
+
+.process-strip {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+}
+
+.process-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: var(--theme-surface, #f8fafc);
+  border-radius: 8px;
+  border: 2px solid var(--theme-border, #e2e8f0);
+  min-width: 100px;
+  transition: all 0.2s ease;
+}
+
+.process-step-indicator {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.process-check {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--theme-primary, #3b82f6);
+}
+
+.process-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--theme-primary, #3b82f6);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.2); }
+}
+
+.process-step-label {
+  font-family: var(--theme-font-body);
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--theme-text);
+  text-align: center;
+}
+
+/* Status variants */
+.process-status-done {
+  background: rgba(34, 197, 94, 0.1);
+  border-color: #22c55e;
+}
+
+.process-status-done .process-step-label {
+  color: #16a34a;
+}
+
+.process-status-active {
+  background: rgba(59, 130, 246, 0.1);
+  border-color: var(--theme-primary, #3b82f6);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.process-status-active .process-step-label {
+  color: var(--theme-primary, #3b82f6);
+  font-weight: 600;
+}
+
+.process-status-pending {
+  background: var(--theme-surface, #f8fafc);
+  border-color: var(--theme-border, #cbd5e1);
+  border-style: dashed;
+}
+
+.process-status-pending .process-step-label {
+  color: var(--theme-text-muted);
+}
+
+.process-pending-icon {
+  font-size: 16px;
+  color: var(--theme-text-muted);
+}
+
+.process-status-neutral {
+  background: var(--theme-surface, #f8fafc);
+  border-color: var(--theme-border, #94a3b8);
+}
+
+.process-status-neutral .process-step-label {
+  margin: auto;
+}
+
+/* Connector arrow */
+.process-connector {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8px;
+}
+
+.process-arrow {
+  width: 24px;
+  height: 24px;
+  color: var(--theme-text-muted);
+}
+
+/* Compact variant */
+.process-strip-compact .process-step {
+  padding: 8px 16px;
+  min-width: 80px;
+}
+
+.process-strip-compact .process-step-indicator {
+  display: none;
+}
+
+.process-strip-compact .process-step-label {
+  font-size: 14px;
+}
+
+.process-strip-compact .process-arrow {
+  width: 18px;
+  height: 18px;
+}
+
+/* Print styles */
+@media print {
+  .slide-navigation {
+    display: none;
+  }
+
+  .slide {
+    break-after: page;
+    height: auto;
+    aspect-ratio: auto;
+  }
+}
