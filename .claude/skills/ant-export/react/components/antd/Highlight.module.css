@@ -1,0 +1,66 @@
+/* =============================================================================
+   Highlight - Inline text emphasis component
+   Migrated from: .claude/skills/export/react/styles/globals.css (.highlight-*)
+   ============================================================================= */
+
+.highlight {
+  display: inline;
+  padding: 2px 8px;
+  border-radius: var(--theme-radius-sm, 4px);
+  font-weight: inherit;
+  color: inherit;
+  background-color: transparent;
+}
+
+/* =============================================================================
+   COLOR VARIANTS
+   ============================================================================= */
+
+/* Default highlight - subtle background */
+.default {
+  background: color-mix(in srgb, var(--theme-primary) 15%, transparent);
+  color: var(--theme-text);
+}
+
+/* Primary highlight - brand color */
+.primary {
+  background: color-mix(in srgb, var(--theme-primary) 20%, transparent);
+  color: var(--theme-primary);
+  font-weight: 600;
+}
+
+/* Success highlight - green/positive */
+.success {
+  background: color-mix(in srgb, var(--theme-success) 18%, transparent);
+  color: var(--theme-success);
+}
+
+/* Warning highlight - yellow/caution */
+.warning {
+  background: color-mix(in srgb, var(--theme-warning) 20%, transparent);
+  color: color-mix(in srgb, var(--theme-warning) 80%, var(--theme-text));
+}
+
+/* Info highlight - blue/informational */
+.info {
+  background: color-mix(in srgb, var(--theme-info) 18%, transparent);
+  color: var(--theme-info);
+}
+
+/* Accent highlight - secondary/decorative */
+.accent {
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--theme-primary) 15%, transparent),
+    color-mix(in srgb, var(--theme-secondary) 15%, transparent)
+  );
+  color: var(--theme-text);
+}
+
+/* =============================================================================
+   MODIFIERS
+   ============================================================================= */
+
+/* Strong/bold modifier */
+.strong {
+  font-weight: 700;
+}

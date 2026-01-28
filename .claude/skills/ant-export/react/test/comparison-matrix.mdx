@@ -1,0 +1,33 @@
+<Title level={2}>Feature Comparison Matrix</Title>
+<Paragraph>How we stack up against OS-native and competitor solutions</Paragraph>
+
+<Table
+  columns={[
+    { title: "Feature", dataIndex: "feature", key: "feature" },
+    { title: "OS Copilot", dataIndex: "os", key: "os" },
+    { title: "Competitor A", dataIndex: "compA", key: "compA" },
+    { title: "Our Solution", dataIndex: "ours", key: "ours" }
+  ]}
+  dataSource={[
+    { key: "1", feature: "Local Inference", os: "❌", compA: "❌", ours: "✅" },
+    { key: "2", feature: "Zero Latency", os: "❌", compA: "⚠️", ours: "✅" },
+    { key: "3", feature: "Cross-App Context", os: "⚠️", compA: "❌", ours: "✅" },
+    { key: "4", feature: "Offline Mode", os: "❌", compA: "❌", ours: "✅" },
+    { key: "5", feature: "Custom Personas", os: "❌", compA: "⚠️", ours: "✅" },
+    { key: "6", feature: "Enterprise Security", os: "⚠️", compA: "✅", ours: "✅" }
+  ]}
+  pagination={false}
+  size="middle"
+/>
+
+<Row gutter={24} style={{ marginTop: 24 }}>
+  <Col span={8}>
+    <Alert type="error" message="OS Copilot" description="Broad but shallow. Cloud-dependent." />
+  </Col>
+  <Col span={8}>
+    <Alert type="warning" message="Competitor A" description="Feature-rich but privacy concerns." />
+  </Col>
+  <Col span={8}>
+    <Alert type="success" message="Our Solution" description="Narrow but deep. Privacy-first." />
+  </Col>
+</Row>

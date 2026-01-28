@@ -28,6 +28,19 @@ Source Document → Storyline → Theme → Layout → Export
 
 Each stage is handled by a specialized subagent.
 
+## Renderer Selection (DEFAULT: Ant Design)
+
+**By default, use Ant Design components:**
+- Layout skill: `ant-paged-layout`
+- Export skill: `ant-slides-export`
+- Preview server: `http://localhost:3001/slides/{project_id}`
+
+**Use original components ONLY if user explicitly requests:**
+- "don't use ant design", "no antd", "use original components", "use custom components"
+- Layout skill: `paged-layout-content`
+- Export skill: `slides-export`
+- Preview server: `http://localhost:3000/slides/{project_id}`
+
 ## Completion Requirement (CRITICAL)
 
 When the user asks to "generate slides" / "produce a deck", you MUST run the pipeline end-to-end in the same turn:
@@ -41,13 +54,13 @@ Do NOT pause after project creation or theme selection waiting for user confirma
 **DO NOT:**
 - Read .tsx, .ts, .js, .jsx, .py files from src/, static/, or any solution code
 - Use file_search, grep_search, or semantic_search tools - all paths are deterministic
-- Search for component implementations - all component syntax is documented in SKILL files
-- Read files outside the project directory except SKILL files in .claude/skills/
+- Search for component implementations
+- Read files outside the project directory
 
 **DO:**
 - Use MCP tools (mcp_create-project, mcp_apply-patch, mcp_export-mdx) exclusively
-- Read only SKILL.md files from .claude/skills/ for subagent instructions
-- Trust the documentation in SKILL files - they contain all component syntax needed
+- Reference skills by name (e.g., "Use the ant-paged-layout skill")
+- Trust the skill instructions - they contain all component syntax needed
 
 ## Todo Management
 
@@ -166,9 +179,7 @@ Invoke the theme-generator subagent (only if needed):
 ```
 runSubagent({
   description: "Select theme",
-  prompt: `You are a theme selection subagent.
-
-Read the SKILL file at .claude/skills/theme/SKILL.md for complete instructions.
+  prompt: `Use the theme-generator skill.
 
 Project directory: {project_dir}
 User instruction: {user_instruction}
@@ -185,14 +196,12 @@ Invoke the storyline-planner subagent:
 ```
 runSubagent({
   description: "Plan storyline",
-  prompt: `You are a storyline planning subagent.
-
-Read the SKILL file at .claude/skills/storyline/SKILL.md for complete instructions.
+  prompt: `Use the storyline-planner skill.
 
 Project directory: {project_dir}
 User instruction: {user_instruction}
 
-Read the source files in {project_dir}/files/ and create draft slides using SCQA framework.
+Read the source files and create draft slides using SCQA framework.
 Include story, density, visual_design, and content fields for each slide.
 Return a summary of planned slides.`
 })
@@ -200,28 +209,34 @@ Return a summary of planned slides.`
 
 ## Step 4: Generate Layouts (Subagent)
 
-Invoke the paged-layout subagent:
+**Default: Use Ant Design layout skill.**
+
+Invoke the ant-paged-layout subagent:
 
 ```
 runSubagent({
   description: "Generate layouts",
-  prompt: `You are a layout generation subagent.
+  prompt: `Use the ant-paged-layout skill.
 
-Read the SKILL file at .claude/skills/paged-layout/SKILL.md for complete instructions.
+Project directory: {project_dir}
+
+Generate Ant Design JSX content for each draft slide.
+Use the slide's story, content, and visual_design fields to guide component selection.
+Return a summary of generated layouts.`
+})
+```
+
+**If user opted out of Ant Design**, use original skill:
+
+```
+runSubagent({
+  description: "Generate layouts",
+  prompt: `Use the paged-layout-content skill.
 
 Project directory: {project_dir}
 
 Generate MDX content for each draft slide.
-Use the slide's story, content, and visual_design fields to generate MDX.
-Follow the visual_design field exactly.
-Use correct component names: <Left>/<Right> for LayoutSplit, <LayoutFullBleed> not LayoutFocus.
-
-CRITICAL SYNTAX RULES:
-- SmartList uses items PROP: <SmartList items={["Point 1", "Point 2"]} />
-- ProcessStrip uses items PROP: <ProcessStrip items={["Step1", "Step2"]} />
-- StepList uses items PROP: <StepList items={[{label: "...", description: "..."}]} />
-- DO NOT use <li> or <Step> child components - they don't exist!
-
+Use the slide's story, content, and visual_design fields.
 Return a summary of generated layouts.`
 })
 ```
@@ -230,11 +245,14 @@ Return a summary of generated layouts.`
 
 **NOTE:** This step is ONLY export. Do NOT run validation here. Validation is Step 6 (Refinement).
 
+**Default: Use Ant Design renderer.**
+
 Use the MCP tool to export slides and start the preview server:
 ```
 mcp_export-mdx_export_mdx({
   "project_dir": "{project_dir}",
-  "start_server": true
+  "start_server": true,
+  "renderer": "antd"
 })
 ```
 
@@ -242,13 +260,25 @@ Returns:
 ```json
 {
   "status": "success",
-  "mdx_file": "C:/Users/.../slides.mdx",
+  "output_file": "C:/Users/.../slides.jsx",
   "slide_count": 10,
   "project_id": "golden_set_7a783fe4",
-  "server_url": "http://localhost:3000/slides/golden_set_7a783fe4",
+  "server_url": "http://localhost:3001/slides/golden_set_7a783fe4",
+  "renderer": "antd",
   "server_status": "started"
 }
 ```
+
+**If user opted out of Ant Design**, use original renderer:
+```
+mcp_export-mdx_export_mdx({
+  "project_dir": "{project_dir}",
+  "start_server": true,
+  "renderer": "original"
+})
+```
+- Server URL: `http://localhost:3000/slides/{project_id}`
+- Output file: `slides.mdx`
 
 After export, open the preview URL in Simple Browser using `open_simple_browser`.
 
@@ -290,12 +320,28 @@ Check the result:
 - If `status == "needs_refinement"` → Continue to fix
 
 **Step 6b: Fix layouts (only if errors found)**
+
+**Default: Use Ant Design skill for fixes.**
 ```
 runSubagent({
   description: "Fix layouts",
-  prompt: `You are a layout refinement subagent.
+  prompt: `Use the ant-paged-layout skill.
 
-Read the SKILL file at .claude/skills/paged-layout/SKILL.md for complete instructions.
+Project directory: {project_dir}
+Refinement round: {current_round} of {max_rounds}
+
+Read the issues section from content.json using mcp_apply-patch_read_section.
+Fix the JSX for slides with errors.
+Focus on: sparse_content, unbalanced_columns, empty_slot, content_overflow issues.
+Return summary of fixes applied.`
+})
+```
+
+**If user opted out of Ant Design:**
+```
+runSubagent({
+  description: "Fix layouts",
+  prompt: `Use the paged-layout-content skill.
 
 Project directory: {project_dir}
 Refinement round: {current_round} of {max_rounds}
@@ -303,19 +349,18 @@ Refinement round: {current_round} of {max_rounds}
 Read the issues section from content.json using mcp_apply-patch_read_section.
 Fix the MDX for slides with errors.
 Focus on: sparse_content, unbalanced_columns, empty_slot, content_overflow issues.
-
-Call mcp_apply-patch_apply_patch directly with the fixed slides array.
 Return summary of fixes applied.`
 })
 ```
 
 **Step 6c: Re-export**
 
-Use the MCP tool to re-export:
+Use the MCP tool to re-export (with same renderer as Step 5):
 ```
 mcp_export-mdx_export_mdx({
   "project_dir": "{project_dir}",
-  "start_server": true
+  "start_server": true,
+  "renderer": "antd"  // or "original" if opted out
 })
 ```
 
@@ -336,6 +381,13 @@ If max_rounds > 0:
 ## Step 7: Open Preview
 
 After pipeline completes, open the browser:
+
+**Default (Ant Design):**
+```
+http://localhost:3001/slides/{project_id}
+```
+
+**Original components (if opted out):**
 ```
 http://localhost:3000/slides/{project_id}
 ```
@@ -445,7 +497,7 @@ User: "Generate slides for golden_set.md"
 
 ## Error Handling
 
-- If subagent fails, check the SKILL.md file for correct instructions
-- If components not rendering, verify correct component names in MDX
+- If subagent fails, verify skill name is correct
+- If components not rendering, verify correct component names in output
 - If server fails, check SLIDES_OUTPUT_PATH environment variable
 - If validation fails repeatedly, check layout_validator.py for issue definitions

@@ -1,0 +1,27 @@
+{/* Slide 10 - Stacked: LT decisions - capacity, governance, and safety */}
+
+<Title level={1}>LT decisions: capacity, governance, and safety</Title>
+<Text type="secondary" style={{ fontSize: 18 }}>A small set of cross-org decisions will determine whether we can scale safely and governably.</Text>
+
+<Table
+  style={{ marginTop: 32 }}
+  pagination={false}
+  columns={[
+    { title: "Area", dataIndex: "area", key: "area", width: "25%" },
+    { title: "Decision focus", dataIndex: "focus", key: "focus" }
+  ]}
+  dataSource={[
+    { key: "1", area: "Capacity & platform", focus: "Confirm GPU capacity and LLM onboarding timelines; align on multi-environment scale and fallbacks." },
+    { key: "2", area: "Reliability & ops", focus: "Set SPOF/error-handling bar and monitoring ownership, including Voice Live API retry/controller strategy." },
+    { key: "3", area: "Enterprise governance", focus: "Assign DRI for Admin reporting SLAs and confirm metering expectations for Mar 31, 2026 preview." },
+    { key: "4", area: "Responsible AI / safety", focus: "Approve guardrails and launch criteria for harassment/misgendering and JP/KR tone control." },
+    { key: "5", area: "Policy / compliance", focus: "Decide on recording parity for interpreted audio to unlock recap and compliance scenarios." }
+  ]}
+/>
+
+<div style={{ background: "#fff2f0", border: "1px solid #ffccc7", borderRadius: 8, padding: "12px 16px", marginTop: 24 }}>
+  <Text strong style={{ color: "#cf1322", fontSize: 12 }}>ACTION REQUIRED</Text>
+  <div style={{ marginTop: 4 }}>
+    <Text style={{ color: "#ff4d4f" }}>LT alignment on these five areas is required to unlock TBT/SIM scale, meet governance expectations, and manage risk.</Text>
+  </div>
+</div>

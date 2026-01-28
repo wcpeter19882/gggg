@@ -1,0 +1,36 @@
+{/* Slide 6 - Dashboard: TBT is the accuracy-and-flow escape hatch */}
+
+<Title level={1}>TBT is the accuracy-and-flow escape hatch</Title>
+<Text type="secondary" style={{ fontSize: 18 }}>A structured mode that restores clarity where SIM breaks down.</Text>
+
+<Row gutter={48} style={{ marginTop: 32 }}>
+  <Col span={12}>
+    <div style={{ marginBottom: 12 }}>
+      <Text>• Improves turn clarity and reduces overlap in complex meetings</Text>
+    </div>
+    <div style={{ marginBottom: 12 }}>
+      <Text>• Early JP/KR feedback highlights stronger accuracy and clearer turns</Text>
+    </div>
+    <div style={{ marginBottom: 24 }}>
+      <Text>• Current limit: 25 concurrent sessions with edge-case behaviors</Text>
+    </div>
+    <div style={{ background: "#fffbe6", border: "1px solid #ffe58f", borderRadius: 8, padding: "12px 16px" }}>
+      <Text strong style={{ color: "#d48806", fontSize: 12 }}>CONSTRAINT</Text>
+      <div style={{ marginTop: 4 }}>
+        <Text style={{ color: "#ad6800" }}>Scaling and hardening TBT capacity is the next execution focus.</Text>
+      </div>
+    </div>
+  </Col>
+  <Col span={12}>
+    <Title level={3} style={{ marginBottom: 16 }}>SIM vs. TBT positioning</Title>
+    <Matrix
+      data={[
+        { label: "SIM", x: 25, y: 45, description: "Best for fluid, low-stakes conversations." },
+        { label: "TBT", x: 80, y: 85, description: "Best for structured, high-stakes meetings." }
+      ]}
+      xLabel="Meeting structure"
+      yLabel="Perceived accuracy & clarity"
+      height={220}
+    />
+  </Col>
+</Row>

@@ -1,0 +1,185 @@
+/* Statistic styles - Shadow implementation matching BigNum/MetricCard */
+
+/* =============================================================================
+   BASE STYLES
+   ============================================================================= */
+
+.statistic {
+  display: flex;
+  flex-direction: column;
+}
+
+.icon {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+  color: var(--theme-accent, #f59e0b);
+}
+
+.content {
+  order: 1;
+}
+
+.value {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.25em;
+}
+
+.valueText {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--theme-accent, #f59e0b);
+  line-height: 1.1;
+}
+
+.prefix,
+.suffix {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--theme-accent, #f59e0b);
+  opacity: 0.8;
+}
+
+.title {
+  order: 2;
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: var(--theme-text-muted, #64748b);
+  margin-top: 0.25rem;
+}
+
+.sublabel {
+  order: 3;
+  font-size: 0.875rem;
+  color: var(--theme-text-muted, #64748b);
+  margin-top: 0.25rem;
+  opacity: 0.8;
+}
+
+/* =============================================================================
+   HERO VARIANT (BigNum style)
+   ============================================================================= */
+
+.hero {
+  text-align: center;
+  padding: 2rem var(--theme-spacing-margin, 1rem);
+  margin: 0.25rem 0;
+}
+
+.hero .icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.hero .valueText {
+  font-size: calc(var(--theme-size-display, 3.25rem) * 2.2);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: var(--theme-background, #fff);
+  background: var(--theme-accent, #f59e0b);
+  display: inline-block;
+  padding: 0.4em 0.6em;
+  border-radius: 0.15em;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: rotate(-2deg);
+  animation: bignum-pop 0.4s ease-out;
+}
+
+.hero .prefix,
+.hero .suffix {
+  font-size: calc(var(--theme-size-display, 3.25rem) * 1.2);
+  color: var(--theme-background, #fff);
+  opacity: 1;
+}
+
+@keyframes bignum-pop {
+  0% { transform: rotate(-2deg) scale(0.8); opacity: 0; }
+  60% { transform: rotate(-2deg) scale(1.05); }
+  100% { transform: rotate(-2deg) scale(1); opacity: 1; }
+}
+
+.hero .title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--theme-text, #1f1f1f);
+  margin-top: 1.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.hero .sublabel {
+  font-size: 1.125rem;
+  color: var(--theme-text-muted, #64748b);
+  margin-top: 0.5rem;
+  font-weight: 500;
+  opacity: 1;
+}
+
+/* =============================================================================
+   CARD VARIANT (MetricCard style)
+   ============================================================================= */
+
+.card {
+  background: var(--theme-surface, #f8fafc);
+  border-radius: var(--theme-radius-md, 8px);
+  padding: 1.5rem 1.25rem 1rem;
+  text-align: left;
+}
+
+.card .valueText {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--theme-secondary, #6366f1);
+  line-height: 1.2;
+}
+
+.card .prefix,
+.card .suffix {
+  color: var(--theme-secondary, #6366f1);
+}
+
+.card .title {
+  font-size: 0.9375rem;
+  font-weight: 400;
+  color: var(--theme-text-muted, #64748b);
+  margin-top: 0.25rem;
+}
+
+.card .sublabel {
+  font-size: 0.875rem;
+  color: var(--theme-text-muted, #64748b);
+  margin-top: 0.5rem;
+}
+
+/* =============================================================================
+   INLINE VARIANT (Compact)
+   ============================================================================= */
+
+.inline {
+  flex-direction: row;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.75rem 0;
+}
+
+.inline .content {
+  order: 1;
+}
+
+.inline .title {
+  order: 2;
+  margin-top: 0;
+  margin-left: 0.5rem;
+}
+
+.inline .valueText {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--theme-secondary, #6366f1);
+}
+
+.inline .prefix,
+.inline .suffix {
+  font-size: 1rem;
+}

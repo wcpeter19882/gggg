@@ -1,0 +1,81 @@
+<Title level={2}>Key Metrics Dashboard</Title>
+
+<Row gutter={24}>
+  <Col span={6}>
+    <HCard shadow="sm">
+      <CardBody>
+        <Statistic title="Monthly Active Users" value="2.4M" valueStyle={{ color: "#1890ff" }} />
+        <Chip color="success" size="sm" variant="flat" className="mt-2">+12% MoM</Chip>
+      </CardBody>
+    </HCard>
+  </Col>
+  <Col span={6}>
+    <HCard shadow="sm">
+      <CardBody>
+        <Statistic title="Revenue" value="$4.2M" prefix="$" valueStyle={{ color: "#52c41a" }} />
+        <Chip color="success" size="sm" variant="flat" className="mt-2">+8% MoM</Chip>
+      </CardBody>
+    </HCard>
+  </Col>
+  <Col span={6}>
+    <HCard shadow="sm">
+      <CardBody>
+        <Statistic title="Churn Rate" value={2.3} suffix="%" valueStyle={{ color: "#faad14" }} />
+        <Chip color="warning" size="sm" variant="flat" className="mt-2">-0.5% MoM</Chip>
+      </CardBody>
+    </HCard>
+  </Col>
+  <Col span={6}>
+    <HCard shadow="sm">
+      <CardBody>
+        <Statistic title="NPS Score" value={72} valueStyle={{ color: "#722ed1" }} />
+        <Chip color="primary" size="sm" variant="flat" className="mt-2">+5 pts</Chip>
+      </CardBody>
+    </HCard>
+  </Col>
+</Row>
+
+<Row gutter={24} style={{ marginTop: 24 }}>
+  <Col span={14}>
+    <HCard shadow="sm">
+      <CardHeader>
+        <Title level={4}>Revenue Growth</Title>
+      </CardHeader>
+      <CardBody>
+        <Area
+          data={[
+            { month: "Jul", revenue: 2800000 },
+            { month: "Aug", revenue: 3100000 },
+            { month: "Sep", revenue: 3400000 },
+            { month: "Oct", revenue: 3600000 },
+            { month: "Nov", revenue: 3900000 },
+            { month: "Dec", revenue: 4200000 }
+          ]}
+          xField="month"
+          yField="revenue"
+          height={220}
+        />
+      </CardBody>
+    </HCard>
+  </Col>
+  <Col span={10}>
+    <HCard shadow="sm">
+      <CardHeader>
+        <Title level={4}>User Segments</Title>
+      </CardHeader>
+      <CardBody>
+        <Pie
+          data={[
+            { type: "Enterprise", value: 45 },
+            { type: "SMB", value: 30 },
+            { type: "Startup", value: 15 },
+            { type: "Individual", value: 10 }
+          ]}
+          angleField="value"
+          colorField="type"
+          height={220}
+        />
+      </CardBody>
+    </HCard>
+  </Col>
+</Row>

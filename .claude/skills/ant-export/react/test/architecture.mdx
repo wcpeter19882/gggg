@@ -1,0 +1,65 @@
+<Title level={2}>Product Architecture</Title>
+<Paragraph style={{ textAlign: "center" }}>Three-Layer Intelligence Stack</Paragraph>
+
+<div className="flex gap-6 mt-8">
+  <HCard className="flex-1" shadow="lg" style={{ borderTop: "4px solid #1890ff" }}>
+    <CardHeader>
+      <Center className="w-full flex-col">
+        <div style={{ fontSize: 40 }}>☁️</div>
+        <Title level={4}>Cloud Layer</Title>
+      </Center>
+    </CardHeader>
+    <CardBody>
+      <List size="small">
+        <List.Item>Heavy compute tasks</List.Item>
+        <List.Item>Model fine-tuning</List.Item>
+        <List.Item>Cross-device sync</List.Item>
+        <List.Item>Analytics & telemetry</List.Item>
+      </List>
+      <Chip color="primary" variant="flat" className="mt-4">Optional</Chip>
+    </CardBody>
+  </HCard>
+
+  <HCard className="flex-1" shadow="lg" style={{ borderTop: "4px solid #52c41a" }}>
+    <CardHeader>
+      <Center className="w-full flex-col">
+        <div style={{ fontSize: 40 }}>💻</div>
+        <Title level={4}>Local Intelligence</Title>
+      </Center>
+    </CardHeader>
+    <CardBody>
+      <List size="small">
+        <List.Item>3B SLM on NPU</List.Item>
+        <List.Item>Local RAG engine</List.Item>
+        <List.Item>Zero-latency inference</List.Item>
+        <List.Item>Privacy vault</List.Item>
+      </List>
+      <Chip color="success" variant="flat" className="mt-4">Core</Chip>
+    </CardBody>
+  </HCard>
+
+  <HCard className="flex-1" shadow="lg" style={{ borderTop: "4px solid #722ed1" }}>
+    <CardHeader>
+      <Center className="w-full flex-col">
+        <div style={{ fontSize: 40 }}>🔌</div>
+        <Title level={4}>OS Integration</Title>
+      </Center>
+    </CardHeader>
+    <CardBody>
+      <List size="small">
+        <List.Item>System tray presence</List.Item>
+        <List.Item>Cross-app context</List.Item>
+        <List.Item>File system access</List.Item>
+        <List.Item>Native notifications</List.Item>
+      </List>
+      <Chip color="secondary" variant="flat" className="mt-4">Differentiator</Chip>
+    </CardBody>
+  </HCard>
+</div>
+
+<Alert 
+  type="info" 
+  message="Key Insight" 
+  description="The Heavy Client acts as a 'Local Intelligence Server' - it's not just an app, it's infrastructure."
+  style={{ marginTop: 24 }}
+/>

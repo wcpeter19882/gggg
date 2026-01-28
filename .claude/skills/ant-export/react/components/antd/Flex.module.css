@@ -1,0 +1,10 @@
+/* Flex styles for slides */
+
+.flex {
+  width: 100%;
+}
+
+.fullHeight {
+  height: 100%;
+  min-height: 0;
+}

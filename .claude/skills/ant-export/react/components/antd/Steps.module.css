@@ -1,0 +1,229 @@
+/* Steps styles - Shadow implementation matching ProcessStrip/StepList */
+
+/* =============================================================================
+   BASE STYLES
+   ============================================================================= */
+
+.steps {
+  display: flex;
+  margin: 1.5rem 0;
+}
+
+.item {
+  display: flex;
+  position: relative;
+  flex: 1;
+}
+
+.itemIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  z-index: 1;
+}
+
+.number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 4rem;
+  height: 4rem;
+  border-radius: 50%;
+  font-size: 1.75rem;
+  font-weight: 700;
+  background: var(--theme-bg, #fff);
+  border: 4px solid var(--theme-border, #e2e8f0);
+  color: var(--theme-text-muted, #64748b);
+}
+
+.dot {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  background: var(--theme-border, #e2e8f0);
+}
+
+.customIcon {
+  font-size: 2.25rem;
+}
+
+.tail {
+  position: absolute;
+  background: var(--theme-border, #e2e8f0);
+}
+
+.itemContent {
+  display: flex;
+  flex-direction: column;
+}
+
+.itemTitle {
+  font-size: 1.875rem;
+  font-weight: 600;
+  color: var(--theme-text, #1e293b);
+  line-height: 1.4;
+}
+
+.itemDescription {
+  font-size: 1.375rem;
+  color: var(--theme-text-muted, #64748b);
+  margin-top: 0.5rem;
+  line-height: 1.5;
+}
+
+/* =============================================================================
+   STATUS VARIANTS
+   ============================================================================= */
+
+.statusFinish .number {
+  background: var(--theme-accent, #3b82f6);
+  border-color: var(--theme-accent, #3b82f6);
+  color: white;
+}
+
+.statusFinish .dot {
+  background: var(--theme-accent, #3b82f6);
+}
+
+.statusFinish .tail {
+  background: var(--theme-accent, #3b82f6);
+}
+
+.statusProcess .number {
+  background: var(--theme-primary, #2563eb);
+  border-color: var(--theme-primary, #2563eb);
+  color: white;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--theme-primary, #2563eb) 20%, transparent);
+}
+
+.statusProcess .dot {
+  background: var(--theme-primary, #2563eb);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--theme-primary, #2563eb) 20%, transparent);
+}
+
+.statusProcess .itemTitle {
+  color: var(--theme-primary, #2563eb);
+}
+
+.statusError .number {
+  background: var(--theme-error, #ef4444);
+  border-color: var(--theme-error, #ef4444);
+  color: white;
+}
+
+.statusError .itemTitle {
+  color: var(--theme-error, #ef4444);
+}
+
+.statusWait .number {
+  background: var(--theme-bg, #fff);
+  border-color: var(--theme-border, #e2e8f0);
+  color: var(--theme-text-muted, #64748b);
+}
+
+.statusWait .itemTitle {
+  color: var(--theme-text-muted, #64748b);
+}
+
+/* =============================================================================
+   HORIZONTAL DIRECTION
+   ============================================================================= */
+
+.horizontal {
+  flex-direction: row;
+  align-items: flex-start;
+}
+
+.horizontal .item {
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.horizontal .itemIcon {
+  margin-bottom: 1.25rem;
+}
+
+.horizontal .tail {
+  top: 2rem;
+  left: calc(50% + 2.25rem);
+  right: calc(-50% + 2.25rem);
+  height: 4px;
+}
+
+.horizontal .itemContent {
+  align-items: center;
+}
+
+/* =============================================================================
+   VERTICAL DIRECTION
+   ============================================================================= */
+
+.vertical {
+  flex-direction: column;
+}
+
+.vertical .item {
+  flex-direction: row;
+  align-items: flex-start;
+  padding-bottom: 1.5rem;
+}
+
+.vertical .item:last-child {
+  padding-bottom: 0;
+}
+
+.vertical .itemIcon {
+  margin-right: 1rem;
+}
+
+.vertical .tail {
+  top: 2.5rem;
+  left: 1rem;
+  bottom: 0.5rem;
+  width: 2px;
+}
+
+.vertical .itemContent {
+  padding-top: 0.25rem;
+}
+
+/* =============================================================================
+   SIZE VARIANTS
+   ============================================================================= */
+
+.small .number {
+  width: 1.5rem;
+  height: 1.5rem;
+  font-size: 0.75rem;
+}
+
+.small .dot {
+  width: 0.375rem;
+  height: 0.375rem;
+}
+
+.small .itemTitle {
+  font-size: 0.875rem;
+}
+
+.small .itemDescription {
+  font-size: 0.75rem;
+}
+
+/* =============================================================================
+   PROGRESS DOT VARIANT
+   ============================================================================= */
+
+.progressDot .number {
+  display: none;
+}
+
+.progressDot .customIcon {
+  display: none;
+}
+
+.progressDot .dot {
+  display: block;
+}

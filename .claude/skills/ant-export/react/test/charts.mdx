@@ -1,0 +1,80 @@
+<Title level={2}>Data Visualization Examples</Title>
+<Paragraph>Demonstrating various chart types available in the renderer.</Paragraph>
+
+<div className="grid grid-cols-2 gap-6 mt-4">
+  <HCard shadow="sm">
+    <CardHeader>
+      <Title level={4}>Line Chart</Title>
+    </CardHeader>
+    <CardBody>
+      <Line
+        data={[
+          { month: "Jan", value: 100 },
+          { month: "Feb", value: 150 },
+          { month: "Mar", value: 180 },
+          { month: "Apr", value: 220 },
+          { month: "May", value: 300 }
+        ]}
+        xField="month"
+        yField="value"
+        height={180}
+      />
+    </CardBody>
+  </HCard>
+
+  <HCard shadow="sm">
+    <CardHeader>
+      <Title level={4}>Bar Chart</Title>
+    </CardHeader>
+    <CardBody>
+      <Bar
+        data={[
+          { category: "Sales", value: 450 },
+          { category: "Marketing", value: 320 },
+          { category: "Engineering", value: 580 },
+          { category: "Support", value: 280 }
+        ]}
+        xField="value"
+        yField="category"
+        height={180}
+      />
+    </CardBody>
+  </HCard>
+
+  <HCard shadow="sm">
+    <CardHeader>
+      <Title level={4}>Pie Chart</Title>
+    </CardHeader>
+    <CardBody>
+      <Pie
+        data={[
+          { type: "Enterprise", value: 45 },
+          { type: "SMB", value: 30 },
+          { type: "Consumer", value: 25 }
+        ]}
+        angleField="value"
+        colorField="type"
+        height={180}
+      />
+    </CardBody>
+  </HCard>
+
+  <HCard shadow="sm">
+    <CardHeader>
+      <Title level={4}>Area Chart</Title>
+    </CardHeader>
+    <CardBody>
+      <Area
+        data={[
+          { date: "Q1", users: 1000 },
+          { date: "Q2", users: 2500 },
+          { date: "Q3", users: 4000 },
+          { date: "Q4", users: 6500 }
+        ]}
+        xField="date"
+        yField="users"
+        height={180}
+      />
+    </CardBody>
+  </HCard>
+</div>

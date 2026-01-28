@@ -1,0 +1,39 @@
+<Title level={2}>Execution Roadmap</Title>
+<Paragraph style={{ textAlign: "center" }}>Immediate Next Steps for Q1 2026</Paragraph>
+
+<div className="mt-8">
+  <Steps direction="vertical">
+    <Steps.Step 
+      title="Phase 1: Validation (This Week)" 
+      status="finish"
+      description={
+        <List size="small">
+          <List.Item>Sarah: Feasibility spike on Local Inference (NPU utilization)</List.Item>
+          <List.Item>Chris: Draft Prompts for "Advocate" Personas</List.Item>
+        </List>
+      }
+    />
+    <Steps.Step 
+      title="Phase 2: MVP Build (Q1)" 
+      status="process"
+      description={
+        <List size="small">
+          <List.Item>Release "Advocate Agent" for Meeting Tool (Viral Marketing hook)</List.Item>
+          <List.Item>Prototype "Heavy Client" with local RAG</List.Item>
+        </List>
+      }
+    />
+    <Steps.Step 
+      title="Phase 3: Launch" 
+      status="wait"
+      description="Full release of Local-First Architecture"
+    />
+  </Steps>
+</div>
+
+<Alert 
+  type="info" 
+  message="Key Decision" 
+  description="We aren't killing the desktop app. We're turning it into a 'Local Intelligence Server'."
+  style={{ marginTop: 32 }}
+/>

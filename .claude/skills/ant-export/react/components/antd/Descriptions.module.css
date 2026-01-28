@@ -1,0 +1,88 @@
+/* Descriptions styles - matches MetricGroup component */
+
+.descriptions {
+  margin: 0.5rem 0;
+}
+
+/* Override Ant Design Descriptions styling */
+.descriptions :global(.ant-descriptions-view) {
+  background: transparent !important;
+  border: none !important;
+}
+
+.descriptions :global(.ant-descriptions-row) {
+  border: none !important;
+}
+
+.descriptions :global(.ant-descriptions-item-label) {
+  font-size: 0.875rem;
+  color: var(--theme-text-muted);
+  font-weight: 500;
+  background: transparent !important;
+  border: none !important;
+  padding: 0.75rem 1rem !important;
+}
+
+.descriptions :global(.ant-descriptions-item-content) {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--theme-accent);
+  background: transparent !important;
+  border: none !important;
+  padding: 0.75rem 1rem !important;
+}
+
+/* Default variant - bordered */
+.default :global(.ant-descriptions-view) {
+  border: 1px solid var(--theme-border) !important;
+  border-radius: var(--theme-radius-md, 6px);
+  overflow: hidden;
+}
+
+.default :global(.ant-descriptions-row) {
+  border-bottom: 1px solid var(--theme-border) !important;
+}
+
+.default :global(.ant-descriptions-row:last-child) {
+  border-bottom: none !important;
+}
+
+.default :global(.ant-descriptions-item-label) {
+  background: var(--theme-surface) !important;
+}
+
+/* Grid variant - cards layout */
+.grid {
+  display: grid !important;
+  gap: 1rem;
+}
+
+.grid :global(.ant-descriptions-view) {
+  display: contents !important;
+}
+
+.grid :global(.ant-descriptions-row) {
+  display: contents !important;
+}
+
+.grid :global(.ant-descriptions-item) {
+  background: var(--theme-surface);
+  border-radius: var(--theme-radius-md, 6px);
+  padding: 1rem !important;
+  text-align: center;
+}
+
+.grid :global(.ant-descriptions-item-container) {
+  flex-direction: column !important;
+}
+
+/* Compact variant */
+.compact :global(.ant-descriptions-item-label),
+.compact :global(.ant-descriptions-item-content) {
+  padding: 0.5rem 0.75rem !important;
+  font-size: 0.875rem;
+}
+
+.compact :global(.ant-descriptions-item-content) {
+  font-size: 1rem;
+}

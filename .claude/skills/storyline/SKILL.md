@@ -97,7 +97,7 @@ This returns constitution, source files, theme, and any existing slides. Use thi
    - *Horizontal*: If you read only the headlines of the deck in order, they must form a flawless, 30-second elevator pitch. If there is a "logic gap" between slide titles, the deck fails.
    - *Vertical*: Every headline must be a claim; every bullet below it must be the evidence.
 
-2. **Cognitive Rhythm (Density Control)**: Vary the "Cognitive Load" to prevent audience fatigue. Some slides should be "Deep Dives" (dense evidence on technical workflow), while others must be "Impact Slides" (sparse, bold visuals/text to anchor emotional "aha" moments). Never put two Deep Dives back-to-back.
+2. **Cognitive Rhythm (Density Control)**: Vary the "Cognitive Load" to prevent audience fatigue. Some slides should be "Deep Dives" (dense evidence on technical workflow), while others must be "Impact Slides" (sparse, bold content to anchor emotional "aha" moments). Never put two Deep Dives back-to-back.
 
 3. **Insight Density**: 
    - *Metric Prioritization*: You must extract and prioritize critical data (metric, datetime, number) in the uploaded file.
@@ -155,29 +155,7 @@ This returns constitution, source files, theme, and any existing slides. Use thi
 
 5. **The Elevator Pitch Test**: Do the headlines connect smoothly (e.g., Slide 1 leads inevitably to Slide 2). Can the headlines be read sequentially to form a coherent 30-second pitch?
 
-### V. Visual Hint (Hard Constraints)
-
-- Framework over Imagery: Do not describe "pictures." Describe logical frameworks (e.g., 2x2 matrix, Flywheel, Bridge chart).
-- Mandatory for Deep Dives: For every "Deep Dive" slide, the visual_design must specify a professional consulting chart type (e.g., Waterfall, Sankey, Gantt, or Harvey Balls).
-
-Specify layout + content approach. Content generator MUST follow this.
-
-Examples:
-- "LayoutCover" (opening only)
-- "LayoutSplit5050: left=narrative+list, right=BigNum+context"
-- "LayoutDashboard: main=chart+metrics, sidebar=key-points"
-- "LayoutStacked: text-focused with supporting callout"
-- "LayoutSplit5050: left=diagram(process flow), right=explanation"
-
-### VI. VISUAL SELECTION RULES
-
-- Use diagram ONLY for process/flow with ≥4 connected steps
-- Use chart for comparisons/trends with ≥3 data points
-- Use BigNum/MetricGroup for key numbers
-- Use SmartList/Text for narrative/recommendations
-- Do NOT force visuals where text is clearer
-
-### VII. The Creative Edge (Soft Guidance)
+### V. The Creative Edge (Soft Guidance)
 
 1. Use metaphors where appropriate to clarify complex concepts (e.g., comparing a platform to an "operating system for logistics" rather than just a "management tool"). 
 2. Aim for a "Visionary yet Grounded" tone—the deck should feel like it was written by a partner who deeply understands the business, not a clerk summarizing a file.
@@ -224,13 +202,15 @@ mcp_apply-patch_apply_patch({
       "id": "slide_01",
       "rank": 1,
       "state": "draft",
-      "story": "cover: [title]",
+      "story": "Audience should understand the bold vision and strategic direction we're proposing",
       "density": "minimal",
-      "visual_design": "[visual description]",
+      "visual_design": "Eye lands on title first, then flows down to subtitle for context",
       "content": {
         "headline": "string (the title of the presentation)",
         "subtitle": "string (optional, adds precision or scope)",
         "category": "cover",
+        "transition_from": null,
+        "transition_to": "Sets up the current state baseline",
         "presenters": [
           { "name": "string", "role": "string (optional)", "org": "string (optional)" }
         ],
@@ -241,37 +221,47 @@ mcp_apply-patch_apply_patch({
       "id": "slide_02",
       "rank": 2,
       "state": "draft",
-      "story": "Situation: [what this slide accomplishes]",
-      "density": "minimal | moderate | dense",
-      "visual_design": "[framework/chart type description]",
+      "story": "Audience should recognize the current performance baseline and sense that something needs to change",
+      "density": "moderate",
+      "visual_design": "Eye catches the key metric first, then scans supporting data points, finally rests on the trend showing decline",
       "content": {
         "headline": "string (active_headline, exec-readable, declarative)",
         "subtitle": "string (optional, adds precision or scope)",
-        "category": "Situation | Complication | Question | Answer",
-        "speaker_intent": "string (optional: what the audience should think/decide/feel)",
+        "category": "Situation",
+        "transition_from": "Cover established vision",
+        "transition_to": "Reveals the pain point blocking progress",
+        "speaker_intent": "string (what the audience should think/decide/feel after this slide)",
         "sections": [
           {
             "title": "string",
             "bullets": [
               {
-                "text": "string"
+                "text": "string (the fact or claim)",
+                "supporting_data": "string (optional: metric, source, or proof)",
+                "so_what": "string (optional: strategic implication)"
               }
             ]
           }
-        ]
+        ],
+        "callout": "string (optional: key takeaway or attention-grabber)"
       }
     },
     {
       "id": "slide_N",
       "rank": "N (last slide)",
       "state": "draft",
-      "story": "ending: [purpose]",
+      "story": "Audience should leave with a clear action item and sense of urgency",
       "density": "minimal",
-      "visual_design": "[visual description]",
+      "visual_design": "Eye focuses on the call-to-action, then scans next steps below",
       "content": {
-        "headline": "string (ending of the presentation, like 'Thank you'/'Decision needed'/'Next Step'/'Q&A' etc.)",
+        "headline": "string (ending: 'Decision Needed'/'Next Steps'/'Q&A' etc.)",
         "subtitle": "string (optional)",
-        "category": "ending"
+        "category": "ending",
+        "transition_from": "Final proof established confidence",
+        "transition_to": null,
+        "next_steps": [
+          { "action": "string", "owner": "string (optional)", "deadline": "string (optional)" }
+        ]
       }
     }
   ]
@@ -294,10 +284,82 @@ Each slide in the array must have:
 - `id`: "slide_01", "slide_02", etc.
 - `rank`: integer (1, 2, 3...)
 - `state`: "draft" (always for new slides)
-- `story`: narrative purpose (e.g., "Situation: establish baseline metrics")
+- `story`: plain text — what should audience understand after reading this page
 - `density`: "minimal" | "moderate" | "dense"
-- `visual_design`: layout hint for content generator
-- `content`: structured content object with headline, category, sections
+- `visual_design`: plain text — where should audience look first, describe the visual attention flow
+- `content`: structured content object (see below)
+
+### Story Field (Plain Text)
+
+The `story` field answers: **"What should the audience understand after reading this page?"**
+
+Examples:
+- "Audience should recognize that current manual processes are costing $2M annually"
+- "Audience should feel urgency: if we don't act now, competitors will capture the market"
+- "Audience should understand our solution solves the core pain with proven technology"
+- "Audience should leave confident that the roadmap is achievable and low-risk"
+
+**Good story statements:**
+- Focus on audience takeaway, not slide description
+- Include emotional/cognitive goal (understand, recognize, feel, believe, decide)
+- Connect to the narrative arc (why this matters at this point)
+
+### Visual Design Field (Plain Text)
+
+The `visual_design` field answers: **"Where should the audience look first? What is the visual attention flow?"**
+
+Examples:
+- "Eye catches the large number first, then flows to supporting context below"
+- "Attention starts top-left with the problem statement, moves right to the impact metric, then down to evidence"
+- "Visual weight centered on the diagram, headline above anchors the interpretation"
+- "Three equal columns draw comparison; eye scans left-to-right naturally"
+
+**Good visual_design statements:**
+- Describe attention sequence (first → then → finally)
+- Indicate visual weight distribution (centered, left-heavy, balanced)
+- Guide layout generator without specifying components
+
+**DO NOT include in visual_design:**
+- Specific component names (Timeline, Statistic, Chart)
+- Layout patterns (Split 60/40, Grid 2x2)
+- Technical terms (these belong in layout step)
+
+### Content Field (Detailed Structure)
+
+The `content` field contains the actual slide content:
+
+```json
+{
+  "headline": "Active, declarative claim (exec-readable)",
+  "subtitle": "Optional precision or scope",
+  "category": "cover | Situation | Complication | Question | Answer | ending",
+  "transition_from": "How this connects from previous slide (null for first)",
+  "transition_to": "What this sets up for next slide (null for last)",
+  "speaker_intent": "What audience should think/decide/feel",
+  "sections": [
+    {
+      "title": "Section heading",
+      "bullets": [
+        {
+          "text": "The fact or claim",
+          "supporting_data": "Metric, source, or proof",
+          "so_what": "Strategic implication"
+        }
+      ]
+    }
+  ],
+  "callout": "Key takeaway or attention-grabber (optional)",
+  "next_steps": [
+    { "action": "Action item", "owner": "Person", "deadline": "Date" }
+  ]
+}
+```
+
+**Minimum Content Requirements:**
+- Every slide MUST have `headline`, `category`, `transition_from`, `transition_to`
+- Non-cover/ending slides SHOULD have at least 3 bullets OR clear conceptual content
+- Dense slides MUST have `sections` with 4+ total bullets
+- Bullets SHOULD include `supporting_data` or `so_what` for executive credibility
 
 ### Optional: Data Gap Summary Slide
 
@@ -307,12 +369,14 @@ Include ONLY if Strategic Unknowns exist:
   "id": "slide_N+1",
   "rank": "N+1",
   "state": "draft",
-  "story": "data gap summary",
+  "story": "Audience should be aware of what data is missing and needs investigation",
   "density": "minimal",
-  "visual_design": "[visual description]",
+  "visual_design": "Eye scans the list of gaps top-to-bottom, each item clearly separated",
   "content": {
     "headline": "Data Gap Summary",
     "category": "data",
+    "transition_from": "Closing slide",
+    "transition_to": null,
     "sections": [
       {
         "title": "Critical Data Gaps",
@@ -330,10 +394,14 @@ Include ONLY if Strategic Unknowns exist:
 After saving via tool call, summarize:
 ```
 Planned 10 slides:
-- Slide 1: Cover (minimal) - Opening
-- Slide 2: Dashboard (dense) - Platform Metrics
-- Slide 3: Split (moderate) - Customer Pain Points
-- Slide 4: FullBleed (minimal) - Key Question
-- ...
-- Slide 10: Stacked (moderate) - Call to Action
+- Slide 1: Cover (minimal) - "AI-First Customer Service"
+- Slide 2: Situation (moderate) - "Support costs up 40% YoY"
+- Slide 3: Complication (dense) - "Manual triage creates 48hr delays"
+- Slide 4: Question (minimal) - "How do we scale without hiring 2x?"
+- Slide 5: Answer (moderate) - "Intelligent routing cuts resolution by 60%"
+- Slide 6: Answer (dense) - "Three-tier automation architecture"
+- Slide 7: Answer (moderate) - "Proven at 10K tickets/day scale"
+- Slide 8: Answer (minimal) - "$2.1M annual savings projected"
+- Slide 9: Commit (moderate) - "12-week implementation roadmap"
+- Slide 10: Ending (minimal) - "Decision: Approve pilot by Q2"
 ```

@@ -1,0 +1,63 @@
+/* Progress styles for slides */
+
+.wrapper {
+  margin: 0.75rem 0;
+}
+
+.label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--theme-text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.progress :global(.ant-progress-text) {
+  color: var(--theme-text) !important;
+  font-weight: 600;
+}
+
+/* Default variant */
+.default :global(.ant-progress-inner) {
+  border-radius: 4px !important;
+}
+
+.default :global(.ant-progress-bg) {
+  border-radius: 4px !important;
+  height: 8px !important;
+}
+
+/* Thick variant */
+.thick :global(.ant-progress-inner) {
+  border-radius: 8px !important;
+}
+
+.thick :global(.ant-progress-bg) {
+  border-radius: 8px !important;
+  height: 16px !important;
+}
+
+.thick :global(.ant-progress-text) {
+  font-size: 1.125rem !important;
+}
+
+/* Gradient variant */
+.gradient :global(.ant-progress-inner) {
+  border-radius: 6px !important;
+}
+
+.gradient :global(.ant-progress-bg) {
+  border-radius: 6px !important;
+  height: 12px !important;
+}
+
+/* Circle type */
+.progress :global(.ant-progress-circle .ant-progress-text) {
+  font-size: 1.25rem !important;
+  font-weight: 700 !important;
+  color: var(--theme-accent) !important;
+}
+
+/* Dashboard type */
+.progress :global(.ant-progress-circle-trail) {
+  stroke: var(--theme-border) !important;
+}

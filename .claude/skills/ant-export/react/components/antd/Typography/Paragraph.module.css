@@ -1,0 +1,35 @@
+/* Paragraph styles - pure shadow implementation */
+
+.paragraph {
+  margin: 0 0 0.75rem 0;
+  font-size: inherit;
+  line-height: var(--theme-line-height, 1.6);
+  color: var(--theme-text);
+}
+
+/* Remove bottom margin when last child (e.g., inside List item) */
+.paragraph:last-child {
+  margin-bottom: 0;
+}
+
+/* Default body text - standalone paragraphs */
+.default {
+  font-size: var(--theme-size-body, 1rem);
+}
+
+/* Type variants */
+.secondary {
+  color: var(--theme-text-muted, #666);
+}
+
+.success {
+  color: var(--theme-success, #52c41a);
+}
+
+.warning {
+  color: var(--theme-warning, #faad14);
+}
+
+.danger {
+  color: var(--theme-danger, #ff4d4f);
+}

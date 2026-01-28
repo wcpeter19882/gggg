@@ -1,0 +1,28 @@
+<Row gutter={32}>
+  <Col span={10}>
+    <Card title="The 'Sherlock' Problem" style={{ height: "100%" }}>
+      <Statistic 
+        title="Feature Overlap with New OS"
+        value={80} 
+        suffix="%" 
+        valueStyle={{ color: "#ff4d4f", fontSize: 56 }} 
+      />
+      <Paragraph style={{ marginTop: 16 }}>
+        The new OS Copilot updates cover the majority of our basic "Text Helper" utility.
+      </Paragraph>
+      <Alert
+        type="error"
+        message="Risk Assessment"
+        description="If we remain a wrapper, users have zero incentive to install our 400MB client."
+      />
+    </Card>
+  </Col>
+  <Col span={14}>
+    <Timeline>
+      <Timeline.Item color="gray">2024 - Standard Text Editor</Timeline.Item>
+      <Timeline.Item color="gray">2025 - AI Wrapper (Current)</Timeline.Item>
+      <Timeline.Item color="red">Now - OS Natively Owns Text</Timeline.Item>
+      <Timeline.Item color="blue">Future? - Deep Integration</Timeline.Item>
+    </Timeline>
+  </Col>
+</Row>

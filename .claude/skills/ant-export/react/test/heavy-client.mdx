@@ -1,0 +1,57 @@
+<Title level={2}>The Heavy Client Architecture</Title>
+<Paragraph style={{ fontSize: 18, textAlign: "center" }}>
+  We shift from "Broad but Shallow" (OS) to <Text strong style={{ color: "#1890ff" }}>"Narrow but Deep" (Us)</Text>.
+</Paragraph>
+
+<div className="grid grid-cols-3 gap-6 mt-8">
+  <HCard shadow="md" className="h-full">
+    <CardHeader>
+      <Center className="w-full">
+        <div style={{ fontSize: 48, color: "#52c41a" }}>🔒</div>
+      </Center>
+    </CardHeader>
+    <CardBody>
+      <Title level={4} style={{ textAlign: "center" }}>The "Local Vault"</Title>
+      <List size="small">
+        <List.Item>Run 3B SLM locally on NPU</List.Item>
+        <List.Item>No data leaves the machine</List.Item>
+        <List.Item>Zero-latency inference</List.Item>
+        <List.Item>"The smartest safe in the world"</List.Item>
+      </List>
+    </CardBody>
+  </HCard>
+
+  <HCard shadow="md" className="h-full">
+    <CardHeader>
+      <Center className="w-full">
+        <div style={{ fontSize: 48, color: "#1890ff" }}>🔗</div>
+      </Center>
+    </CardHeader>
+    <CardBody>
+      <Title level={4} style={{ textAlign: "center" }}>OS Interoperability</Title>
+      <List size="small">
+        <List.Item>System-level awareness</List.Item>
+        <List.Item>"Sidecar" to Excel/Slack</List.Item>
+        <List.Item>Local RAG on file system</List.Item>
+        <List.Item>Drag-and-drop prediction</List.Item>
+      </List>
+    </CardBody>
+  </HCard>
+
+  <HCard shadow="md" className="h-full">
+    <CardHeader>
+      <Center className="w-full">
+        <div style={{ fontSize: 48, color: "#722ed1" }}>📦</div>
+      </Center>
+    </CardHeader>
+    <CardBody>
+      <Title level={4} style={{ textAlign: "center" }}>Local Runtime</Title>
+      <List size="small">
+        <List.Item>Agentic Sandbox for tasks</List.Item>
+        <List.Item>True Offline Capability</List.Item>
+        <List.Item>Maintain state across apps</List.Item>
+        <List.Item>Secure environment</List.Item>
+      </List>
+    </CardBody>
+  </HCard>
+</div>

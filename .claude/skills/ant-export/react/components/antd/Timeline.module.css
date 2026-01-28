@@ -1,0 +1,252 @@
+/* Timeline styles for slides - Shadow implementation */
+
+/* =============================================================================
+   VERTICAL TIMELINE
+   ============================================================================= */
+
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 1rem 0;
+  padding: 0;
+}
+
+.timelineItem {
+  display: flex;
+  align-items: flex-start;
+  position: relative;
+  min-height: 3rem;
+}
+
+/* Dot container - holds the dot and the connecting tail */
+.itemDotContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  width: 1.5rem;
+  position: relative;
+}
+
+.itemDot {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  background: var(--theme-primary, #1677ff);
+  flex-shrink: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.itemDot:empty {
+  /* Default dot appearance */
+}
+
+.itemDot > * {
+  font-size: 0.625rem;
+  color: white;
+}
+
+.itemTail {
+  width: 2px;
+  flex-grow: 1;
+  min-height: 2rem;
+  background: var(--theme-border, rgba(0, 0, 0, 0.1));
+  margin-top: 0.25rem;
+}
+
+/* Content area */
+.itemContent {
+  flex: 0 1 70%;
+  max-width: 70%;
+  padding: 0 0 1.5rem 1rem;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--theme-text, #1f1f1f);
+}
+
+/* Label (timestamp/date) */
+.itemLabel {
+  flex-shrink: 0;
+  width: 6rem;
+  padding-right: 1rem;
+  text-align: right;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--theme-text, #1f1f1f);
+}
+
+.itemLabelRight {
+  flex-shrink: 0;
+  width: 6rem;
+  padding-left: 1rem;
+  text-align: left;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--theme-text, #1f1f1f);
+}
+
+/* Mode: left (default) */
+.left .timelineItem {
+  flex-direction: row;
+}
+
+/* Mode: right */
+.right .timelineItem {
+  flex-direction: row-reverse;
+}
+
+.right .itemContent {
+  padding: 0 1rem 1.5rem 0;
+  text-align: right;
+}
+
+/* Mode: alternate */
+.alternate .timelineItem:nth-child(odd) {
+  flex-direction: row;
+}
+
+.alternate .timelineItem:nth-child(even) {
+  flex-direction: row-reverse;
+}
+
+.alternate .timelineItem:nth-child(even) .itemContent {
+  padding: 0 1rem 1.5rem 0;
+  text-align: right;
+}
+
+.alternate .itemLabel {
+  width: 8rem;
+}
+
+/* =============================================================================
+   HORIZONTAL TIMELINE
+   ============================================================================= */
+
+.timelineHorizontal {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 4rem 1rem;
+  min-height: 12rem;
+}
+
+.horizontalLine {
+  position: absolute;
+  top: 50%;
+  left: 2rem;
+  right: 2rem;
+  height: 3px;
+  background: var(--theme-border, rgba(0, 0, 0, 0.15));
+  transform: translateY(-50%);
+  border-radius: 2px;
+}
+
+.horizontalItems {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  min-height: 10rem;
+}
+
+.horizontalItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  flex: 1;
+  max-width: 12rem;
+}
+
+/* Dot on horizontal line */
+.horizontalDot {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  background: var(--theme-primary, #1677ff);
+  border: 3px solid var(--theme-surface, #fff);
+  box-shadow: 0 0 0 2px var(--theme-primary, #1677ff);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.horizontalDot:empty {
+  /* Default appearance */
+}
+
+/* Connector from dot to content card */
+.horizontalConnector {
+  width: 2px;
+  height: 1.5rem;
+  background: var(--theme-border, rgba(0, 0, 0, 0.15));
+  flex-shrink: 0;
+}
+
+/* Content card */
+.horizontalContent {
+  background: var(--theme-surface, #fff);
+  padding: 0.75rem 1rem;
+  border-radius: var(--theme-radius-md, 8px);
+  box-shadow: var(--theme-shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.1));
+  text-align: center;
+  max-width: 10rem;
+}
+
+.horizontalLabel {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--theme-text, #1f1f1f);
+  margin-bottom: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.horizontalText {
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: var(--theme-text, #1f1f1f);
+}
+
+/* Top-positioned items (content above line) */
+.itemTop {
+  flex-direction: column-reverse;
+}
+
+.itemTop .horizontalConnector {
+  order: 1;
+}
+
+.itemTop .horizontalDot {
+  order: 2;
+}
+
+.itemTop .horizontalContent {
+  order: 0;
+}
+
+/* Bottom-positioned items (content below line) */
+.itemBottom {
+  flex-direction: column;
+}
+
+.itemBottom .horizontalContent {
+  order: 2;
+}
+
+.itemBottom .horizontalDot {
+  order: 0;
+}
+
+.itemBottom .horizontalConnector {
+  order: 1;
+}

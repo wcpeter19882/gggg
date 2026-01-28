@@ -1,0 +1,67 @@
+/* Tag styles for slides */
+
+.tag {
+  font-size: 0.8125rem !important;
+  font-weight: 500 !important;
+  padding: 0.25rem 0.625rem !important;
+  border-radius: var(--theme-radius-sm, 4px) !important;
+  line-height: 1.4 !important;
+  margin: 0.125rem !important;
+}
+
+/* Default variant - subtle */
+.default {
+  background: var(--theme-surface) !important;
+  border: 1px solid var(--theme-border) !important;
+  color: var(--theme-text) !important;
+}
+
+/* Filled variant */
+.filled {
+  background: var(--theme-accent) !important;
+  border: none !important;
+  color: var(--theme-bg) !important;
+}
+
+.filled:global(.ant-tag-success) {
+  background: var(--theme-success) !important;
+}
+
+.filled:global(.ant-tag-processing) {
+  background: var(--theme-info) !important;
+}
+
+.filled:global(.ant-tag-warning) {
+  background: var(--theme-warning) !important;
+}
+
+.filled:global(.ant-tag-error) {
+  background: var(--theme-danger) !important;
+}
+
+/* Outline variant */
+.outline {
+  background: transparent !important;
+  border: 1.5px solid var(--theme-accent) !important;
+  color: var(--theme-accent) !important;
+}
+
+.outline:global(.ant-tag-success) {
+  border-color: var(--theme-success) !important;
+  color: var(--theme-success) !important;
+}
+
+.outline:global(.ant-tag-processing) {
+  border-color: var(--theme-info) !important;
+  color: var(--theme-info) !important;
+}
+
+.outline:global(.ant-tag-warning) {
+  border-color: var(--theme-warning) !important;
+  color: var(--theme-warning) !important;
+}
+
+.outline:global(.ant-tag-error) {
+  border-color: var(--theme-danger) !important;
+  color: var(--theme-danger) !important;
+}

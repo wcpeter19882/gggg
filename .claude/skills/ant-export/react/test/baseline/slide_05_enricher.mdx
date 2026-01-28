@@ -1,0 +1,52 @@
+{/* Slide 5 - Split: Enricher impact - Performance vs. baseline */}
+
+<Title level={1}>Enricher impact: Performance vs. baseline</Title>
+<Text type="secondary" style={{ fontSize: 18 }}>Quality improvements translate into real trust and satisfaction gains.</Text>
+
+<Row gutter={32} style={{ marginTop: 32 }}>
+  <Col span={6}>
+    <Title level={3} style={{ marginBottom: 16 }}>Quality lift vs. baseline</Title>
+    <div style={{ marginBottom: 12 }}>
+      <Text>• Domain entity errors</Text>
+    </div>
+    <div style={{ marginBottom: 12 }}>
+      <Text>• Accent/dialect issues</Text>
+    </div>
+    <div style={{ marginBottom: 12 }}>
+      <Text>• Customer satisfaction</Text>
+    </div>
+  </Col>
+  <Col span={10}>
+    <Title level={3} style={{ marginBottom: 16 }}>Pre vs. post Enricher performance</Title>
+    <Bar
+      data={[
+        { category: "Domain entity errors", before: 100, after: 66 },
+        { category: "Accent/dialect issues", before: 100, after: 69 },
+        { category: "Customer satisfaction", before: 42.95, after: 62.32 }
+      ]}
+      height={180}
+    />
+    <Text type="secondary" style={{ fontSize: 12, marginTop: 8 }}>Entity and accent improvements are normalized (100 → baseline) to show relative reduction.</Text>
+  </Col>
+  <Col span={8}>
+    <Title level={3} style={{ marginBottom: 16 }}>Why this matters</Title>
+    <div style={{ marginBottom: 8 }}>
+      <Text>• Transcription inaccuracy drops from 19.5% to 12.3% (−37%)</Text>
+    </div>
+    <div style={{ marginBottom: 8 }}>
+      <Text>• Domain entity and accent issues shrink materially in high-stakes meetings</Text>
+    </div>
+    <div style={{ marginBottom: 8 }}>
+      <Text>• CSAT rises from 42.95% to 62.32% as quality improves</Text>
+    </div>
+    <div style={{ marginBottom: 16 }}>
+      <Text>• Batch S2S display upgrades improve readability without raising CoGS</Text>
+    </div>
+    <div style={{ background: "#e6f7ff", border: "1px solid #91d5ff", borderRadius: 8, padding: "12px 16px" }}>
+      <Text strong style={{ color: "#0050b3", fontSize: 12 }}>TAKEAWAY</Text>
+      <div style={{ marginTop: 4 }}>
+        <Text style={{ color: "#1890ff" }}>Enricher converts model quality gains into measurable trust and satisfaction improvements.</Text>
+      </div>
+    </div>
+  </Col>
+</Row>

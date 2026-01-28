@@ -1,0 +1,41 @@
+/* Layout styles for slides */
+
+.layout {
+  background: transparent !important;
+  height: 100%;
+  min-height: 0;
+}
+
+.header {
+  background: var(--theme-surface) !important;
+  padding: 0 var(--theme-spacing-margin, 1.5rem) !important;
+  height: auto !important;
+  line-height: normal !important;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--theme-border);
+}
+
+.footer {
+  background: var(--theme-surface) !important;
+  padding: 0.75rem var(--theme-spacing-margin, 1.5rem) !important;
+  font-size: 0.75rem;
+  color: var(--theme-text-muted);
+  border-top: 1px solid var(--theme-border);
+}
+
+.sider {
+  background: var(--theme-surface) !important;
+  padding: 1rem !important;
+  border-right: 1px solid var(--theme-border);
+}
+
+.sider:global(.ant-layout-sider-light) {
+  background: var(--theme-surface) !important;
+}
+
+.content {
+  background: transparent !important;
+  padding: 1.5rem var(--theme-spacing-margin, 1.5rem) !important;
+  overflow: auto;
+}

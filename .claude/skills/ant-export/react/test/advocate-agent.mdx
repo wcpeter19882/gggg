@@ -1,0 +1,78 @@
+<Title level={2}>Active Meeting AI</Title>
+<Paragraph style={{ textAlign: "center", fontSize: 18 }}>From Passive Recording to Active Participation</Paragraph>
+
+<Row gutter={32} style={{ marginTop: 32 }}>
+  <Col span={12}>
+    <HCard shadow="lg" className="h-full">
+      <CardHeader>
+        <Title level={3}>The "Advocate Agent"</Title>
+      </CardHeader>
+      <CardBody>
+        <Paragraph>
+          A designated AI persona that listens to the meeting and provides a specific point of view to break Groupthink.
+        </Paragraph>
+        <List>
+          <List.Item>
+            <div className="flex items-center gap-3">
+              <Avatar name="CFO" color="warning" size="sm" />
+              <div>
+                <Text strong>The Grumpy CFO</Text>
+                <br />
+                <Text type="secondary">Analyzes ROI, complains about margin</Text>
+              </div>
+            </div>
+          </List.Item>
+          <List.Item>
+            <div className="flex items-center gap-3">
+              <Avatar name="Z" color="secondary" size="sm" />
+              <div>
+                <Text strong>The Gen Z User</Text>
+                <br />
+                <Text type="secondary">Critiques UI/UX vibe checks</Text>
+              </div>
+            </div>
+          </List.Item>
+          <List.Item>
+            <div className="flex items-center gap-3">
+              <Avatar name="LE" color="danger" size="sm" />
+              <div>
+                <Text strong>The Legal Eagle</Text>
+                <br />
+                <Text type="secondary">Flags compliance risks immediately</Text>
+              </div>
+            </div>
+          </List.Item>
+        </List>
+      </CardBody>
+    </HCard>
+  </Col>
+  <Col span={12}>
+    <HCard shadow="lg" className="h-full">
+      <CardHeader>
+        <Title level={4}>Live Meeting Sidebar</Title>
+      </CardHeader>
+      <CardBody>
+        <FlexCol gap="gap-3">
+          <div style={{ alignSelf: "flex-start", background: "#e6f7ff", padding: 12, borderRadius: 8, maxWidth: "80%" }}>
+            <Chip color="success" size="sm" variant="flat">Alex (Human)</Chip>
+            <Paragraph style={{ margin: "8px 0 0 0" }}>Let's offer the Pro plan for $19.</Paragraph>
+          </div>
+          <div style={{ alignSelf: "flex-end", background: "#fff2f0", padding: 12, borderRadius: 8, border: "1px solid #ffccc7", maxWidth: "80%" }}>
+            <Chip color="danger" size="sm" variant="flat">CFO Bot (AI)</Chip>
+            <Paragraph style={{ margin: "8px 0 0 0" }}>⚠️ Warning: $19 ruins our margin. Competitor is at $29.</Paragraph>
+          </div>
+          <div style={{ alignSelf: "flex-start", background: "#e6f7ff", padding: 12, borderRadius: 8, maxWidth: "80%" }}>
+            <Chip color="success" size="sm" variant="flat">Sarah (Human)</Chip>
+            <Paragraph style={{ margin: "8px 0 0 0" }}>Good catch. Let's adjust.</Paragraph>
+          </div>
+        </FlexCol>
+      </CardBody>
+      <CardFooter>
+        <div className="flex gap-2">
+          <Chip color="success" variant="flat" size="sm">High Virality</Chip>
+          <Chip color="primary" variant="flat" size="sm">Low Tech Risk</Chip>
+        </div>
+      </CardFooter>
+    </HCard>
+  </Col>
+</Row>

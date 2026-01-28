@@ -1,0 +1,107 @@
+/* Blockquote styles - Shadow implementation matching QuoteBlock */
+
+/* =============================================================================
+   BASE STYLES
+   ============================================================================= */
+
+.blockquote {
+  margin: 1.5rem 0;
+  padding: 1.5rem 2rem;
+  background: var(--theme-surface, #f8fafc);
+  border-radius: var(--theme-radius-md, 8px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  border: 1px solid var(--theme-border-subtle, rgba(0,0,0,0.05));
+  position: relative;
+  display: flex;
+  gap: 1rem;
+}
+
+.icon {
+  font-family: Georgia, serif;
+  font-size: 4rem;
+  line-height: 1;
+  color: var(--theme-accent, #7c3aed);
+  opacity: 0.2;
+  flex-shrink: 0;
+  user-select: none;
+  margin-top: -0.5rem;
+}
+
+.content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.text {
+  font-size: 1.25rem;
+  font-weight: 500;
+  font-style: italic;
+  color: var(--theme-text, #1e293b);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.attribution {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--theme-border, rgba(0,0,0,0.1));
+  padding-top: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.author {
+  font-style: normal;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--theme-text-heading, #0f172a);
+}
+
+.source {
+  font-size: 0.85rem;
+  color: var(--theme-text-muted, #64748b);
+}
+
+/* =============================================================================
+   LARGE VARIANT
+   ============================================================================= */
+
+.large {
+  flex-direction: column;
+  align-items: center;
+  padding: 3rem 2rem;
+}
+
+.large .icon {
+  font-size: 5rem;
+  margin: 0 0 1rem 0;
+}
+
+.large .text {
+  font-size: 1.75rem;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.large .attribution {
+  align-items: center;
+  border-top: none;
+}
+
+/* =============================================================================
+   MINIMAL VARIANT
+   ============================================================================= */
+
+.minimal {
+  background: transparent;
+  box-shadow: none;
+  border: none;
+  border-left: 2px solid var(--theme-accent, #7c3aed);
+  border-radius: 0;
+  padding: 0.5rem 0 0.5rem 1.5rem;
+}
+
+.minimal .icon {
+  display: none;
+}

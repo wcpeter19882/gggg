@@ -1,0 +1,81 @@
+<Title level={2}>HeroUI Component Showcase</Title>
+<Paragraph>Demonstrating HeroUI visual components combined with Ant Design content.</Paragraph>
+
+<div className="flex gap-6 mt-6">
+  <HCard className="flex-1" shadow="lg">
+    <CardHeader>
+      <div className="flex items-center gap-3">
+        <Avatar name="John Doe" color="primary" />
+        <div>
+          <Title level={4} style={{ margin: 0 }}>John Doe</Title>
+          <Text type="secondary">Product Manager</Text>
+        </div>
+      </div>
+    </CardHeader>
+    <CardBody>
+      <Paragraph>Leading the initiative to improve speech quality and expand TBT mode to enterprise customers.</Paragraph>
+      <div className="flex gap-2 mt-2">
+        <Chip color="primary" size="sm">Speech</Chip>
+        <Chip color="secondary" size="sm">TBT</Chip>
+        <Chip color="success" size="sm">Enterprise</Chip>
+      </div>
+    </CardBody>
+    <CardFooter>
+      <Button color="primary" size="sm">View Profile</Button>
+    </CardFooter>
+  </HCard>
+
+  <HCard className="flex-1" shadow="lg">
+    <CardHeader>
+      <Title level={4}>Project Status</Title>
+    </CardHeader>
+    <CardBody>
+      <FlexCol gap="gap-4">
+        <div>
+          <Text>Multilingual STT</Text>
+          <HProgress value={85} color="success" size="sm" />
+        </div>
+        <div>
+          <Text>TBT Expansion</Text>
+          <HProgress value={60} color="primary" size="sm" />
+        </div>
+        <div>
+          <Text>Admin Dashboard</Text>
+          <HProgress value={35} color="warning" size="sm" />
+        </div>
+      </FlexCol>
+    </CardBody>
+    <CardFooter>
+      <div className="flex gap-2">
+        <Chip color="success" variant="flat">3 Complete</Chip>
+        <Chip color="warning" variant="flat">2 In Progress</Chip>
+      </div>
+    </CardFooter>
+  </HCard>
+
+  <HCard className="flex-1" shadow="lg">
+    <CardHeader>
+      <Title level={4}>Quick Stats</Title>
+    </CardHeader>
+    <CardBody>
+      <Grid cols={2} gap="gap-4">
+        <Center className="flex-col p-4 bg-blue-50 rounded-lg">
+          <Text strong style={{ fontSize: "24px" }}>136k</Text>
+          <Text type="secondary">MAU</Text>
+        </Center>
+        <Center className="flex-col p-4 bg-green-50 rounded-lg">
+          <Text strong style={{ fontSize: "24px" }}>99.4%</Text>
+          <Text type="secondary">Uptime</Text>
+        </Center>
+        <Center className="flex-col p-4 bg-yellow-50 rounded-lg">
+          <Text strong style={{ fontSize: "24px" }}>71%</Text>
+          <Text type="secondary">CSAT</Text>
+        </Center>
+        <Center className="flex-col p-4 bg-purple-50 rounded-lg">
+          <Text strong style={{ fontSize: "24px" }}>9</Text>
+          <Text type="secondary">Languages</Text>
+        </Center>
+      </Grid>
+    </CardBody>
+  </HCard>
+</div>

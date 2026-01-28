@@ -1,0 +1,116 @@
+<Title level={2}>Brainstorm: Q1 2026 Strategic Initiatives</Title>
+
+<div className="grid grid-cols-3 gap-12 mt-6">
+  
+  <div>
+    <Chip color="primary" variant="solid" className="mb-4">💻 Heavy Client</Chip>
+    <div className="flex flex-wrap gap-4">
+      <HCard className="w-[140px] h-[140px]" style={{ background: "#fff740", transform: "rotate(-2deg)" }} shadow="md">
+        <CardBody className="p-3 relative h-full">
+          <Text strong style={{ fontSize: 11 }}>Run 3B SLM locally</Text>
+          <Text style={{ fontSize: 10, color: "#555" }}>Zero-latency inference on NPU</Text>
+          <div className="absolute bottom-2 left-2"><Avatar name="SK" size="sm" color="success" /></div>
+          <div className="absolute bottom-2 right-2"><Chip size="sm" color="danger">🔥5</Chip></div>
+        </CardBody>
+      </HCard>
+      
+      <HCard className="w-[140px] h-[140px]" style={{ background: "#ff7eb9", transform: "rotate(3deg)" }} shadow="md">
+        <CardBody className="p-3 relative h-full">
+          <Text strong style={{ fontSize: 11 }}>Local RAG engine</Text>
+          <Text style={{ fontSize: 10, color: "#444" }}>Index docs privately on device</Text>
+          <div className="absolute bottom-2 left-2"><Avatar name="CW" size="sm" color="warning" /></div>
+          <div className="absolute bottom-2 right-2"><Chip size="sm" color="danger">🔥8</Chip></div>
+        </CardBody>
+      </HCard>
+      
+      <HCard className="w-[140px] h-[140px]" style={{ background: "#7afcff", transform: "rotate(-1deg)" }} shadow="md">
+        <CardBody className="p-3 relative h-full">
+          <Text strong style={{ fontSize: 11 }}>Sidecar mode</Text>
+          <Text style={{ fontSize: 10, color: "#444" }}>Overlay on Excel, Slack etc</Text>
+          <div className="absolute bottom-2 left-2"><Avatar name="MC" size="sm" color="secondary" /></div>
+          <div className="absolute bottom-2 right-2"><Chip size="sm" color="danger">🔥3</Chip></div>
+        </CardBody>
+      </HCard>
+    </div>
+  </div>
+
+  <div>
+    <Chip color="secondary" variant="solid" className="mb-4">🎙️ Meeting AI</Chip>
+    <div className="flex flex-wrap gap-4">
+      <HCard className="w-[140px] h-[140px]" style={{ background: "#fff740", transform: "rotate(2deg)" }} shadow="md">
+        <CardBody className="p-3 relative h-full">
+          <Text strong style={{ fontSize: 11 }}>Advocate Agent</Text>
+          <Text style={{ fontSize: 10, color: "#555" }}>AI personas play devils advocate</Text>
+          <div className="absolute bottom-2 left-2"><Avatar name="AC" size="sm" color="primary" /></div>
+          <div className="absolute bottom-2 right-2"><Chip size="sm" color="danger">🔥12</Chip></div>
+        </CardBody>
+      </HCard>
+      
+      <HCard className="w-[140px] h-[140px]" style={{ background: "#ff7eb9", transform: "rotate(-2deg)" }} shadow="md">
+        <CardBody className="p-3 relative h-full">
+          <Text strong style={{ fontSize: 11 }}>Live fact-check</Text>
+          <Text style={{ fontSize: 10, color: "#444" }}>Correct errors in real-time</Text>
+          <div className="absolute bottom-2 left-2"><Avatar name="EZ" size="sm" color="danger" /></div>
+          <div className="absolute bottom-2 right-2"><Chip size="sm" color="danger">🔥7</Chip></div>
+        </CardBody>
+      </HCard>
+      
+      <HCard className="w-[140px] h-[140px]" style={{ background: "#7afcff", transform: "rotate(1deg)" }} shadow="md">
+        <CardBody className="p-3 relative h-full">
+          <Text strong style={{ fontSize: 11 }}>Kill follow-up</Text>
+          <Text style={{ fontSize: 10, color: "#444" }}>Actions during not after</Text>
+          <div className="absolute bottom-2 left-2"><Avatar name="JL" size="sm" color="success" /></div>
+          <div className="absolute bottom-2 right-2"><Chip size="sm" color="danger">🔥9</Chip></div>
+        </CardBody>
+      </HCard>
+    </div>
+  </div>
+
+  <div>
+    <Chip color="success" variant="solid" className="mb-4">🏢 Enterprise</Chip>
+    <div className="flex flex-wrap gap-4">
+      <HCard className="w-[140px] h-[140px]" style={{ background: "#fff740", transform: "rotate(-3deg)" }} shadow="md">
+        <CardBody className="p-3 relative h-full">
+          <Text strong style={{ fontSize: 11 }}>SOC2 package</Text>
+          <Text style={{ fontSize: 10, color: "#555" }}>Security audit ready</Text>
+          <div className="absolute bottom-2 left-2"><Avatar name="DP" size="sm" color="warning" /></div>
+          <div className="absolute bottom-2 right-2"><Chip size="sm" color="danger">🔥4</Chip></div>
+        </CardBody>
+      </HCard>
+      
+      <HCard className="w-[140px] h-[140px]" style={{ background: "#ff7eb9", transform: "rotate(2deg)" }} shadow="md">
+        <CardBody className="p-3 relative h-full">
+          <Text strong style={{ fontSize: 11 }}>SSO integration</Text>
+          <Text style={{ fontSize: 10, color: "#444" }}>Okta, Azure AD</Text>
+          <div className="absolute bottom-2 left-2"><Avatar name="SK" size="sm" color="success" /></div>
+          <div className="absolute bottom-2 right-2"><Chip size="sm" color="danger">🔥6</Chip></div>
+        </CardBody>
+      </HCard>
+      
+      <HCard className="w-[140px] h-[140px]" style={{ background: "#7afcff", transform: "rotate(-1deg)" }} shadow="md">
+        <CardBody className="p-3 relative h-full">
+          <Text strong style={{ fontSize: 11 }}>Admin dashboard</Text>
+          <Text style={{ fontSize: 10, color: "#444" }}>Tenant analytics</Text>
+          <div className="absolute bottom-2 left-2"><Avatar name="CW" size="sm" color="danger" /></div>
+          <div className="absolute bottom-2 right-2"><Chip size="sm" color="danger">🔥5</Chip></div>
+        </CardBody>
+      </HCard>
+    </div>
+  </div>
+
+</div>
+
+<div className="flex justify-between items-center mt-8 pt-4" style={{ borderTop: "2px dashed #ccc" }}>
+  <div className="flex gap-3">
+    <Chip variant="solid" color="default">9 ideas</Chip>
+    <Chip variant="solid" color="danger">59 votes</Chip>
+  </div>
+  <div className="flex items-center gap-3">
+    <Text type="secondary" style={{ fontSize: 12 }}>Team:</Text>
+    <Avatar name="AC" size="sm" color="primary" />
+    <Avatar name="SK" size="sm" color="success" />
+    <Avatar name="CW" size="sm" color="warning" />
+    <Avatar name="EZ" size="sm" color="secondary" />
+    <Avatar name="+3" size="sm" color="default" />
+  </div>
+</div>

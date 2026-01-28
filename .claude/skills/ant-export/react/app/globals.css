@@ -1,0 +1,54 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import 'antd/dist/reset.css';
+
+/* 
+ * CSS Custom Properties - Minimal fallbacks only
+ * Theme-specific values are injected by ThemeProvider from themes/*.ts
+ */
+:root {
+  /* Fallback font families (themes override these) */
+  --theme-font-body: system-ui, -apple-system, sans-serif;
+  --theme-font-mono: ui-monospace, monospace;
+  
+  /* Fallback line-height */
+  --theme-line-height: 1.5;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  font-family: var(--theme-font-body);
+  background: #1a1a1a;
+  min-height: 100vh;
+}
+
+/* Center slides in viewport */
+.slide-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 2rem;
+}
+
+/* Scale slide to fit viewport if needed */
+@media (max-width: 1320px) {
+  .slide-container {
+    transform: scale(0.8);
+    transform-origin: center;
+  }
+}
+
+@media (max-width: 1080px) {
+  .slide-container {
+    transform: scale(0.6);
+    transform-origin: center;
+  }
+}

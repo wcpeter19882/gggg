@@ -1,0 +1,46 @@
+/* Divider styles for slides */
+
+.divider {
+  margin: 1.5rem 0 !important;
+}
+
+/* Solid variant (Ant Design default) */
+.solid:global(.ant-divider-horizontal) {
+  border-top: 1px solid var(--theme-border) !important;
+}
+
+.solid:global(.ant-divider-vertical) {
+  border-left: 1px solid var(--theme-border) !important;
+}
+
+.solid :global(.ant-divider-inner-text) {
+  color: var(--theme-text-muted);
+  font-size: 0.875rem;
+}
+
+/* Dashed variant (Ant Design) */
+.dashed:global(.ant-divider-horizontal) {
+  border-top: 2px dashed var(--theme-accent) !important;
+}
+
+.dashed:global(.ant-divider-vertical) {
+  border-left: 2px dashed var(--theme-accent) !important;
+}
+
+.dashed :global(.ant-divider-inner-text) {
+  color: var(--theme-accent);
+  font-weight: 600;
+}
+
+/* Dotted variant (Ant Design) */
+.dotted:global(.ant-divider-horizontal) {
+  border-top: 1px dotted var(--theme-border) !important;
+}
+
+.dotted:global(.ant-divider-vertical) {
+  border-left: 1px dotted var(--theme-border) !important;
+}
+
+.dotted {
+  margin: 1rem 0 !important;
+}

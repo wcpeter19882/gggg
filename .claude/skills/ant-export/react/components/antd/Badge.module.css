@@ -1,0 +1,50 @@
+/* Badge styles for slides */
+
+.badge {
+  font-size: 0.75rem;
+}
+
+.badge :global(.ant-badge-count) {
+  font-weight: 600 !important;
+  box-shadow: 0 0 0 2px var(--theme-bg) !important;
+}
+
+/* Default variant */
+.default :global(.ant-badge-count) {
+  background: var(--theme-accent) !important;
+}
+
+/* Dot variant */
+.dot :global(.ant-badge-dot) {
+  width: 0.5rem !important;
+  height: 0.5rem !important;
+  background: var(--theme-accent) !important;
+  box-shadow: 0 0 0 2px var(--theme-bg) !important;
+}
+
+/* Status colors */
+.badge :global(.ant-badge-status-success) {
+  background: var(--theme-success) !important;
+}
+
+.badge :global(.ant-badge-status-processing) {
+  background: var(--theme-info) !important;
+}
+
+.badge :global(.ant-badge-status-warning) {
+  background: var(--theme-warning) !important;
+}
+
+.badge :global(.ant-badge-status-error) {
+  background: var(--theme-danger) !important;
+}
+
+/* Ribbon variant */
+.ribbon :global(.ant-ribbon) {
+  background: var(--theme-accent) !important;
+  font-weight: 600 !important;
+}
+
+.ribbon :global(.ant-ribbon-corner) {
+  color: var(--theme-accent) !important;
+}

@@ -1,0 +1,65 @@
+/* Alert styles - matches Callout component */
+
+.alert {
+  border-radius: 16px !important;
+  padding: 20px 28px !important;
+  font-size: 28px !important;
+  font-weight: 600;
+  margin-top: auto;
+}
+
+/* Type: error - red theme */
+.error {
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%) !important;
+  border: 2px solid #ef4444 !important;
+  color: #b91c1c !important;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15);
+}
+
+.error :global(.ant-alert-message) {
+  color: #b91c1c !important;
+  font-size: 28px !important;
+  font-weight: 600 !important;
+}
+
+/* Type: success - green theme */
+.success {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%) !important;
+  border: 2px solid #22c55e !important;
+  color: #15803d !important;
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.15);
+}
+
+.success :global(.ant-alert-message) {
+  color: #15803d !important;
+  font-size: 28px !important;
+  font-weight: 600 !important;
+}
+
+/* Type: info - blue theme */
+.info {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%) !important;
+  border: 2px solid #3b82f6 !important;
+  color: #1d4ed8 !important;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+.info :global(.ant-alert-message) {
+  color: #1d4ed8 !important;
+  font-size: 28px !important;
+  font-weight: 600 !important;
+}
+
+/* Type: warning - orange theme */
+.warning {
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%) !important;
+  border: 2px solid #f59e0b !important;
+  color: #b45309 !important;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);
+}
+
+.warning :global(.ant-alert-message) {
+  color: #b45309 !important;
+  font-size: 28px !important;
+  font-weight: 600 !important;
+}
