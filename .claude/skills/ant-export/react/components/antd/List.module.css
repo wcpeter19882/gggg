@@ -89,22 +89,22 @@
    ============================================================================= */
 
 .small .item {
-  font-size: 0.875rem;
+  font-size: calc(var(--theme-size-body, 36px) * 0.85);
   margin: 0.375rem 0;
   line-height: 1.5;
 }
 
 .small .itemDescription {
-  font-size: 0.75rem;
+  font-size: calc(var(--theme-size-body, 36px) * 0.75);
 }
 
 .default .item {
-  font-size: 1rem;
+  font-size: var(--theme-size-body, 36px);
   margin: 0.5rem 0;
 }
 
 .large .item {
-  font-size: 1.125rem;
+  font-size: calc(var(--theme-size-body, 36px) * 1.125);
   margin: 0.625rem 0;
   line-height: 1.7;
 }

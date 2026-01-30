@@ -27,7 +27,7 @@ export const businessLightTheme: ThemeDefinition = {
     fontDisplay: "'Segoe UI', system-ui, -apple-system, sans-serif",
     fontBody: "'Segoe UI', system-ui, -apple-system, sans-serif",
     fontMono: "'JetBrains Mono', ui-monospace, monospace",
-    sizeDisplay: '96px',
+    sizeDisplay: '72px',
     sizeHeading: '64px',
     sizeBody: '36px',
     sizeCaption: '32px',

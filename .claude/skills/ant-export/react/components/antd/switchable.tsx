@@ -56,11 +56,11 @@ export { Typography, Title, Paragraph, Text } from './Typography';
 export { 
   Charts, 
   Line, Bar, Column, Pie, Area,
-  Funnel, Venn, Pyramid, Matrix, Radar 
+  Funnel, Venn, Pyramid, Radar, Scatter 
 } from './Charts';
 export type { 
   LineChartProps, BarChartProps, ColumnChartProps, PieChartProps, AreaChartProps,
-  FunnelChartProps, VennChartProps, PyramidChartProps, MatrixChartProps, RadarChartProps
+  FunnelChartProps, VennChartProps, PyramidChartProps, RadarChartProps, ScatterChartProps
 } from './Charts';
 
 // =============================================================================

@@ -9,6 +9,34 @@ import { ThemeSelector } from "@/components/core/ThemeSelector";
 import { ComponentConfigProvider, ComponentModeToggle } from "@/components/core";
 import { getTheme } from "@/themes";
 
+// Import Ant Design icons
+import {
+  LockOutlined, TeamOutlined, CheckCircleOutlined, CloseCircleOutlined,
+  WarningOutlined, InfoCircleOutlined, CheckOutlined, CloseOutlined,
+  ArrowUpOutlined, ArrowDownOutlined, ArrowLeftOutlined, ArrowRightOutlined,
+  ThunderboltOutlined, RocketOutlined, SafetyOutlined, ApiOutlined,
+  BulbOutlined, UserOutlined, CodeOutlined, ShareAltOutlined,
+  FlagOutlined, CalendarOutlined, LinkOutlined, StarOutlined,
+  HeartOutlined, FireOutlined, TrophyOutlined, CrownOutlined,
+  SettingOutlined, ToolOutlined, CloudOutlined, DatabaseOutlined,
+  GlobalOutlined, MobileOutlined, DesktopOutlined, TabletOutlined,
+  DollarOutlined, EuroOutlined, PoundOutlined, PercentageOutlined,
+  RiseOutlined, FallOutlined, StockOutlined, FundOutlined,
+  PieChartOutlined, BarChartOutlined, LineChartOutlined, DotChartOutlined,
+  FileOutlined, FolderOutlined, CopyOutlined, DeleteOutlined,
+  EditOutlined, SaveOutlined, SearchOutlined, FilterOutlined,
+  PlusOutlined, MinusOutlined, QuestionOutlined, ExclamationOutlined,
+  SyncOutlined, LoadingOutlined, ReloadOutlined, UndoOutlined,
+  PlayCircleOutlined, PauseCircleOutlined, StopOutlined,
+  MailOutlined, PhoneOutlined, MessageOutlined, CommentOutlined,
+  LikeOutlined, DislikeOutlined, SmileOutlined, FrownOutlined,
+  ClockCircleOutlined, ScheduleOutlined, HistoryOutlined,
+  EnvironmentOutlined, HomeOutlined, ShopOutlined, BankOutlined,
+  TeamOutlined as TeamIcon, UserAddOutlined, UserDeleteOutlined,
+  SolutionOutlined, IdcardOutlined, ContactsOutlined,
+  CarOutlined, SendOutlined, GiftOutlined, TagOutlined
+} from "@ant-design/icons";
+
 // Import all Ant Design styled components (switchable)
 import {
   Typography, Title, Paragraph, Text,
@@ -17,7 +45,7 @@ import {
   Image, Blockquote, Row, Col, Flex, Divider,
   Layout, Header, Footer, Sider, Content,
   Charts, Line, Bar, Column, Pie, Area,
-  Funnel, Venn, Pyramid, Matrix, Radar
+  Funnel, Venn, Pyramid, Radar, Scatter
 } from "@/components/antd/switchable";
 
 // Import HeroUI components (switchable)
@@ -43,13 +71,39 @@ const components = {
   Layout, Header, Footer, Sider, Content,
   Charts, 
   "Charts.Line": Line, "Charts.Bar": Bar, "Charts.Column": Column, "Charts.Pie": Pie, "Charts.Area": Area,
-  "Charts.Funnel": Funnel, "Charts.Venn": Venn, "Charts.Pyramid": Pyramid, "Charts.Matrix": Matrix, "Charts.Radar": Radar,
-  Line, Bar, Column, Pie, Area, Funnel, Venn, Pyramid, Matrix, Radar,
+  "Charts.Funnel": Funnel, "Charts.Venn": Venn, "Charts.Pyramid": Pyramid, "Charts.Radar": Radar, "Charts.Scatter": Scatter,
+  Line, Bar, Column, Pie, Area, Funnel, Venn, Pyramid, Radar, Scatter,
   
   // HeroUI components for flexible layout
   HCard, CardHeader, CardBody, CardFooter,
   Chip, Button, Avatar, HDivider, HProgress, HBadge,
-  FlexRow, FlexCol, Grid, Center
+  FlexRow, FlexCol, Grid, Center,
+  
+  // Ant Design Icons
+  LockOutlined, TeamOutlined, CheckCircleOutlined, CloseCircleOutlined,
+  WarningOutlined, InfoCircleOutlined, CheckOutlined, CloseOutlined,
+  ArrowUpOutlined, ArrowDownOutlined, ArrowLeftOutlined, ArrowRightOutlined,
+  ThunderboltOutlined, RocketOutlined, SafetyOutlined, ApiOutlined,
+  BulbOutlined, UserOutlined, CodeOutlined, ShareAltOutlined,
+  FlagOutlined, CalendarOutlined, LinkOutlined, StarOutlined,
+  HeartOutlined, FireOutlined, TrophyOutlined, CrownOutlined,
+  SettingOutlined, ToolOutlined, CloudOutlined, DatabaseOutlined,
+  GlobalOutlined, MobileOutlined, DesktopOutlined, TabletOutlined,
+  DollarOutlined, EuroOutlined, PoundOutlined, PercentageOutlined,
+  RiseOutlined, FallOutlined, StockOutlined, FundOutlined,
+  PieChartOutlined, BarChartOutlined, LineChartOutlined, DotChartOutlined,
+  FileOutlined, FolderOutlined, CopyOutlined, DeleteOutlined,
+  EditOutlined, SaveOutlined, SearchOutlined, FilterOutlined,
+  PlusOutlined, MinusOutlined, QuestionOutlined, ExclamationOutlined,
+  SyncOutlined, LoadingOutlined, ReloadOutlined, UndoOutlined,
+  PlayCircleOutlined, PauseCircleOutlined, StopOutlined,
+  MailOutlined, PhoneOutlined, MessageOutlined, CommentOutlined,
+  LikeOutlined, DislikeOutlined, SmileOutlined, FrownOutlined,
+  ClockCircleOutlined, ScheduleOutlined, HistoryOutlined,
+  EnvironmentOutlined, HomeOutlined, ShopOutlined, BankOutlined,
+  TeamIcon, UserAddOutlined, UserDeleteOutlined,
+  SolutionOutlined, IdcardOutlined, ContactsOutlined,
+  CarOutlined, SendOutlined, GiftOutlined, TagOutlined
 };
 
 export default function ProjectSlidesPage() {
@@ -234,11 +288,12 @@ export default function ProjectSlidesPage() {
               flex-direction: column;
               justify-content: space-evenly;
             }
-            /* Chips minimum readable size */
+            /* Chips minimum readable size - use theme variable */
             .slide-frame .ant-tag,
             .slide-frame [class*="chip"] {
-              font-size: 18px !important;
-              padding: 6px 16px !important;
+              font-size: calc(var(--theme-size-body, 36px) * 0.8) !important;
+              padding: 10px 20px !important;
+              border-radius: var(--theme-radius-md, 8px) !important;
             }
             /* Statistic component - make value prominent */
             .slide-frame [class*="statistic"] [class*="valueText"] {

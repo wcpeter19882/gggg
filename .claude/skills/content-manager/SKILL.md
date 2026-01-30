@@ -23,7 +23,7 @@ Full project path example: `%TEMP%/content-manager/golden_set_6c765a24/`
 ## Pipeline Overview
 
 ```
-Source Document → Storyline → Theme → Layout → Export
+Source Document → Research → Storyline → Theme → Layout → Export
 ```
 
 Each stage is handled by a specialized subagent.
@@ -44,7 +44,7 @@ Each stage is handled by a specialized subagent.
 ## Completion Requirement (CRITICAL)
 
 When the user asks to "generate slides" / "produce a deck", you MUST run the pipeline end-to-end in the same turn:
-- Create Project → (Theme if needed) → Plan Storyline → Generate Layouts → Export & Preview
+- Create Project → Research → (Theme if needed) → Plan Storyline → Generate Layouts → Export & Preview
 - If `constitution.refinement_rounds > 0`, run the refinement loop (Validate → Fix → Re-export) until `status=="ok"` or rounds exhausted.
 
 Do NOT pause after project creation or theme selection waiting for user confirmation unless the user explicitly requests a pause or a choice.
@@ -71,27 +71,28 @@ Use the built-in `manage_todo_list` tool for tracking pipeline progress.
 manage_todo_list({
   todoList: [
     { id: 1, title: "Create Project", status: "not-started" },
-    { id: 2, title: "Select Theme (if needed)", status: "not-started" },
-    { id: 3, title: "Plan Storyline", status: "not-started" },
-    { id: 4, title: "Generate Layouts", status: "not-started" },
-    { id: 5, title: "Export & Preview", status: "not-started" }
+    { id: 2, title: "Research Topics", status: "not-started" },
+    { id: 3, title: "Select Theme (if needed)", status: "not-started" },
+    { id: 4, title: "Plan Storyline", status: "not-started" },
+    { id: 5, title: "Generate Layouts", status: "not-started" },
+    { id: 6, title: "Export & Preview", status: "not-started" }
   ]
 })
 ```
 
-**Note:** If theme is pre-set in constitution or not needed, mark todo 2 as "completed" and skip the theme subagent.
+**Note:** If theme is pre-set in constitution or not needed, mark todo 3 as "completed" and skip the theme subagent.
 
 **Refinement todos (added dynamically if validation finds errors):**
 
 By default, `refinement_rounds = 0` (no auto-refinement after export). However, validation always runs as part of refinement. If errors are found and refinement is requested:
 ```
 // Added when refinement is triggered:
-{ id: 6, title: "Validate & Refine (R1)", status: "not-started" },
-{ id: 7, title: "Re-export (R1)", status: "not-started" }
+{ id: 7, title: "Validate & Refine (R1)", status: "not-started" },
+{ id: 8, title: "Re-export (R1)", status: "not-started" }
 
 // If refinement_rounds = 2 or more issues remain:
-{ id: 8, title: "Validate & Refine (R2)", status: "not-started" },
-{ id: 9, title: "Re-export (R2)", status: "not-started" }
+{ id: 9, title: "Validate & Refine (R2)", status: "not-started" },
+{ id: 10, title: "Re-export (R2)", status: "not-started" }
 ```
 
 Update status as each step progresses: "not-started" → "in-progress" → "completed"
@@ -154,7 +155,49 @@ Supported by the React renderer (ThemeSelector.tsx):
 | `teamsDark` | Microsoft Teams dark mode | Teams meetings |
 | `teamsLight` | Microsoft Teams light mode | Teams meetings |
 
-## Step 2: Select Theme (Conditional)
+## Step 2: Research Topics (Subagent) — DEFAULT ON
+
+**Research is ENABLED by default.** External validation strengthens claims with market data, industry trends, and citations that executives expect.
+
+### When to SKIP Research (opt-out conditions)
+
+Only skip research if user explicitly requests:
+- "no external data", "no research", "internal only"
+- "use only the source content", "don't search the web"
+- "confidential" or "do not validate externally"
+
+If skipped, mark todo 2 as "completed" with note: "Skipped per user request."
+
+### Research Purpose
+
+Research adds **external validation** to internal source content:
+- Market statistics to quantify claims (e.g., "X% of enterprises cite privacy concerns")
+- Industry trends to establish urgency (e.g., "NPU adoption growing Y% YoY")
+- Competitor data to validate positioning
+- Citations that build credibility with executive audiences
+
+**Research does NOT replace source content** — it enriches it with supporting evidence.
+
+### Invoke Research Subagent
+
+```
+runSubagent({
+  description: "Research topics",
+  prompt: `Use the research-agent skill.
+
+Project directory: {project_dir}
+
+Read source files from files/ directory and constitution from content.json.
+Identify 3-5 key topics that need external validation or supporting data.
+Perform web searches to find relevant statistics, trends, and citations.
+Write organized research results to files/research.md.
+Return a summary of findings and the path to research.md.`
+})
+```
+
+The research output will be saved to `{project_dir}/files/research.md` and will be used by the storyline planner to enrich slides with external data.
+
+## Step 3: Select Theme (Conditional)
 
 **Theme Selection Logic:**
 
@@ -189,7 +232,7 @@ Save to content.json and return the theme name.`
 })
 ```
 
-## Step 3: Plan Storyline (Subagent)
+## Step 4: Plan Storyline (Subagent)
 
 Invoke the storyline-planner subagent:
 
@@ -207,7 +250,7 @@ Return a summary of planned slides.`
 })
 ```
 
-## Step 4: Generate Layouts (Subagent)
+## Step 5: Generate Layouts (Subagent)
 
 **Default: Use Ant Design layout skill.**
 
@@ -241,9 +284,9 @@ Return a summary of generated layouts.`
 })
 ```
 
-## Step 5: Export & Preview
+## Step 6: Export & Preview
 
-**NOTE:** This step is ONLY export. Do NOT run validation here. Validation is Step 6 (Refinement).
+**NOTE:** This step is ONLY export. Do NOT run validation here. Validation is Step 7 (Refinement).
 
 **Default: Use Ant Design renderer.**
 
@@ -284,16 +327,16 @@ After export, open the preview URL in Simple Browser using `open_simple_browser`
 
 ### If terminal execution is unavailable
 
-Some environments may not provide a terminal execution tool. If you cannot run the validator script in Step 6, you MUST:
+Some environments may not provide a terminal execution tool. If you cannot run the validator script in Step 7, you MUST:
 - Still export and open preview
 - Clearly state that automated validation/refinement could not be run due to tooling limits
 - Offer the exact validator command for the user to run locally to populate `issues` and enable refinement
 
 ---
 
-## Step 6: Refinement Loop (Validate → Fix → Re-export)
+## Step 7: Refinement Loop (Validate → Fix → Re-export)
 
-**This step is SEPARATE from Export (Step 5).** Do NOT run validation during export.
+**This step is SEPARATE from Export (Step 6).** Do NOT run validation during export.
 
 **Refinement is triggered ONLY when:**
 1. `constitution.refinement_rounds > 0`, OR
@@ -355,7 +398,7 @@ Return summary of fixes applied.`
 
 **Step 6c: Re-export**
 
-Use the MCP tool to re-export (with same renderer as Step 5):
+Use the MCP tool to re-export (with same renderer as Step 6):
 ```
 mcp_export-mdx_export_mdx({
   "project_dir": "{project_dir}",
@@ -378,7 +421,7 @@ If max_rounds > 0:
     5. If round < max_rounds: continue
 ```
 
-## Step 7: Open Preview
+## Step 8: Open Preview
 
 After pipeline completes, open the browser:
 
@@ -480,20 +523,22 @@ Targets: theme, slides, story, constitution
 
 User: "Generate slides for golden_set.md"
 
-1. Initialize todos with manage_todo_list
-2. Create project: `create_project.py --source golden_set.md`
-3. Check constitution for `theme` field:
-   - If theme exists → skip to step 4, mark todo 2 completed
-   - If theme needed → run theme-generator subagent (update todo 2)
-4. Run storyline-planner subagent → reads source files, creates 10 draft slides with SCQA (update todo 3)
-5. Run paged-layout subagent → 10 active slides with MDX (update todo 4)
-6. Run export subagent → slides.mdx exported, server started (update todo 5)
-7. Run validator subagent → 2 slides with errors detected (update todo 6)
-8. **Refinement loop** (if errors and refinement_rounds > 0):
-   - Run paged-layout subagent with issues → fix 2 slides
-   - Run export subagent → re-export
-   - Run validator subagent → all slides OK
-9. Open http://localhost:3000/slides
+1. Initialize todos with manage_todo_list (6 base todos)
+2. Create project: `mcp_create-project_create_project` → mark todo 1 completed
+3. Run research-agent subagent → saves research.md to files/ (update todo 2)
+   - If user opts out ("no research") → mark todo 2 completed and skip
+4. Check constitution for `theme` field:
+   - If theme exists or not needed → mark todo 3 completed and skip
+   - If theme needed → run theme-generator subagent (update todo 3)
+5. Run storyline-planner subagent → reads source + research, creates 10 draft slides with SCQA (update todo 4)
+6. Run ant-paged-layout subagent → 10 active slides with JSX (update todo 5)
+7. Run mcp_export-mdx_export_mdx → slides.jsx exported, server started (update todo 6)
+8. **Refinement loop** (if refinement_rounds > 0):
+   - Run validate_layouts.py → check for issues
+   - If status == "ok" → done
+   - Run ant-paged-layout subagent with issues → fix slides
+   - Run mcp_export-mdx_export_mdx → re-export
+9. Open http://localhost:3001/slides/{project_id}
 
 ## Error Handling
 

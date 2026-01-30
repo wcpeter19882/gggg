@@ -1,12 +1,15 @@
 /* Tag styles for slides */
 
 .tag {
-  font-size: 0.8125rem !important;
+  font-size: calc(var(--theme-size-body, 36px) * 0.75) !important;
   font-weight: 500 !important;
-  padding: 0.25rem 0.625rem !important;
-  border-radius: var(--theme-radius-sm, 4px) !important;
+  padding: 0.5rem 1.25rem !important;
+  border-radius: var(--theme-radius-md, 8px) !important;
   line-height: 1.4 !important;
-  margin: 0.125rem !important;
+  margin: 0.25rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
 }
 
 /* Default variant - subtle */
