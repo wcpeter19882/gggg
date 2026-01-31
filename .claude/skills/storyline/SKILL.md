@@ -116,7 +116,15 @@ If research.md contains a **Downloaded Images** table, you may assign relevant i
    - *Horizontal*: If you read only the headlines of the deck in order, they must form a flawless, 30-second elevator pitch. If there is a "logic gap" between slide titles, the deck fails.
    - *Vertical*: Every headline must be a claim; every bullet below it must be the evidence.
 
-2. **Cognitive Rhythm (Density Control)**: Vary the "Cognitive Load" to prevent audience fatigue. Some slides should be "Deep Dives" (dense evidence on technical workflow), while others must be "Impact Slides" (sparse, bold content to anchor emotional "aha" moments). Never put two Deep Dives back-to-back.
+2. **Cognitive Rhythm (Density Control)**: Vary the "Cognitive Load" to prevent audience fatigue. Some slides should be "Deep Dives" (dense evidence on technical workflow), while others must be "Impact Slides" (sparse, bold content to anchor emotional "aha" moments). **Never put two dense slides back-to-back.**
+
+   | Density | Indicators | Max Consecutive |
+   |---------|------------|-----------------|
+   | `dense` | 2+ sections, 6+ bullets, data-heavy | 1 (must follow with minimal/moderate) |
+   | `moderate` | 1-2 sections, 3-5 bullets | 2 |
+   | `minimal` | Statement, quote, big number, transition | No limit |
+
+   **Breather insertion**: If you have Dense → Dense, insert a `minimal` slide between them (Billboard statement, key insight, or section transition).
 
 3. **Insight Density**: 
    - *Metric Prioritization*: You must extract and prioritize critical data (metric, datetime, number) in the uploaded file.
@@ -205,7 +213,7 @@ When refining existing story based on user instructions:
 mcp_apply-patch_apply_patch({
   project_dir: "{project_dir}",
   target: "slides",
-  data: [ {id, rank, state, story, density, visual_design, content}, ... ]
+  data: [ {id, rank, state, story, density, intent, modifier?, content}, ... ]
 })
 ```
 
@@ -220,8 +228,24 @@ If constitution.verbose=true, include `patch_file: "{project_dir}/patches/slides
 | `state` | string | Always "draft" for new slides |
 | `story` | string | What audience should understand/feel/decide after this slide |
 | `density` | enum | "minimal" \| "moderate" \| "dense" |
-| `visual_design` | string | Attention flow description (first → then → finally) |
+| `intent` | enum | Primary information relationship (see Intent table) |
+| `modifier` | enum? | Optional: with-evidence \| with-visual \| with-takeaway |
 | `content` | object | Structured content (see below) |
+
+### Intent (Primary Information Relationship)
+
+| Intent | Meaning | Typical Density |
+|--------|---------|----------------|
+| `statement` | One bold claim to remember | minimal |
+| `comparison` | A vs B | moderate |
+| `evidence` | Data proves the point | moderate-dense |
+| `process` | Sequential steps | moderate |
+| `structure` | Parallel concepts (3-4 pillars) | moderate |
+| `focal` | One main + supporting details | moderate |
+| `summary` | Wrap-up + next steps | moderate |
+| `matrix` | 2x2 categorization | moderate |
+| `hierarchy` | Layers (pyramid/funnel) | moderate |
+| `overlap` | Intersection (Venn) | moderate |
 
 ### Content Fields
 

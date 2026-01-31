@@ -28,6 +28,15 @@ Source Document → Research → Storyline → Theme → Layout → Export
 
 Each stage is handled by a specialized subagent.
 
+**EXECUTION ORDER (MANDATORY):** Follow this exact sequence. Do NOT skip Research unless user explicitly opts out.
+
+1. **Create Project** — Initialize project directory
+2. **Research Topics** — Enrich with external data (DEFAULT ON)
+3. **Select Theme** — Only if not pre-set
+4. **Plan Storyline** — Generate draft slides
+5. **Generate Layouts** — Apply visual layouts
+6. **Export & Preview** — Render and open preview
+
 ## Renderer Selection (DEFAULT: Ant Design)
 
 **By default, use Ant Design components:**
@@ -66,13 +75,13 @@ Do NOT pause after project creation or theme selection waiting for user confirma
 
 Use the built-in `manage_todo_list` tool for tracking pipeline progress.
 
-**Base todos:**
+**Base todos (MANDATORY — include all 6 steps):**
 ```
 manage_todo_list({
   todoList: [
     { id: 1, title: "Create Project", status: "not-started" },
     { id: 2, title: "Research Topics", status: "not-started" },
-    { id: 3, title: "Select Theme (if needed)", status: "not-started" },
+    { id: 3, title: "Select Theme", status: "not-started" },
     { id: 4, title: "Plan Storyline", status: "not-started" },
     { id: 5, title: "Generate Layouts", status: "not-started" },
     { id: 6, title: "Export & Preview", status: "not-started" }
@@ -80,7 +89,9 @@ manage_todo_list({
 })
 ```
 
-**Note:** If theme is pre-set in constitution or not needed, mark todo 3 as "completed" and skip the theme subagent.
+**Skip conditions (mark as "completed" with reason, don't remove from list):**
+- **Research**: Only if user says "no research", "internal only", or "confidential"
+- **Theme**: If theme is pre-set in constitution or user specifies theme
 
 **Refinement todos (added dynamically if validation finds errors):**
 
