@@ -35,21 +35,45 @@ You are a research specialist that gathers external information to enrich presen
 
 Example: `%TEMP%/content-manager/golden_set_6c765a24/`
 
-## Your Task (ATOMIC OPERATION)
+---
 
-1. **Read Context** - Read source files and constitution to understand topics
-2. **Identify Research Topics** - Extract 3-5 key topics that need external validation
-3. **Web Search** - Search for each topic to find relevant data
-4. **Image Search** - Find visual assets that enhance slide storytelling (2 primary + 2 backup queries)
-5. **Organize Results** - Structure findings with summaries and sources
-6. **Write Output** - Save to `{project_dir}/files/research.md` using `create_file` tool
-7. **Return Summary** - Brief summary of topics, images, and key insights
+## Workflow
 
-**OUTPUT:** This skill writes to `files/research.md` (a markdown file), NOT to content.json. The storyline skill reads research.md as supplementary content.
+This skill operates in THREE phases. In Claude skill mode, execute all three sequentially.
+In workflow mode (cliv2), phases are executed separately with tool calls between them.
+
+### Input
+
+Read all context in ONE call:
+```
+mcp_apply-patch_read_section({
+  project_dir: "{project_dir}",
+  section: "all"
+})
+```
+
+This returns constitution and source files. Use this data to identify research topics.
+
+### Output
+
+**Phase 1** outputs search queries (JSON) - for workflow mode tool execution.
+**Phase 2** executes web/image searches - tool calls (not LLM).
+**Phase 3** outputs research.md saved to `{project_dir}/files/research.md`.
+
+In Claude skill mode, all three phases happen in sequence with tool calls.
+In workflow mode, Phase 1 and Phase 3 are LLM calls; Phase 2 is tool execution.
+
+### Summary
+
+After completing all phases, report topics researched, images found, and key insights.
 
 ---
 
-## Step 1: Read Project Context
+## Phase 1: Identify Topics and Generate Queries
+
+Read project context and generate search queries.
+
+### Read Project Context
 
 Read source files from the project's files/ directory:
 ```
@@ -73,9 +97,7 @@ mcp_apply-patch_read_section({
 - Industry/domain for targeted research
 - Target audience (affects research depth)
 
----
-
-## Step 2: Identify Research Topics
+### Identify Research Topics
 
 Based on source content, identify 3-5 research topics:
 
@@ -93,177 +115,90 @@ Based on source content, identify 3-5 research topics:
 - Skip topics already well-supported in source content
 - Limit to 3-5 topics to maintain focus
 
+### Query Generation: Think Like a Marketer
+
+You're filling knowledge gaps to strengthen the story. Ask yourself:
+
+- **What claim needs proof?** → Search for evidence that validates or challenges it
+- **What's the "so what"?** → Search for impact, consequences, stakes
+- **Who else solved this?** → Search for case studies, precedents, analogies
+- **What's the counter-argument?** → Search for objections you need to address
+
+Be specific about what you need. Vague topics yield vague snippets.
+
+### Phase 1 Output (Workflow Mode)
+
+In workflow mode, Phase 1 outputs JSON for tool execution:
+```json
+{
+  "topics": [
+    {
+      "name": "Topic name",
+      "goal": "What knowledge gap this fills",
+      "web_queries": ["targeted query"]
+    }
+  ],
+  "image_queries": [
+    {
+      "concept": "Visual concept description",
+      "query": "search query for images",
+      "priority": "primary"
+    }
+  ]
+}
+```
+
 ---
 
-## Step 3: Web Search
+## Phase 2: Execute Searches
 
-For each identified topic, perform web search using the tool:
+**This phase is tool execution.** In Claude skill mode, call tools directly. In workflow mode, the pipeline executes these tools.
+
+### Web Search
+
+For each identified topic, perform web search:
 
 ```
 vscode-websearchforcopilot_webSearch({
-  query: "{topic} {year} statistics"
+  query: "{targeted_query}"
 })
 ```
 
-**Search Query Patterns:**
-- Statistics: `"{topic} 2025 statistics report"`
-- Trends: `"{topic} market trends forecast"`
-- Competitors: `"{company} {product} capabilities features"`
-- Technical: `"{technology} benchmark performance comparison"`
-- Best practices: `"{domain} best practices enterprise"`
-
 **Per Topic:**
-- Run 1-2 searches with different query angles
+- Run 1-2 searches with different angles
 - Collect top 3-5 relevant results
 - Extract key facts, figures, and quotes
 - Note source URLs and authors
 
----
+### Image Search
 
-## Step 4: Image Search
+Find visual assets that support the story. **Images evoke emotion, not explain concepts.**
 
-Find visual assets that can be used in slides. **Images are for storytelling, not literal illustration.**
-
-### Image Search Strategy: 2 Primary + 2 Backup
-
-**LIMIT IMAGE SEARCHES** — too many searches waste API calls and create unused assets.
-
-**Step 1: Run 2 Primary Queries (top 3 each)**
-Pick the 2 MOST VALUABLE image concepts for the presentation:
-- Usually: 1 hero/abstract + 1 people/use-case
-
-**Step 2: Check Results**
-- If primary queries return 4+ usable images → STOP
-- If results are poor quality or off-topic → Run 2 backup queries
-
-**Step 3: Run Backup Queries ONLY IF NEEDED**
-Add 2 more searches only if primary results are insufficient.
-
-### Image Search Tool
+#### Strategy: 2-4 Queries Maximum
 
 ```
 mcp_image-search_search_images({
-  query: "{strategic_visual_query}",
+  query: "{visual_query}",
   top_n: 3,
   output_folder: "{project_dir}"
 })
 ```
 
-Images are saved to `{project_dir}/images/`
+Images saved to `{project_dir}/images/`
 
-**Returns metadata for each image:**
-- `filename`: Image filename
-- `width`, `height`: Dimensions in pixels
-- `aspect_ratio`: Human-readable ratio ("16:9", "4:3", "1:1", etc.)
-- `snippet`: Description from source
-- `source`: Source website
+**Returns metadata:** filename, width, height, aspect_ratio, snippet (title/description), source
 
-### CRITICAL: Constructing Image Queries
+#### Query Principle
 
-**DO NOT search for literal technical terms.** These give unusable results:
-- ❌ "NPU chip" → stock photos of random chips
-- ❌ "local AI inference" → meaningless diagrams
-- ❌ "enterprise data privacy" → lock icons
+**Don't search for what you're talking about. Search for what you want the audience to FEEL.**
 
-**INSTEAD, think like a slide designer.** Ask: "What visual would make this concept compelling?"
-
-### Image Query Strategy
-
-| Slide Concept | BAD Query (Literal) | GOOD Query (Visual) | Why It Works |
-|---------------|---------------------|---------------------|--------------|
-| AI on device | "on-device AI" | "person working laptop coffee shop" | Shows the USE CASE, not the tech |
-| Data privacy | "data privacy security" | "secure vault door dramatic lighting" | Metaphor that feels powerful |
-| Speed/performance | "fast inference" | "sports car motion blur speed" | Visual metaphor for speed |
-| Local processing | "local compute" | "modern laptop minimalist desk workspace" | Shows the CONTEXT |
-| Innovation | "AI innovation" | "sunrise over city skyline hope" | Emotion, not technology |
-| Team collaboration | "enterprise software" | "diverse team brainstorming whiteboard" | Real people, real work |
-| Control/ownership | "data control" | "hands holding glowing object precious" | Metaphor for ownership |
-| Simplicity | "easy to use" | "clean minimal interface design mockup" | Shows the FEELING |
-
-### Query Construction Rules
-
-1. **Think Visual Metaphor**
-   - Abstract concept → Concrete image
-   - "Security" → vault, shield, fortress
-   - "Speed" → race car, cheetah, lightning
-   - "Privacy" → closed door, personal space, home
-
-2. **Show the Human Story**
-   - Who uses this? → Show that person
-   - Where do they use it? → Show that environment
-   - How do they feel? → Show that emotion
-
-3. **Add Mood Words**
-   - "professional modern clean" for enterprise
-   - "warm friendly approachable" for consumer
-   - "dramatic powerful bold" for impact slides
-   - "bright optimistic future" for vision slides
-
-4. **Specify Composition**
-   - "wide shot" for backgrounds
-   - "close up detail" for feature highlights
-   - "overhead flat lay" for process diagrams
-   - "silhouette dramatic" for title slides
-
-### Image Categories to Search
-
-Pick **2 primary** from this list based on presentation topic:
-
-| Category | Purpose | Example Query |
-|----------|---------|---------------|
-| **Hero/Title** | Opening impact | "abstract technology gradient blue purple" |
-| **People** | Use cases, testimonials | "professional developer working focused" |
-| **Metaphor** | Abstract concepts | "bridge connection two sides" |
-| **Environment** | Context setting | "modern office open space natural light" |
-| **Product** | Features (if showing) | "laptop screen mockup clean interface" |
-| **Emotion** | Closing/CTA | "team celebrating success high five" |
-
-### Target: 6-12 Images Maximum
-
-- **2 primary queries × 3 images = 6 images** (minimum)
-- **+2 backup queries × 3 images = 12 images** (maximum, only if needed)
-
-### Image Search Workflow Example
-
-For a presentation about "Local AI for Enterprise":
-
-```
-# PRIMARY QUERY 1: Hero/abstract (most impactful)
-mcp_image-search_search_images({
-  query: "abstract neural network blue gradient dark background wide",
-  top_n: 3,
-  output_folder: "{project_dir}"
-})
-
-# PRIMARY QUERY 2: People/use-case (humanizes the tech)
-mcp_image-search_search_images({
-  query: "software developer coding laptop focused professional",
-  top_n: 3,
-  output_folder: "{project_dir}"
-})
-
-# CHECK: Do we have 4+ good images with useful aspect ratios?
-# If YES → stop
-# If NO → run backup queries:
-
-# BACKUP QUERY 1: Metaphor (only if needed)
-mcp_image-search_search_images({
-  query: "secure vault door dramatic lighting",
-  top_n: 3,
-  output_folder: "{project_dir}"
-})
-
-# BACKUP QUERY 2: Environment (only if needed)
-mcp_image-search_search_images({
-  query: "modern office glass walls natural light",
-  top_n: 3,
-  output_folder: "{project_dir}"
-})
-```
+- Technical terms yield unusable stock photos
+- Metaphors yield compelling visuals
+- People and environments yield relatable context
 
 ---
 
-## Step 5: Organize Research Results
+## Phase 3: Summarize Research
 
 Structure findings in a consistent format:
 
@@ -306,6 +241,22 @@ Structure findings in a consistent format:
 
 ---
 
+## Extracted Data
+
+**Numeric facts that strengthen the narrative:**
+
+| Fact | Value | Source |
+|------|-------|--------|
+| {what it proves} | {number + unit} | {source} |
+
+**Conceptual frameworks identified:**
+
+| Framework | Components | How it supports the story |
+|-----------|------------|--------------------------||
+| {name} | {parts} | {narrative purpose} |
+
+---
+
 ## Research Gaps
 
 Topics where insufficient data was found:
@@ -316,19 +267,13 @@ Topics where insufficient data was found:
 
 ## Downloaded Images
 
-Images available in `images/` folder:
+Images available in `images/` folder (only include images from search results):
 
-| Filename | Dimensions | Aspect | Query | Suggested Use |
-|----------|------------|--------|-------|---------------|
-| {filename1.jpg} | 1920×1080 | 16:9 | "{query}" | Hero/title slide background |
-| {filename2.jpg} | 1200×800 | 3:2 | "{query}" | Privacy concept illustration |
-| {filename3.jpg} | 800×800 | 1:1 | "{query}" | Developer use case photo |
+| Filename | Dimensions | Aspect | Description |
+|----------|------------|--------|-------------|
+| {filename} | {W}×{H} | {ratio} | {what the image shows and the mood/emotion it evokes} |
 
-**Aspect Ratio Guide for Layout:**
-- **16:9 / 21:9** (wide): Hero backgrounds, full-width panels, 60%+ split main panels
-- **4:3 / 3:2** (photo): 50/50 splits, Card backgrounds, 40-60% panels
-- **1:1** (square): Avatars, icons, small accent images, sidebar panels
-- **9:16 / 2:3** (portrait): Sidebar accents, narrow 30% panels
+If no images were returned in search results, write "No images downloaded."
 
 ---
 
@@ -339,9 +284,7 @@ Ready-to-use citations for the presentation:
 2. "{Quote or statistic}" — Source: {Publication}, {Date}
 ```
 
----
-
-## Step 6: Write Research Output
+### Write Research Output
 
 Write the research results to `{project_dir}/files/research.md` using create_file tool:
 
@@ -352,9 +295,7 @@ create_file({
 })
 ```
 
----
-
-## Step 7: Return Summary
+### Phase 3 Output
 
 Return a brief summary in this exact format:
 

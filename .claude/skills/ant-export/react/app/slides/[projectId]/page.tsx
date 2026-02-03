@@ -332,9 +332,17 @@ export default function ProjectSlidesPage() {
           <div ref={containerRef} style={{ width: "100vw", height: "100vh", overflow: "hidden", background: "#0a0a0a" }}>
             {slides.map((slide, index) => {
               // Strip <Slide> wrapper if present - we use slide-frame as the container
-              const jsx = slide.jsx
+              let jsx = slide.jsx
                 .replace(/<Slide[^>]*>\s*/g, '')
                 .replace(/\s*<\/Slide>/g, '');
+              
+              // Transform relative image paths to full API paths
+              // images/filename.jpg → /api/project-image/{projectId}/images/filename.jpg
+              jsx = jsx.replace(
+                /src=["']images\/([^"']+)["']/g,
+                `src="/api/project-image/${projectId}/images/$1"`
+              );
+              
               return (
               <div key={slide.id} style={{ display: index === currentSlide ? "flex" : "none", width: "100%", height: "100%", alignItems: "center", justifyContent: "center" }}>
                 <div className="slide-frame" style={{ ...slideVars, width: "1920px", height: "1080px", padding: "72px 96px", background: theme.colors.bg, color: theme.colors.text, fontSize: theme.typography.sizeBody, fontFamily: theme.typography.fontBody, display: "flex", flexDirection: "column", gap: "24px", justifyContent: "center", borderRadius: "4px", boxShadow: "0 8px 32px rgba(0,0,0,0.3)", overflow: "hidden", transform: `scale(${slideScale})`, transformOrigin: "center center", flexShrink: 0 }}>

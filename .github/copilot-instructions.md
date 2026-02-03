@@ -6,6 +6,45 @@ Auto-generated from all feature plans. Last updated: 2025-01-09
 
 ---
 
+## Critical Principles (READ FIRST)
+
+### Code vs Data Separation
+
+| Type | Examples | Rule |
+|------|----------|------|
+| **Code** | SKILL.md files, Python handlers, React components | Defines behavior, never creates mock data |
+| **Data** | brainstorm_set.md, source files, research.md | Content to be processed |
+| **Output** | content.json, slides.jsx | Generated from data by code |
+
+**If data is lacking:**
+- Request richer source data from user
+- Rely on research step to fill in external data (citations, statistics, metrics)
+- **NEVER modify SKILL files to synthesize or mock data**
+
+### Pipeline Flow
+
+```
+Source Data → Research (adds external data) → Storyline (sets intent) → Layout (uses intent) → Export
+```
+
+- **Research step** fills in citations, statistics, and external validation
+- **Storyline** assigns `intent` (evidence, comparison, process, etc.) based on content
+- **Layout** uses `intent` to select visual components (Charts, Diagrams, Lists)
+- If layout output lacks visual diversity, the issue is upstream data, not layout code
+
+### Intent-Driven Component Selection
+
+Layout SKILL uses slide `intent` to determine components. The mapping from intent to component is defined in the SKILL.md file, not here.
+
+**Principle:** Layout code is correct if it follows intent. If wrong components are used, check:
+1. Did storyline assign the right intent?
+2. Did research provide enough data for visual components?
+3. Are budget constraints (defined in SKILL.md) exhausted?
+
+**Detailed mappings, budgets, and alternatives are in:** `.claude/skills/ant-paged-layout/SKILL.md`
+
+---
+
 ## Architecture Principles
 
 ### Skills and Subagents Architecture
@@ -184,79 +223,15 @@ python -m cli config.json --width 1280 --height 720 --output slide.html
 
 ## Widget Presets
 
-Widget presets provide inline styling through 4 categories:
+Widget presets provide inline styling through 4 categories: **Surface**, **Shape**, **Fill**, **Effect**.
 
-**Surface** (depth/layering): `Flat`, `Elevated`, `Outline`, `Glass`, `Sunken`, `NeoBrutal`
-**Shape** (border radius): `Sharp`, `Rounded`, `Curve`, `Pill`, `Squircle`, `Organic`
-**Fill** (backgrounds): `Solid_Brand`, `Subtle`, `Gradient_Linear`, `Gradient_Mesh`, `Pattern_Dot`, `Noise`
-**Effect** (visual fx): `Duotone`, `Glitch`, `Glow`, `Tape`
-
-### Usage in JSON
-
-```json
-{
-  "type": "Type.Display",
-  "parameters": {"text": "Hello World"},
-  "preset": {
-    "surface": "Elevated",
-    "shape": "Rounded",
-    "fill": "Gradient_Linear",
-    "effect": "Glow"
-  }
-}
-```
-
-Presets apply to the outer `.widget` container, ensuring effects like `Outline` properly border the entire widget including padding.
+Use `python -m cli --list-styles` for available options.
 
 ---
 
 ## Layout Strategies
 
-Available strategies (use `--list-strategies` for full details):
-- **Bento**: Standard, HeroLeft, HeroTop, Quarter
-- **Swiss**: Poster, Asymmetry, SplitTypo
-- **Cinematic**: FullBleed
-- **Data**: KPI_Row, Magazine_Collage, Split, Grid_Masonry
-- **Edit**: Left_Right, Solar_System
-- **Focus**: Feature_Focus, Hero
-
----
-
-## Configuration Structure
-
-```json
-{
-  "width": 1920,
-  "height": 1080,
-  "theme": {
-    "colors": {
-      "primary": "#00ff9f",
-      "secondary": "#00d4ff",
-      "background": "#0a0e27"
-    }
-  },
-  "style": {
-    "theme_name": "cyber-tech",
-    "typography": {
-      "h1": {"size": "56px", "weight": "bold"}
-    }
-  },
-  "slides": [
-    {
-      "id": "slide-1",
-      "rank": 0,
-      "strategy": "Bento.Standard",
-      "widgets": {
-        "cell_1": {
-          "type": "Type.Display",
-          "parameters": {"text": "Title"},
-          "preset": {"surface": "Elevated", "shape": "Rounded"}
-        }
-      }
-    }
-  ]
-}
-```
+Use `python -m cli --list-strategies` for available strategies (Bento, Swiss, Cinematic, Data, Edit, Focus families).
 
 ---
 
@@ -312,42 +287,88 @@ The SKILL.md file is a **prompt for LLM generation**. It should:
 - Specify version: **Ant Design 6.x** (not 5.x or 4.x)
 - NOT mention shadow implementation details
 
-#### Prompt Token Efficiency
+#### SKILL.md Prompt Architecture (CRITICAL)
 
-**DO NOT** waste tokens on component syntax — LLMs already know Ant Design 6.x API.
+**All layout SKILL.md files MUST follow this 4-section structure:**
 
-**DO** spend tokens on:
-- **Layout composition**: How to arrange components in grid/flex
-- **Component selection**: When to use List vs Cards vs Table
-- **Visual hierarchy**: What goes where on a slide
-- **Constraints**: Forbidden patterns, density rules, hard limits
+```
+## 1. Layout
+├── 1.1 Layout Patterns (single merged table: Symmetric + Asymmetric + Compound)
+├── 1.2 Layout Rules (all ad-hoc rules grouped: Forbidden Elements, Images, Canvas, Density, Void)
+├── 1.3 Hard Constraints (single table: Variety + Budgets + Requirements + Visual Balance)
+├── 1.4 Pre-Generation Planning (mandatory budget template)
+└── 1.5 Visual Rhythm Guidance
 
-**BAD** (wastes tokens):
+## 2. Components
+├── 2.1 Content-to-Component Mapping (Intent + Story Element merged)
+├── 2.2 Component Weight Classification (Heavy + Medium + Light + Text merged)
+├── 2.3 Component Selection Guide (relationships → visuals → budgets)
+├── 2.4 Component Rules (List Discipline, Alert Discipline, Card Styling)
+├── 2.5 Process Alternatives (6 patterns for process-heavy content)
+└── 2.6 Chart Reference (props + sizing merged)
+
+## 3. Wording
+├── 3.1 List Formatting (styles + variety rules)
+├── 3.2 Text Length Rules (word budgets by container)
+└── 3.3 Data Integrity
+
+## 4. Styling
+├── 4.1 Icons
+├── 4.2 Typography
+├── 4.3 Inline Emphasis
+├── 4.4 Colors & Patterns
+├── 4.5 Sibling Consistency
+└── 4.6 Density Targets
+```
+
+**Architecture Principles:**
+- **Minimize tables**: Merge related tables (e.g., all layout patterns in ONE table with Category column)
+- **Group ad-hoc rules**: Rules belong under their section, not scattered
+- **Single source of truth**: Each constraint appears in ONE place only (prefer Hard Constraints table)
+- **Budget-limited items**: Heavy diagrams (Pyramid, Funnel, Venn, Scatter, Steps, Timeline) = max 1 each
+
+#### NO CODE SNIPPET EXAMPLES (STRICTLY FORBIDDEN)
+
+**SKILL.md files are LLM prompts, NOT code tutorials.** LLMs already know component APIs.
+
+| ✅ ALLOWED | ❌ FORBIDDEN |
+|------------|--------------|
+| Tailwind class names: `grid-cols-3`, `flex-col justify-center` | Full JSX code blocks with component examples |
+| Prop names in tables: `dataSource`, `renderItem` | Multi-line code snippets showing how to use components |
+| Short inline references: `<Venn />`, `<Pyramid />` | Markdown code fences with complete JSX |
+| Decision tables: "When X → use Y component" | "Here's how to use Timeline:" followed by code |
+
+**BAD** (wastes tokens, LLM already knows this):
 ```markdown
 ### Timeline Usage
 Timeline accepts `items` prop which is an array of objects with `label` and `children` properties...
 ```
 
-**GOOD** (adds value):
+**GOOD** (adds value LLM doesn't know):
 ```markdown
 ### When to Use Timeline
 - Horizontal: 3-5 milestones, fits in one row
 - Vertical: 4+ items OR items need descriptions
 - NEVER: Single item (use Paragraph instead)
+- **Budget: Max 1 per deck**
 ```
 
-Example in SKILL.md:
-```jsx
-// ✅ Standard Ant Design 6.x API
-<Timeline
-  items={[
-    { label: '2024-01', children: 'Event A' },
-    { label: '2024-06', children: 'Event B' },
-  ]}
-  mode="alternate"
-  orientation="horizontal"
-/>
-```
+**Token Budget Priority:**
+1. **Constraints** — What is forbidden, what has limits
+2. **Decision logic** — When to use X vs Y
+3. **Layout composition** — How to arrange (via Tailwind classes)
+4. **Visual hierarchy** — What goes where
+5. ~~Component syntax~~ — LLM already knows this
+
+#### Prompt Token Efficiency
+
+**DO NOT** waste tokens on component syntax — LLMs already know Ant Design 6.x API.
+
+**DO** spend tokens on:
+- **Constraints**: Forbidden patterns, budget limits, hard rules
+- **Decision logic**: When to use List vs Cards vs Table
+- **Layout composition**: Tailwind class patterns for grid/flex
+- **Visual hierarchy**: What goes where on a slide
 
 ### Implementation Layer (Shadow Components)
 
@@ -406,71 +427,9 @@ For **slide content components**, always use shadow implementation.
 
 ## Slide Density Framework
 
-Proper slide density requires matching **visual weight** to **layout space**. Content should fill 70-85% of slide area.
+**Principle:** Match visual weight to layout space. Content should fill 70-85% of slide area.
 
-### Visual Weight Classification
-
-| Weight | Components | Space Needed |
-|--------|-----------|--------------|
-| **Heavy** | Chart, Diagram, Image, Matrix, Venn, Pyramid | 40-60% of slide |
-| **Medium** | Statistic, Timeline, Steps, Card grid, Table | 30-40% of slide |
-| **Light** | Tag, Badge, Alert, Divider, single Icon | Inline or 10-20% |
-
-### Content-Layout Matching
-
-| Content Mix | Recommended Layout |
-|-------------|-------------------|
-| 1 Heavy visual only | **Full-width centered** — no split |
-| 1 Heavy + short text | **60/40 split** — visual gets 60% |
-| 2 concepts to compare | **50/50 split** or `grid-cols-2` |
-| 1 Medium + text block | **50/50 split** — only if text has 3+ items |
-| 1 Medium visual alone | **NO split** — use centered or inline accent |
-| 3-4 equal items | **Grid 2x2** with Cards |
-| 5+ items | **List or Table** — not individual cards |
-
-### Minimum Content Per Panel
-
-For **split layouts**, each panel must meet minimum:
-
-| Panel Width | Minimum Content |
-|-------------|-----------------|
-| **≤30%** (accent) | 1 Heavy OR 1 Medium + 1 line text |
-| **40-50%** (half) | 1 Heavy + caption OR 1 Medium + 2-3 lines OR heading + 3 items |
-| **≥60%** (main) | Heading + 3+ items OR 2 paragraphs OR 1 Heavy + explanation |
-
-**If panel cannot meet minimum → change layout (don't leave void)**
-
-### Void Prevention Decision Tree
-
-```
-Does right/bottom panel have enough content?
-├─ Heavy visual (chart/diagram) → ✅ OK for 40-60%
-├─ Medium visual (Statistic/Timeline) alone → ❌ Too sparse for >30%
-│   └─ Fix: Add breakdown list OR make inline accent OR remove split
-├─ Light visual only → ❌ Never split for this
-│   └─ Fix: Use inline decoration within main content
-└─ Text only (no visual) → Needs 3+ items for 40%+ panel
-```
-
-### Component Weight Reference
-
-#### Heavy (needs 40-60% space)
-- `Line`, `Bar`, `Column`, `Pie`, `Area` — charts
-- `Venn`, `Matrix`, `Pyramid`, `Funnel`, `Radar` — diagrams  
-- Image, UI Mockup, Screenshot
-
-#### Medium (needs 30-40% space, or pair with content)
-- `Statistic` — only if 2+ stats grouped OR has supporting list
-- `Timeline` — 3+ items
-- `Steps` — 3+ steps
-- `Table` — 3+ rows
-- `Card` grid — 2+ cards
-
-#### Light (inline only, never split for these)
-- `Tag`, `Badge` — labels
-- `Alert` — single takeaway
-- `Divider` — separator
-- Single `Statistic` — use as inline callout, not panel filler
+**Detailed rules are in:** `.claude/skills/ant-paged-layout/SKILL.md` sections 1.2 (Layout Rules), 2.2 (Component Weight), and 4.6 (Density Targets).
 
 ---
 

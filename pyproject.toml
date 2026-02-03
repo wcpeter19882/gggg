@@ -34,12 +34,20 @@ dev = [
     "ruff>=0.1.0",
     "mypy>=1.7",
 ]
+cliv2 = [
+    "openhands-ai>=0.38.0",
+    "click>=8.0,<9.0",
+    "python-dotenv>=1.0.0",
+    "azure-identity>=1.15.0",
+    "pyyaml>=6.0.0",
+]
 
 [project.scripts]
 uce-render = "cli.uce_render:cli"
+cliv2 = "cliv2.interfaces.cli.main:main"
 
 [tool.setuptools]
-packages = ["src", "src.common", "src.paged", "src.paged.render", "src.paged.render.slidev", "src.tools", "src.utils", "src.generation", "src.generation.atom", "src.generation.content", "src.generation.theme", "src.generation.todo", "cli"]
+packages = ["src", "src.common", "src.paged", "src.paged.render", "src.paged.render.slidev", "src.tools", "src.utils", "src.generation", "src.generation.atom", "src.generation.content", "src.generation.theme", "src.generation.todo", "cli", "cliv2", "cliv2.core", "cliv2.config", "cliv2.tools", "cliv2.skills", "cliv2.interfaces", "cliv2.interfaces.cli"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -33,11 +33,13 @@ Example: `%TEMP%/content-manager/golden_set_6c765a24/`
 
 Your task is to select an existing theme or create cohesive, professional presentation themes based on user requirements.
 
-## Step 0: Read Constitution
+---
 
-**ALWAYS read constitution first** - it may specify tone/style preferences.
+## Workflow
 
-Use the MCP tool:
+### Input
+
+Read constitution to check for tone/style preferences:
 ```
 mcp_apply-patch_read_section({
   project_dir: "{project_dir}",
@@ -52,13 +54,64 @@ mcp_apply-patch_read_section({
 - If tone is "technical" → prefer minimal_dark, cyber_neon
 - Check style_rules for specific theme hints
 
-## Step 1: Check Available Preset Themes
+### Output
+
+Save theme to content.json:
+```
+mcp_apply-patch_apply_patch({
+  "project_dir": "{project_dir}",
+  "target": "theme",
+  "data": {
+    "id": "theme_id",
+    "name": "Theme Name",
+    "colors": {
+      "primary": "#0066CC",
+      "background": "#FFFFFF",
+      "text": "#1A1A1A",
+      "accent": "#FF6B35",
+      "surface": "#F5F5F5",
+      "muted": "#6B7280"
+    },
+    "fonts": {...},
+    "spacing": {...}
+  }
+})
+```
+
+**IMPORTANT**: Generate this tool call directly with theme inline. Do NOT output JSON first then call the tool separately.
+
+**If constitution.verbose=true**, include `patch_file`:
+```
+mcp_apply-patch_apply_patch({
+  "project_dir": "{project_dir}",
+  "target": "theme",
+  "data": {...theme object...},
+  "patch_file": "{project_dir}/patches/theme.json"
+})
+```
+
+### Summary
+
+After theme selection/generation, return:
+```
+Applied theme: corp_modern
+- Primary: #0066CC (Corporate Blue)
+- Background: #FFFFFF (Light)
+- Text: #1A1A1A (Dark)
+- Style: Professional, clean
+- Typography: Inter font family
+```
+
+---
+
+## Available Preset Themes
 
 Available preset themes (supported by React renderer):
 
 | Theme Name | Style | Best For |
 |------------|-------|----------|
-| `business` | Professional corporate style | Business presentations, executive briefings |
+| `businessLight` | **DEFAULT** Professional light theme | Business presentations, executive briefings |
+| `business` | Professional corporate style | Corporate presentations |
 | `cyber` | Futuristic tech aesthetic | Tech demos, developer content |
 | `minimal` | Clean, typography-focused | Reports, documentation |
 | `academic` | Scholarly presentation | Research, educational content |
@@ -68,6 +121,8 @@ Available preset themes (supported by React renderer):
 | `teamsDark` | Microsoft Teams dark mode | Teams meetings |
 | `teamsLight` | Microsoft Teams light mode | Teams meetings |
 
+**Default theme is `businessLight`** - use this unless user specifies otherwise.
+
 ## Step 2: Theme Selection Logic (Preset-First)
 
 **Priority Order:**
@@ -75,6 +130,8 @@ Available preset themes (supported by React renderer):
 1. **Constitution specifies theme name** → Use that theme directly
 
 2. **User mentions preset by name** (e.g., "use dark", "business theme") → Use that preset
+
+3. **No theme specified** → Use `businessLight` as default
 
 3. **Match style keywords to preset**:
    | Keyword | Recommended Preset |
@@ -291,65 +348,3 @@ When modifying an existing theme:
 4. **Keep the same structure** - only change values
 5. **Generate a new unique ID** for the modified theme (e.g., `original_id + "_custom"`)
 
----
-
-## Step 3: Save Theme to content.json
-
-**Call the `mcp_apply-patch_apply_patch` tool directly** with theme object:
-
-```
-mcp_apply-patch_apply_patch({
-  "project_dir": "{project_dir}",
-  "target": "theme",
-  "data": {
-    "id": "theme_id",
-    "name": "Theme Name",
-    "colors": {
-      "primary": "#0066CC",
-      "background": "#FFFFFF",
-      "text": "#1A1A1A",
-      "accent": "#FF6B35",
-      "surface": "#F5F5F5",
-      "muted": "#6B7280"
-    },
-    "fonts": {...},
-    "spacing": {...}
-  }
-})
-```
-
-**IMPORTANT**: Generate this tool call directly with theme inline. Do NOT output JSON first then call the tool separately.
-
-**If constitution.verbose=true**, include `patch_file`:
-```
-mcp_apply-patch_apply_patch({
-  "project_dir": "{project_dir}",
-  "target": "theme",
-  "data": {...theme object...},
-  "patch_file": "{project_dir}/patches/theme.json"
-})
-```
-
----
-
-## Example Output
-
-After theme selection/generation, return:
-```
-Applied theme: corp_modern
-- Primary: #0066CC (Corporate Blue)
-- Background: #FFFFFF (Light)
-- Text: #1A1A1A (Dark)
-- Style: Professional, clean
-- Typography: Inter font family
-```
-
-Or for generated theme:
-```
-Generated custom theme: neon_dark
-- Primary: #00FFFF (Cyan)
-- Background: #0A0A0A (Near Black)
-- Text: #FFFFFF (White)
-- Accent: #FF00FF (Magenta)
-- Style: Vibrant, high contrast
-```

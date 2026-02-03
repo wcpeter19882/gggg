@@ -1,19 +1,16 @@
 'use client';
 
 /**
- * Card - Styled to match our CardGroup Card component
+ * Card - Standard Ant Design API
  * 
- * Wraps Ant Design's Card with slide-appropriate styling.
- * Uses only Ant Design's native props.
- * 
- * Reference: .claude/skills/export/react/components/blocks/CardGroup.tsx
+ * Styling via Tailwind classes (passed through className).
+ * Shadow effects from theme CSS variables.
  */
 
 import React from 'react';
 import { Card as AntCard, type CardProps as AntCardProps } from 'antd';
 import styles from './Card.module.css';
 
-// Re-export Ant Design's props exactly
 export type CardProps = AntCardProps;
 
 export function Card({ 
@@ -21,7 +18,6 @@ export function Card({
   className = '',
   ...rest 
 }: CardProps) {
-  // Map Ant Design's size to our styling
   const sizeClass = styles[size] || styles.default;
   
   return (

@@ -402,7 +402,21 @@ export function Venn({ data = [], height = 550, className = '' }: VennChartProps
   const labelSize = Math.round(parseInt(theme.typography.sizeCaption) * 1.25); // ~40px
   const smallSize = Math.round(parseInt(theme.typography.sizeCaption) * 1.1); // ~35px
   
-  const sets = [...new Set(data.filter(d => d.sets.length === 1).map(d => d.sets[0]))];
+  // Robustly extract unique sets (handles missing 'sets' or 'set' vs 'sets' hallucination)
+  // Non-mutating normalization of data props
+  const safeData = data.map(d => {
+     if (Array.isArray(d.sets)) return d;
+     // @ts-ignore - Handle runtime data issue from LLM hallucination
+     if (typeof d.set === 'string') return { ...d, sets: [d.set] };
+     return { ...d, sets: [] };
+  });
+
+  const uniqueSets = new Set<string>();
+  safeData.forEach(d => {
+    if (d.sets.length === 1) uniqueSets.add(d.sets[0]);
+  });
+
+  const sets = Array.from(uniqueSets);
   
   // Circle radius - LARGER for more presence
   const radius = 240;
@@ -436,7 +450,7 @@ export function Venn({ data = [], height = 550, className = '' }: VennChartProps
   const gradientIds = sets.map((_, i) => `venn-gradient-${i}-${Math.random().toString(36).slice(2, 8)}`);
   
   // Filter overlaps: only show those with explicit labels (not auto-generated)
-  const overlapsWithLabels = data.filter(d => d.sets.length > 1 && d.label);
+  const overlapsWithLabels = safeData.filter(d => d.sets.length > 1 && d.label);
   
   return (
     <div className={`${styles.chart} ${className}`} style={{ height, minHeight: 400 }}>

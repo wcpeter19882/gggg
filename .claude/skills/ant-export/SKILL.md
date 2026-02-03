@@ -32,15 +32,13 @@ You are a subagent responsible for exporting Ant Design slides to JSX and starti
 
 Example: `%TEMP%/content-manager/golden_set_6c765a24/`
 
-## Your Task
+---
 
-Export active slides from content.json to slides.jsx and start the Ant Design preview server.
+## Workflow
 
-## Step 0: Read Constitution
+### Input
 
-**ALWAYS read constitution first** - verify final output meets requirements.
-
-Use the MCP tool:
+Read constitution to verify final output requirements:
 ```
 mcp_apply-patch_read_section({
   project_dir: "{project_dir}",
@@ -53,13 +51,13 @@ mcp_apply-patch_read_section({
 - Confirm no content_exclusions appear in final JSX
 - Ensure content_requirements are covered
 
-## Step 1: Export JSX
+### Output
 
-Use the MCP tool:
+Export slides and start preview server:
 ```
 mcp_export-mdx_export_mdx({
-  "project_dir": "{project_dir}",
-  "start_server": true
+  project_dir: "{project_dir}",
+  start_server: true
 })
 ```
 
@@ -68,9 +66,7 @@ This tool:
 2. Generates slides.jsx file (Ant Design JSX)
 3. Starts Next.js preview server on port 3001
 
-## Step 2: Verify Export
-
-The MCP tool returns:
+The tool returns:
 ```json
 {
   "status": "success",
@@ -84,6 +80,23 @@ The MCP tool returns:
 }
 ```
 
+After export, open the preview URL:
+```
+http://localhost:3001/slides/{project_id}
+```
+
+### Summary
+
+After export, return:
+```
+Exported N slides using Ant Design renderer
+- File: {jsx_file} (N chars)
+- Server: {server_url}
+- Theme: {theme}
+```
+
+---
+
 ## URL Structure
 
 The server uses project-based URLs (port 3001 to avoid conflict with main renderer):
@@ -92,13 +105,6 @@ The server uses project-based URLs (port 3001 to avoid conflict with main render
 - **Specific Project**: `http://localhost:3001/slides/{projectId}/` - View slides
 
 Project ID is the folder name under the content-manager path (e.g., `golden_set_8fd4f96a`).
-
-## Step 3: Open Browser
-
-After export completes, open the preview URL with the project ID:
-```
-http://localhost:3001/slides/{project_id}
-```
 
 ## Server Configuration
 
@@ -130,13 +136,3 @@ Each project folder contains:
 ### Project not found
 - Check that project folder exists in the content-manager path
 - Verify project ID in URL matches folder name exactly
-
-## Example Output
-
-After export, return:
-```
-Exported 10 slides using Ant Design renderer
-- File: C:\...\slides.jsx (5044 chars)
-- Server: http://localhost:3001/slides/golden_set_8fd4f96a
-- Theme: teamsDark
-```

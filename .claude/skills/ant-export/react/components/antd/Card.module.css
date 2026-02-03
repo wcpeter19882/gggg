@@ -1,20 +1,23 @@
-/* Card styles - matches CardGroup Card component */
+/* Card base styles - minimal, let Tailwind handle variants */
 
 .card {
-  background: var(--theme-surface) !important;
+  background: transparent !important;
   border: none !important;
   border-radius: var(--theme-radius-md, 8px) !important;
-  border-bottom: 4px solid var(--theme-secondary) !important;
   box-shadow: none !important;
-  transition: transform 0.2s, box-shadow 0.2s !important;
   height: 100%;
   display: flex !important;
   flex-direction: column !important;
 }
 
-.card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--theme-shadow-md) !important;
+.card :global(.ant-card-body) {
+  padding: 1.5rem !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start;
+  gap: 0.75rem;
+  flex: 1 !important;
+  height: 100% !important;
 }
 
 .card :global(.ant-card-body) {
