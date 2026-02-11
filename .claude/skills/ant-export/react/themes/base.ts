@@ -10,9 +10,14 @@ import type { ThemeDefinition } from '@/utils/types';
 export const baseTheme: ThemeDefinition = {
   name: 'base',
   displayName: 'Base Theme',
+  isDark: false,
+  background: {
+    color: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+  },
   colors: {
     bg: '#ffffff',
     surface: '#f1f5f9',
+    surfaceAlt: '#e2e8f0',
     primary: '#2563eb',
     secondary: '#7c3aed',
     accent: '#f59e0b',
@@ -28,12 +33,12 @@ export const baseTheme: ThemeDefinition = {
     fontDisplay: "'Inter', system-ui, -apple-system, sans-serif",
     fontBody: "'Inter', system-ui, -apple-system, sans-serif",
     fontMono: "'JetBrains Mono', ui-monospace, monospace",
-    sizeDisplay: '80px',
-    sizeHeading: '56px',
-    sizeBody: '32px',
-    sizeCaption: '24px',
-    lineHeight: '1.5',
-    letterSpacing: '-0.02em',
+    sizeDisplay: '59px',
+    sizeHeading: '47px',
+    sizeBody: '34px',
+    sizeCaption: '27px',
+    lineHeight: '1.3',
+    letterSpacing: '-0.01em',
   },
   spacing: {
     gap: '72px',

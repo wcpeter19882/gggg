@@ -4,27 +4,32 @@ This package provides a command-line interface for generating slide presentation
 from markdown source files using OpenHands SDK for LLM orchestration.
 
 Public API:
-    generate: Async function to generate slides from a source file
+    generate: Async function to generate slides (linear mode)
     generate_sync: Synchronous wrapper for generate()
+    generate_with_tasks: Async function with task DAG (compound instructions)
+    generate_with_tasks_sync: Synchronous wrapper for generate_with_tasks()
     GenerationRequest: Request model for slide generation
     GenerationResult: Result model with pipeline state
     StageResult: Result of a single pipeline stage
 """
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 
 # Public API exports
-from cliv2.core.orchestrator import generate, generate_sync
+from cliv2.core.orchestrator_session import OrchestratorSession, run_orchestrator_session
 from cliv2.core.models import GenerationRequest, GenerationResult, StageResult
 from cliv2.core.errors import Cliv2Error, ConfigError, GenerationError
 
 __all__ = [
     "__version__",
-    "generate",
-    "generate_sync",
+    # Orchestration
+    "OrchestratorSession",
+    "run_orchestrator_session",
+    # Models
     "GenerationRequest",
     "GenerationResult",
     "StageResult",
+    # Errors
     "Cliv2Error",
     "ConfigError",
     "GenerationError",

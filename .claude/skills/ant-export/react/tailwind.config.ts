@@ -1,14 +1,32 @@
 import type { Config } from "tailwindcss";
+import { heroui } from "@heroui/react";
 
 const config: Config = {
   content: [
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
+    "./node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}",
   ],
+  darkMode: "class",
   // Safelist classes used in dynamic JSX content (JsxParser)
   // These classes are generated at runtime and would otherwise be purged
+  // Note: Use escaped slashes for opacity modifiers to match CSS selectors
   safelist: [
+    // Theme colors (CSS variable based)
+    'bg-theme-bg', 'bg-theme-surface', 'bg-theme-surface-alt', 'bg-theme-primary', 'bg-theme-secondary', 'bg-theme-accent',
+    'bg-theme-success', 'bg-theme-danger', 'bg-theme-warning', 'bg-theme-info',
+    'bg-theme-accent1', 'bg-theme-accent2', 'bg-theme-accent3', 'bg-theme-accent4', 'bg-theme-accent5', 'bg-theme-accent6',
+    // Theme colors with opacity (escaped slashes to preserve in purge)
+    'bg-theme-surface\/60', 'bg-theme-surface\/40',
+    'bg-theme-primary\/10', 'bg-theme-primary\/20', 'bg-theme-primary\/30',
+    'bg-theme-secondary\/20', 'bg-theme-accent\/20',
+    'bg-theme-success\/20', 'bg-theme-danger\/20', 'bg-theme-warning\/20', 'bg-theme-info\/20',
+    'bg-theme-accent1\/20', 'bg-theme-accent2\/20', 'bg-theme-accent3\/20', 'bg-theme-accent4\/20', 'bg-theme-accent5\/20', 'bg-theme-accent6\/20',
+    'text-theme-text', 'text-theme-text-muted', 'text-theme-primary', 'text-theme-secondary', 'text-theme-accent',
+    'text-theme-success', 'text-theme-danger', 'text-theme-warning', 'text-theme-info',
+    'border-theme-border', 'border-theme-primary', 'border-theme-secondary', 'border-theme-accent',
+    'border-theme-success', 'border-theme-danger', 'border-theme-warning', 'border-theme-info',
     // Grid layouts
     'grid', 'grid-cols-1', 'grid-cols-2', 'grid-cols-3', 'grid-cols-4', 'grid-cols-5', 'grid-cols-6',
     'grid-cols-7', 'grid-cols-8', 'grid-cols-9', 'grid-cols-10', 'grid-cols-11', 'grid-cols-12',
@@ -116,9 +134,81 @@ const config: Config = {
     'place-items-center', 'place-content-center',
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        // Theme colors that reference CSS variables set by page.tsx
+        theme: {
+          bg: 'var(--theme-bg)',
+          surface: 'var(--theme-surface)',
+          'surface-alt': 'var(--theme-surface-alt)',
+          primary: 'var(--theme-primary)',
+          secondary: 'var(--theme-secondary)',
+          accent: 'var(--theme-accent)',
+          text: 'var(--theme-text)',
+          'text-muted': 'var(--theme-text-muted)',
+          border: 'var(--theme-border)',
+          // Semantic colors
+          success: 'var(--theme-success)',
+          danger: 'var(--theme-danger)',
+          warning: 'var(--theme-warning)',
+          info: 'var(--theme-info)',
+          // Accent colors (from PowerPoint)
+          accent1: 'var(--theme-accent1)',
+          accent2: 'var(--theme-accent2)',
+          accent3: 'var(--theme-accent3)',
+          accent4: 'var(--theme-accent4)',
+          accent5: 'var(--theme-accent5)',
+          accent6: 'var(--theme-accent6)',
+        },
+      },
+      // Slide-specific spacing (based on 1280x720 slide)
+      spacing: {
+        'slide-xs': '8px',
+        'slide-sm': '16px',
+        'slide-md': '24px',
+        'slide-lg': '32px',
+        'slide-xl': '48px',
+        'slide-2xl': '64px',
+      },
+      // Slide-specific sizes
+      width: {
+        'slide-full': '1280px',
+        'slide-half': '640px',
+        'slide-third': '426px',
+        'slide-quarter': '320px',
+      },
+      height: {
+        'slide-full': '720px',
+        'slide-content': '600px',
+        'slide-half': '360px',
+      },
+      // Font sizes for slides
+      fontSize: {
+        'slide-title': ['48px', { lineHeight: '1.2', fontWeight: '700' }],
+        'slide-subtitle': ['32px', { lineHeight: '1.3', fontWeight: '600' }],
+        'slide-heading': ['28px', { lineHeight: '1.3', fontWeight: '600' }],
+        'slide-body': ['20px', { lineHeight: '1.5' }],
+        'slide-caption': ['16px', { lineHeight: '1.4' }],
+        'slide-small': ['14px', { lineHeight: '1.4' }],
+      },
+      // Animation for slide transitions
+      animation: {
+        'slide-in': 'slideIn 0.3s ease-out',
+        'fade-in': 'fadeIn 0.3s ease-out',
+      },
+      keyframes: {
+        slideIn: {
+          '0%': { transform: 'translateY(20px)', opacity: '0' },
+          '100%': { transform: 'translateY(0)', opacity: '1' },
+        },
+        fadeIn: {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+      },
+    },
   },
-  plugins: [],
+  plugins: [heroui()],
   // Disable Tailwind's preflight to avoid conflicts with Ant Design
   corePlugins: {
     preflight: false,

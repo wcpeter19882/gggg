@@ -10,9 +10,14 @@ import type { ThemeDefinition } from '@/utils/types';
 export const academicTheme: ThemeDefinition = {
   name: 'academic',
   displayName: 'Academic',
+  isDark: false,
+  background: {
+    color: 'linear-gradient(160deg, #fffef8 0%, #faf8f0 50%, #f5f0e0 100%)',
+  },
   colors: {
     bg: '#fffef8',
     surface: '#faf8f0',
+    surfaceAlt: '#f5f3e8',
     primary: '#1a365d',
     secondary: '#2c5282',
     accent: '#c53030',
@@ -28,12 +33,12 @@ export const academicTheme: ThemeDefinition = {
     fontDisplay: "'Libre Baskerville', Georgia, serif",
     fontBody: "'Source Serif Pro', Georgia, serif",
     fontMono: "'IBM Plex Mono', ui-monospace, monospace",
-    sizeDisplay: '3rem',
-    sizeHeading: '1.875rem',
-    sizeBody: '1.125rem',
-    sizeCaption: '0.875rem',
-    lineHeight: '1.8',
-    letterSpacing: '0em',
+    sizeDisplay: '59px', // e.g., '59px' - from title style
+    sizeHeading: '47px', // e.g., '47px'
+    sizeBody: '34px', // e.g., '34px' - from body style
+    sizeCaption: '27px', // e.g., '27px'
+    lineHeight: '1.3',
+    letterSpacing: '-0.01em'
   },
   spacing: {
     gap: '3rem',

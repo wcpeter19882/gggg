@@ -552,8 +552,13 @@ export function Venn({ data = [], height = 550, className = '' }: VennChartProps
   );
 }
 
-// Pyramid Chart
-interface PyramidItem { label: string; value: number; color?: string }
+// Pyramid Chart - Labels placed outside on alternating sides with title + description
+interface PyramidItem { 
+  label: string;      // Short title (required)
+  description?: string; // Longer description (optional)
+  value: number; 
+  color?: string 
+}
 export interface PyramidChartProps {
   data: PyramidItem[];
   height?: number;
@@ -562,42 +567,102 @@ export interface PyramidChartProps {
 
 export function Pyramid({ data = [], height = 500, className = '' }: PyramidChartProps) {
   const theme = useSlideTheme();
-  const baseFontSize = parseInt(theme.typography.sizeCaption); // 32px base
+  const titleFontSize = parseInt(theme.typography.sizeCaption) || 18;
+  const descFontSize = Math.round(titleFontSize * 0.7); // Description is 70% of title size
   
-  const COLORS = ['#1890ff', '#52c41a', '#faad14', '#f5222d', '#722ed1'];
+  const COLORS = ['var(--theme-primary)', 'var(--theme-accent4)', 'var(--theme-success)', 'var(--theme-warning)', 'var(--theme-accent5)'];
   const total = data.length;
-  const layerHeight = Math.min(100, 350 / total); // Adaptive height
-  const startY = 30;
-  const svgWidth = 700;
-  const svgHeight = startY + total * layerHeight + 40;
+  const layerHeight = Math.min(120, 480 / total); // Slightly taller for two lines
+  const startY = 20;
+  
+  // Pyramid centered, with space for labels on sides
+  const pyramidWidth = 300; // Central pyramid width
+  const labelAreaWidth = 200; // Space for labels on each side
+  const svgWidth = pyramidWidth + labelAreaWidth * 2;
+  const svgHeight = startY + total * layerHeight + 20;
+  const centerX = svgWidth / 2;
+  
+  // Reverse data so first item (foundation) renders at bottom (widest)
+  // and last item (peak) renders at top (narrowest)
+  const reversedData = [...data].reverse();
   
   return (
     <div className={`${styles.chart} ${className}`} style={{ height, minHeight: 350 }}>
       <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} style={{ width: '100%', height: '100%' }}>
-        {data.map((item, i) => {
-          // Ensure minimum width of 280px for bottom layer so text fits
-          const widthPercent = ((total - i) / total);
-          const minWidth = 300;
-          const maxWidth = svgWidth - 60;
-          const width = Math.max(minWidth, maxWidth * widthPercent);
-          const x = (svgWidth - width) / 2;
+        {reversedData.map((item, i) => {
+          // Calculate trapezoid dimensions - narrower at top, wider at bottom
+          // i=0 is at top (narrowest), i=total-1 is at bottom (widest)
+          const widthPercent = (i + 1) / total;
+          const nextWidthPercent = i / total;
+          const topWidth = pyramidWidth * nextWidthPercent;
+          const bottomWidth = pyramidWidth * widthPercent;
           const y = startY + i * layerHeight;
+          const topX = centerX - topWidth / 2;
+          const bottomX = centerX - bottomWidth / 2;
           
-          // Smaller font for longer labels
-          const labelLen = item.label?.length || 0;
-          const fontSize = labelLen > 15 ? baseFontSize - 6 : baseFontSize;
+          // Label on alternating sides (based on original data index for consistency)
+          const originalIndex = total - 1 - i;
+          const isLeftLabel = originalIndex % 2 === 0;
+          const labelX = isLeftLabel ? labelAreaWidth - 10 : svgWidth - labelAreaWidth + 10;
+          const labelAnchor = isLeftLabel ? 'end' : 'start';
+          const labelY = y + layerHeight / 2;
+          
+          // Connection line from label to pyramid edge
+          const lineStartX = isLeftLabel ? labelX + 5 : labelX - 5;
+          const lineEndX = isLeftLabel ? bottomX + 5 : bottomX + bottomWidth - 5;
+          
+          // Calculate vertical offset for two-line labels
+          const hasDescription = !!item.description;
+          const titleY = hasDescription ? labelY - descFontSize / 2 : labelY + titleFontSize / 3;
+          const descY = labelY + titleFontSize / 2 + 4;
           
           return (
             <g key={i}>
+              {/* Trapezoid layer - stacked without gaps */}
               <path
-                d={`M ${x} ${y} L ${x + width} ${y} L ${x + width - 25} ${y + layerHeight - 6} L ${x + 25} ${y + layerHeight - 6} Z`}
-                fill={item.color || COLORS[i % COLORS.length]}
-                stroke="rgba(0,0,0,0.15)"
-                strokeWidth={2}
+                d={`M ${topX} ${y} L ${topX + topWidth} ${y} L ${bottomX + bottomWidth} ${y + layerHeight} L ${bottomX} ${y + layerHeight} Z`}
+                fill={item.color || COLORS[originalIndex % COLORS.length]}
+                stroke="rgba(0,0,0,0.1)"
+                strokeWidth={1}
               />
-              <text x={svgWidth / 2} y={y + layerHeight / 2 + fontSize / 3} textAnchor="middle" fill="#fff" fontSize={fontSize} fontWeight="700">
+              
+              {/* Connection line */}
+              <line
+                x1={lineStartX}
+                y1={labelY}
+                x2={lineEndX}
+                y2={labelY}
+                stroke="var(--theme-text-muted)"
+                strokeWidth={1}
+                strokeDasharray="3,2"
+                opacity={0.5}
+              />
+              
+              {/* Title - short, bold */}
+              <text
+                x={labelX}
+                y={titleY}
+                textAnchor={labelAnchor}
+                fill="var(--theme-text)"
+                fontSize={titleFontSize}
+                fontWeight="700"
+              >
                 {item.label}
               </text>
+              
+              {/* Description - longer, lighter */}
+              {hasDescription && (
+                <text
+                  x={labelX}
+                  y={descY}
+                  textAnchor={labelAnchor}
+                  fill="var(--theme-text-muted)"
+                  fontSize={descFontSize}
+                  fontWeight="400"
+                >
+                  {item.description}
+                </text>
+              )}
             </g>
           );
         })}

@@ -5,6 +5,7 @@
 export interface ThemeColors {
   bg: string;
   surface: string;
+  surfaceAlt: string;
   primary: string;
   secondary: string;
   accent: string;
@@ -52,10 +53,19 @@ export interface ThemeVisuals {
   borderWidth: string;
 }
 
+export interface ThemeBackground {
+  /** Background color (hex) */
+  color: string;
+  /** Background image path (relative to project, e.g., "images/cover_bg.png") */
+  image?: string;
+}
+
 export interface ThemeDefinition {
   name: string;
   displayName: string;
   isDark?: boolean;
+  /** Default slide background */
+  background?: ThemeBackground;
   colors: ThemeColors;
   typography: ThemeTypography;
   spacing: ThemeSpacing;

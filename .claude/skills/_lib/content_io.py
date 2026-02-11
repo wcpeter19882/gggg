@@ -14,7 +14,7 @@ from typing import Any, Dict, Optional
 sys.path.insert(0, str(Path(__file__).parent))
 
 from project import Project, Metadata
-from content_json import ContentJson, Constitution, ContentMetadata
+from content_json import ContentJson, ContentMetadata
 
 
 def read_content_json(content_json_path: str | Path) -> Optional[ContentJson]:
@@ -94,7 +94,7 @@ def write_content_json_raw(content_json_path: str | Path, data: Dict[str, Any]) 
 
 def initialize_content_json(
     project: Project,
-    constitution: Optional[Constitution] = None,
+    constitution: Optional[Any] = None,  # Deprecated, ignored
     instruction: str = ""
 ) -> ContentJson:
     """
@@ -102,7 +102,7 @@ def initialize_content_json(
     
     Args:
         project: Project instance
-        constitution: Optional constitution to set
+        constitution: Deprecated, ignored (constitution now in constitution.md)
         instruction: Initial instruction text
         
     Returns:
@@ -117,9 +117,6 @@ def initialize_content_json(
             "created_at": project.created_at,
             "updated_at": project.updated_at,
         },
-        constitution=constitution or Constitution(),
-        theme=None,
-        atoms=None,
         slides=[],
         metadata=ContentMetadata(
             version=1,

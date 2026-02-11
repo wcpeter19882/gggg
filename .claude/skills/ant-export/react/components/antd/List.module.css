@@ -45,7 +45,7 @@
 }
 
 .item::marker {
-  color: var(--theme-accent, #3b82f6);
+  color: var(--theme-text-muted, #64748b);
   font-size: 1.25em;
 }
 

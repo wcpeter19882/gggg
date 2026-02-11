@@ -10,9 +10,14 @@ import type { ThemeDefinition } from '@/utils/types';
 export const darkTheme: ThemeDefinition = {
   name: 'dark',
   displayName: 'Dark',
+  isDark: true,
+  background: {
+    color: 'linear-gradient(145deg, #121212 0%, #1a1a1a 50%, #222222 100%)',
+  },
   colors: {
     bg: '#121212',
     surface: '#1e1e1e',
+    surfaceAlt: '#2a2a2a',
     primary: '#bb86fc',
     secondary: '#03dac6',
     accent: '#cf6679',
@@ -28,11 +33,11 @@ export const darkTheme: ThemeDefinition = {
     fontDisplay: "'Inter', system-ui, sans-serif",
     fontBody: "'Inter', system-ui, sans-serif",
     fontMono: "'JetBrains Mono', ui-monospace, monospace",
-    sizeDisplay: '3.5rem',
-    sizeHeading: '2rem',
-    sizeBody: '1.125rem',
-    sizeCaption: '0.875rem',
-    lineHeight: '1.6',
+    sizeDisplay: '59px',
+    sizeHeading: '47px',
+    sizeBody: '34px',
+    sizeCaption: '27px',
+    lineHeight: '1.3',
     letterSpacing: '-0.01em',
   },
   spacing: {

@@ -17,8 +17,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 // Constants
 // =============================================================================
 
-/** Available themes with display names */
-const THEMES = [
+/** Built-in themes with display names */
+const BUILTIN_THEMES = [
   { value: 'businessLight', label: 'Business Light', description: 'Professional light theme' },
   { value: 'business', label: 'Business', description: 'Professional corporate style' },
   { value: 'cyber', label: 'Cyber', description: 'Futuristic tech aesthetic' },
@@ -31,6 +31,13 @@ const THEMES = [
   { value: 'teamsLight', label: 'Teams Light', description: 'Microsoft Teams light mode' },
   { value: 'base', label: 'Base', description: 'Default clean theme' },
 ];
+
+/** Theme option structure */
+interface ThemeOption {
+  value: string;
+  label: string;
+  description: string;
+}
 
 // =============================================================================
 // Component
@@ -45,6 +52,8 @@ export interface ThemeSelectorProps {
   defaultCollapsed?: boolean;
   /** Position on screen */
   position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+  /** Additional themes loaded from project (e.g., pptx template themes) */
+  availableThemes?: string[];
 }
 
 /**
@@ -57,9 +66,21 @@ export function ThemeSelector({
   onThemeChange,
   defaultCollapsed = true,
   position = 'bottom-right',
+  availableThemes = [],
 }: ThemeSelectorProps): JSX.Element {
   const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
   const [isVisible, setIsVisible] = useState(true);
+
+  // Merge built-in themes with project-specific themes
+  const projectThemeOptions: ThemeOption[] = availableThemes
+    .filter(t => !BUILTIN_THEMES.find(bt => bt.value === t)) // Exclude duplicates
+    .map(t => ({
+      value: t,
+      label: t.charAt(0).toUpperCase() + t.slice(1).replace(/([A-Z])/g, ' $1'), // "template" → "Template"
+      description: `Project theme: ${t}`,
+    }));
+  
+  const THEMES: ThemeOption[] = [...projectThemeOptions, ...BUILTIN_THEMES];
 
   // Position styles
   const positionStyles: Record<string, React.CSSProperties> = {

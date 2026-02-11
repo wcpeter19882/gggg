@@ -10,9 +10,14 @@ import type { ThemeDefinition } from '@/utils/types';
 export const cyberTheme: ThemeDefinition = {
   name: 'cyber',
   displayName: 'Cyber',
+  isDark: true,
+  background: {
+    color: 'linear-gradient(135deg, #0a0a0f 0%, #12121a 40%, #1a1a2e 100%)',
+  },
   colors: {
     bg: '#0a0a0f',
     surface: '#12121a',
+    surfaceAlt: '#1a1a25',
     primary: '#00d4ff',
     secondary: '#7b2cbf',
     accent: '#ff006e',
@@ -28,12 +33,12 @@ export const cyberTheme: ThemeDefinition = {
     fontDisplay: "'Orbitron', 'Inter', system-ui, sans-serif",
     fontBody: "'Inter', system-ui, sans-serif",
     fontMono: "'JetBrains Mono', ui-monospace, monospace",
-    sizeDisplay: '4rem',
-    sizeHeading: '2.25rem',
-    sizeBody: '1.125rem',
-    sizeCaption: '0.875rem',
-    lineHeight: '1.5',
-    letterSpacing: '0.05em',
+    sizeDisplay: '59px',
+    sizeHeading: '47px',
+    sizeBody: '34px',
+    sizeCaption: '27px',
+    lineHeight: '1.3',
+    letterSpacing: '-0.01em',
   },
   spacing: {
     gap: '4rem',

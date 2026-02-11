@@ -10,9 +10,14 @@ import type { ThemeDefinition } from '@/utils/types';
 export const teamsLightTheme: ThemeDefinition = {
   name: 'teamsLight',
   displayName: 'Teams Light',
+  isDark: false,
+  background: {
+    color: 'linear-gradient(145deg, #ffffff 0%, #f5f5f5 60%, #ebebeb 100%)',
+  },
   colors: {
     bg: '#ffffff',
     surface: '#f5f5f5',
+    surfaceAlt: '#ebebeb',
     primary: '#6a63d9',
     secondary: '#338fe6',
     accent: '#4fb3ff',
@@ -28,11 +33,11 @@ export const teamsLightTheme: ThemeDefinition = {
     fontDisplay: "'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
     fontBody: "'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
     fontMono: "'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
-    sizeDisplay: '3.25rem',
-    sizeHeading: '1.9rem',
-    sizeBody: '1.0625rem',
-    sizeCaption: '0.875rem',
-    lineHeight: '1.6',
+    sizeDisplay: '59px',
+    sizeHeading: '47px',
+    sizeBody: '34px',
+    sizeCaption: '27px',
+    lineHeight: '1.3',
     letterSpacing: '-0.01em',
   },
   spacing: {

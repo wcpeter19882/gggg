@@ -10,15 +10,19 @@ This module provides:
 - run_subagent(): Function matching Claude's runSubagent API
 """
 import json
+import logging
 import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Optional, TYPE_CHECKING
 
 from cliv2.core.skill_parser import parse_skill, build_subagent_prompt, ParsedSkill
+from cliv2.core import verbose_logger
 
 if TYPE_CHECKING:
     from cliv2.skills.base import SkillHandler, SkillContext
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -36,6 +40,7 @@ class SubagentResult:
     output: Any
     skill_name: str
     error: Optional[str] = None
+    raw_output: Optional[str] = None  # Raw LLM output before parsing
 
 
 class Subagent:
@@ -69,6 +74,9 @@ class Subagent:
     # Which stages need user instruction passed
     STAGES_WITH_USER_INSTRUCTION = {"theme", "storyline"}
     
+    # Cache for parsed skills (class-level, shared across instances)
+    _skill_cache: dict[str, "ParsedSkill"] = {}
+    
     def __init__(self, skill_name: str, llm: Any, skills_dir: Optional[Path] = None):
         """Initialize subagent with a skill.
         
@@ -85,20 +93,31 @@ class Subagent:
         else:
             self.skills_dir = skills_dir
         
-        # Parse skill using the new parser
+        # Parse skill using cached parser
         self.parsed_skill = self._parse_skill()
     
     def _parse_skill(self) -> ParsedSkill:
-        """Parse skill from SKILL.md file."""
+        """Parse skill from SKILL.md file (with caching)."""
         skill_path = self.SKILL_PATHS.get(self.skill_name)
         if not skill_path:
             raise ValueError(f"Unknown skill: {self.skill_name}")
         
         full_path = self.skills_dir / skill_path
+        cache_key = str(full_path)
+        
+        # Check cache first
+        if cache_key in Subagent._skill_cache:
+            return Subagent._skill_cache[cache_key]
+        
         if not full_path.exists():
             raise FileNotFoundError(f"Skill file not found: {full_path}")
         
-        return parse_skill(full_path)
+        # Parse and cache
+        parsed = parse_skill(full_path)
+        Subagent._skill_cache[cache_key] = parsed
+        logger.debug(f"[{self.skill_name}] Cached parsed skill from {skill_path}")
+        
+        return parsed
     
     @property
     def input_spec(self):
@@ -114,21 +133,134 @@ class Subagent:
         self,
         handler: "SkillHandler",
         context: "SkillContext",
+        max_completion_tokens: Optional[int] = None,
+        use_minimal_prompt: bool = False,
     ) -> SubagentResult:
         """Execute subagent using a SkillHandler for prompt building.
         
         This is the preferred method - uses handler for:
         1. build_prompt(): Skill-specific prompt with context
-        2. SKILL.md instructions as system prompt
+        2. SKILL.md instructions as system prompt (unless minimal mode)
         3. Parse output based on handler's output format
         
         Args:
             handler: Skill handler for prompt building
             context: Pre-loaded context from SkillContext
+            max_completion_tokens: Optional token limit for output
+            use_minimal_prompt: If True, skip SKILL.md and use minimal system prompt
             
         Returns:
             SubagentResult with parsed output
         """
+        from cliv2.skills.base import SkillHandler, SkillContext
+        
+        # System prompt - either full SKILL.md or minimal
+        if use_minimal_prompt:
+            system_prompt = f"""You are a {self.skill_name} agent. Output JSON only, no explanations."""
+        else:
+            system_prompt = self.parsed_skill.instructions
+        
+        system_prompt += """
+
+=== EXECUTION MODE ===
+You are running in DIRECT OUTPUT mode.
+- MCP tools are NOT available - context is pre-loaded below
+- Return output DIRECTLY (no tool calls, no XML tags)
+- Your output will be saved by the pipeline (you don't need to save)
+"""
+        
+        # User prompt = handler builds skill-specific prompt
+        user_prompt = handler.build_prompt(context)
+        
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt},
+        ]
+        
+        # Log LLM input sizes at INFO level for performance debugging
+        total_input_chars = len(system_prompt) + len(user_prompt)
+        logger.info(f"[{self.skill_name}] LLM Input: system={len(system_prompt)}, user={len(user_prompt)}, total={total_input_chars} chars")
+        logger.debug(f"[{self.skill_name}] LLM Input - User prompt:\n{user_prompt[:2000]}{'...(truncated)' if len(user_prompt) > 2000 else ''}")
+        if max_completion_tokens:
+            logger.info(f"[{self.skill_name}] Max completion tokens: {max_completion_tokens}")
+        
+        # Verbose logging (full, untruncated)
+        verbose_logger.log_llm_call(
+            skill_name=self.skill_name,
+            system_prompt=system_prompt,
+            user_prompt=user_prompt,
+        )
+        
+        try:
+            # Build completion kwargs
+            completion_kwargs = {"messages": messages}
+            if max_completion_tokens:
+                completion_kwargs["max_completion_tokens"] = max_completion_tokens
+            
+            import time
+            start_time = time.time()
+            response = self.llm.completion(**completion_kwargs)
+            elapsed = time.time() - start_time
+            
+            content = response.choices[0].message.content if hasattr(response, 'choices') else str(response)
+            content = content.strip()
+            
+            # Log token usage if available
+            if hasattr(response, 'usage') and response.usage:
+                usage = response.usage
+                prompt_tokens = getattr(usage, 'prompt_tokens', 0)
+                completion_tokens = getattr(usage, 'completion_tokens', 0)
+                # Handle reasoning tokens - may be nested in completion_tokens_details
+                reasoning_tokens = 0
+                if hasattr(usage, 'completion_tokens_details') and usage.completion_tokens_details:
+                    details = usage.completion_tokens_details
+                    if hasattr(details, 'reasoning_tokens'):
+                        reasoning_tokens = details.reasoning_tokens or 0
+                logger.info(f"[{self.skill_name}] Tokens: prompt={prompt_tokens}, completion={completion_tokens}, reasoning={reasoning_tokens}")
+            
+            # Log LLM output at INFO level
+            logger.info(f"[{self.skill_name}] LLM Output: {len(content)} chars in {elapsed:.1f}s")
+            logger.debug(f"[{self.skill_name}] LLM Output:\n{content[:2000]}{'...(truncated)' if len(content) > 2000 else ''}")
+            
+            # Verbose logging (full, untruncated response)
+            verbose_logger.log_streaming_complete(self.skill_name, content)
+            
+            # Parse output based on handler's output format
+            parsed_output = self._parse_output(content, handler.output_spec.format)
+            
+            return SubagentResult(
+                success=True,
+                output=parsed_output,
+                skill_name=self.skill_name,
+                raw_output=content,  # Preserve raw LLM output
+            )
+            
+        except Exception as e:
+            logger.error(f"[{self.skill_name}] LLM call failed: {e}")
+            return SubagentResult(
+                success=False,
+                output=None,
+                skill_name=self.skill_name,
+                error=str(e),
+            )
+    
+    async def run_with_handler_streaming(
+        self,
+        handler: "SkillHandler",
+        context: "SkillContext",
+    ):
+        """Execute subagent with streaming LLM response.
+        
+        Uses LiteLLM directly for streaming since OpenHands LLM doesn't support it.
+        
+        Args:
+            handler: Skill handler for prompt building
+            context: Pre-loaded context from SkillContext
+            
+        Yields:
+            String chunks from LLM response
+        """
+        import litellm
         from cliv2.skills.base import SkillHandler, SkillContext
         
         # System prompt = SKILL.md instructions (excluding Workflow section)
@@ -149,27 +281,57 @@ You are running in DIRECT OUTPUT mode.
             {"role": "user", "content": user_prompt},
         ]
         
+        # Log LLM input
+        logger.debug(f"[{self.skill_name}] LLM Input (streaming) - System prompt length: {len(system_prompt)} chars")
+        logger.debug(f"[{self.skill_name}] LLM Input (streaming) - User prompt length: {len(user_prompt)} chars")
+        logger.debug(f"[{self.skill_name}] LLM Input (streaming) - User prompt:\n{user_prompt[:2000]}{'...(truncated)' if len(user_prompt) > 2000 else ''}")
+        
+        # Verbose logging (full, untruncated)
+        verbose_logger.log_llm_call(
+            skill_name=self.skill_name,
+            system_prompt=system_prompt,
+            user_prompt=user_prompt,
+            streaming=True,
+        )
+        
+        # Collect full response for verbose logging
+        full_response_chunks = []
+        
         try:
-            response = self.llm.completion(messages=messages)
-            content = response.choices[0].message.content if hasattr(response, 'choices') else str(response)
-            content = content.strip()
+            # Get LLM config for direct litellm call
+            model = self.llm.config.model
+            api_key = self.llm.config.api_key
+            base_url = self.llm.config.base_url
+            api_version = self.llm.config.api_version
             
-            # Parse output based on handler's output format
-            parsed_output = self._parse_output(content, handler.output_spec.format)
+            # Convert SecretStr to plain string if needed
+            if hasattr(api_key, 'get_secret_value'):
+                api_key = api_key.get_secret_value()
             
-            return SubagentResult(
-                success=True,
-                output=parsed_output,
-                skill_name=self.skill_name,
+            # Use litellm async streaming directly
+            response = await litellm.acompletion(
+                model=model,
+                messages=messages,
+                api_key=api_key,
+                base_url=base_url,
+                api_version=api_version,
+                stream=True,
             )
             
+            async for chunk in response:
+                if hasattr(chunk, 'choices') and chunk.choices:
+                    delta = chunk.choices[0].delta
+                    if hasattr(delta, 'content') and delta.content:
+                        full_response_chunks.append(delta.content)
+                        yield delta.content
+            
+            # Verbose logging of complete streaming response
+            if full_response_chunks:
+                verbose_logger.log_streaming_complete(self.skill_name, "".join(full_response_chunks))
+                        
         except Exception as e:
-            return SubagentResult(
-                success=False,
-                output=None,
-                skill_name=self.skill_name,
-                error=str(e),
-            )
+            logger.error(f"[{self.skill_name}] LLM streaming call failed: {e}")
+            raise
     
     async def run_with_context(
         self,
@@ -206,10 +368,19 @@ You are running in DIRECT OUTPUT mode.
             {"role": "user", "content": user_prompt},
         ]
         
+        # Log LLM input
+        logger.debug(f"[{self.skill_name}] LLM Input - System prompt length: {len(system_prompt)} chars")
+        logger.debug(f"[{self.skill_name}] LLM Input - User prompt length: {len(user_prompt)} chars")
+        logger.debug(f"[{self.skill_name}] LLM Input - User prompt:\n{user_prompt[:2000]}{'...(truncated)' if len(user_prompt) > 2000 else ''}")
+        
         try:
             response = self.llm.completion(messages=messages)
             content = response.choices[0].message.content if hasattr(response, 'choices') else str(response)
             content = content.strip()
+            
+            # Log LLM output
+            logger.debug(f"[{self.skill_name}] LLM Output length: {len(content)} chars")
+            logger.debug(f"[{self.skill_name}] LLM Output:\n{content[:2000]}{'...(truncated)' if len(content) > 2000 else ''}")
             
             # Parse output based on skill's output spec
             parsed_output = self._parse_output(content, self.output_format)
@@ -221,6 +392,7 @@ You are running in DIRECT OUTPUT mode.
             )
             
         except Exception as e:
+            logger.error(f"[{self.skill_name}] LLM call failed: {e}")
             return SubagentResult(
                 success=False,
                 output=None,
@@ -247,10 +419,19 @@ You are running in DIRECT OUTPUT mode.
             {"role": "user", "content": prompt},
         ]
         
+        # Log LLM input
+        logger.debug(f"[{self.skill_name}] LLM Input - System prompt length: {len(system_prompt)} chars")
+        logger.debug(f"[{self.skill_name}] LLM Input - User prompt length: {len(prompt)} chars")
+        logger.debug(f"[{self.skill_name}] LLM Input - User prompt:\n{prompt[:2000]}{'...(truncated)' if len(prompt) > 2000 else ''}")
+        
         try:
             response = self.llm.completion(messages=messages)
             content = response.choices[0].message.content if hasattr(response, 'choices') else str(response)
             content = content.strip()
+            
+            # Log LLM output
+            logger.debug(f"[{self.skill_name}] LLM Output length: {len(content)} chars")
+            logger.debug(f"[{self.skill_name}] LLM Output:\n{content[:2000]}{'...(truncated)' if len(content) > 2000 else ''}")
             
             parsed_output = self._parse_output(content, output_format)
             
@@ -261,6 +442,7 @@ You are running in DIRECT OUTPUT mode.
             )
             
         except Exception as e:
+            logger.error(f"[{self.skill_name}] LLM call failed: {e}")
             return SubagentResult(
                 success=False,
                 output=None,
@@ -291,6 +473,20 @@ You are running in DIRECT OUTPUT mode.
                     content = parts[1]
                     if content.startswith("jsx") or content.startswith("tsx"):
                         content = content[3:]
+            return content.strip()
+        
+        elif output_format == "mdx":
+            # MDX format: YAML frontmatter + content blocks
+            # Strip markdown code blocks if present
+            if content.startswith("```"):
+                parts = content.split("```")
+                if len(parts) >= 2:
+                    content = parts[1]
+                    # Remove language identifier
+                    for lang in ["mdx", "markdown", "md", "yaml"]:
+                        if content.startswith(lang):
+                            content = content[len(lang):]
+                            break
             return content.strip()
         
         else:  # text/markdown

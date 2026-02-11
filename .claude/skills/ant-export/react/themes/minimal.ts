@@ -10,9 +10,14 @@ import type { ThemeDefinition } from '@/utils/types';
 export const minimalTheme: ThemeDefinition = {
   name: 'minimal',
   displayName: 'Minimal',
+  isDark: false,
+  background: {
+    color: 'linear-gradient(180deg, #fafafa 0%, #f5f5f5 100%)',
+  },
   colors: {
     bg: '#fafafa',
     surface: '#ffffff',
+    surfaceAlt: '#f4f4f5',
     primary: '#18181b',
     secondary: '#52525b',
     accent: '#a1a1aa',
@@ -28,12 +33,12 @@ export const minimalTheme: ThemeDefinition = {
     fontDisplay: "'Inter', system-ui, sans-serif",
     fontBody: "'Inter', system-ui, sans-serif",
     fontMono: "'IBM Plex Mono', ui-monospace, monospace",
-    sizeDisplay: '3rem',
-    sizeHeading: '1.75rem',
-    sizeBody: '1rem',
-    sizeCaption: '0.75rem',
-    lineHeight: '1.75',
-    letterSpacing: '0em',
+    sizeDisplay: '59px',
+    sizeHeading: '47px',
+    sizeBody: '34px',
+    sizeCaption: '27px',
+    lineHeight: '1.3',
+    letterSpacing: '-0.01em',
   },
   spacing: {
     gap: '4rem',

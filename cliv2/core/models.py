@@ -23,12 +23,15 @@ class GenerationRequest(BaseModel):
     # Optional generation settings
     output_path: Optional[Path] = Field(None, description="Output file path")
     instruction: str = Field("", description="Custom generation instructions")
-    theme: Optional[str] = Field(None, description="Pre-selected theme name")
+    theme: Optional[str] = Field(None, description="Pre-selected theme name or .pptx path")
+    template_path: Optional[Path] = Field(None, description="Path to .pptx template file")
     renderer: Literal["antd", "original"] = Field("antd", description="Renderer choice")
     
     # Pipeline control
     skip_research: bool = Field(False, description="Skip research stage")
     stop_after: Optional[str] = Field(None, description="Stop after this stage")
+    start_from: Optional[str] = Field(None, description="Start from this stage (requires existing project)")
+    project_dir: Optional[Path] = Field(None, description="Existing project directory (for start_from)")
     verbose: bool = Field(False, description="Enable verbose output")
     
     # Progress tracking (excluded from serialization)
@@ -41,7 +44,7 @@ class StageResult(BaseModel):
     """Result of a single pipeline stage execution."""
     
     stage: str = Field(..., description="Stage identifier")
-    status: Literal["pending", "running", "completed", "skipped", "failed"] = Field(
+    status: Literal["pending", "running", "completed", "skipped", "failed", "waiting"] = Field(
         ..., description="Execution status"
     )
     message: str = Field("", description="Human-readable message")

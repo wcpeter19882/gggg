@@ -1,79 +1,158 @@
-"""CLI interface adapter for slide generation.
+"""CLI interface for slide generation.
 
-This is a thin wrapper that:
-1. Parses command-line arguments
-2. Converts them to GenerationRequest
-3. Calls core orchestrator
-4. Formats output for terminal
+Simple chat-based interface that formats input and calls the orchestrator.
 """
 import asyncio
+import logging
+import os
 import sys
+from datetime import datetime
 from pathlib import Path
 from typing import Optional
+
+# Fix Windows console encoding for Unicode characters
+if sys.platform == "win32":
+    os.environ.setdefault("PYTHONIOENCODING", "utf-8")
+    # Force UTF-8 for stdout/stderr
+    if hasattr(sys.stdout, 'reconfigure'):
+        sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    if hasattr(sys.stderr, 'reconfigure'):
+        sys.stderr.reconfigure(encoding='utf-8', errors='replace')
 
 import click
 
 from cliv2 import __version__
 from cliv2.core.errors import Cliv2Error, ConfigError
-from cliv2.core.models import GenerationRequest, StageResult
-from cliv2.core.orchestrator import generate
-from cliv2.interfaces.cli.formatters import (
-    format_progress,
-    format_summary,
-    format_error,
-    format_config_info,
-)
+from cliv2.core.models import StageResult
 
 
 @click.group()
 @click.version_option(version=__version__, prog_name="cliv2")
 def main():
-    """CLIv2: Headless slide generation with OpenHands SDK.
+    """CLIv2: Chat-based slide generation.
     
-    Generate slide presentations from markdown source files using
-    AI-powered orchestration.
+    Generate slide presentations through natural language.
     
     Examples:
     
-      cliv2 generate docs/pitch.md
+      cliv2 generate source.md "Create 10 slides"
       
-      cliv2 generate docs/pitch.md --theme cyber --skip-research
+      cliv2 generate source.md -t template.pptx "Match this style"
       
-      cliv2 generate docs/pitch.md -v -o output/slides.html
+      cliv2 generate source.md --skip-search "Internal deck"
     """
     pass
 
 
+def format_chat_message(
+    source: Optional[Path] = None,
+    template: Optional[Path] = None,
+    context_files: Optional[list[Path]] = None,
+    image_files: Optional[list[Path]] = None,
+    instruction: str = "",
+) -> tuple[str, list[dict]]:
+    """Format inputs into chat message and files list.
+    
+    Returns:
+        (message, files_list) tuple
+    """
+    files = []
+    msg_parts = []
+    
+    # Add source file
+    if source and source.exists():
+        files.append({
+            "path": str(source),
+            "name": source.name,
+            "purpose": "source",
+        })
+        msg_parts.append(f"Source: {source.name}")
+    
+    # Add template file
+    if template and template.exists():
+        files.append({
+            "path": str(template),
+            "name": template.name,
+            "purpose": "template",
+        })
+        msg_parts.append(f"Template: {template.name}")
+    
+    # Add context files
+    if context_files:
+        for ctx in context_files:
+            if ctx.exists():
+                files.append({
+                    "path": str(ctx),
+                    "name": ctx.name,
+                    "purpose": "context",
+                })
+                msg_parts.append(f"Context: {ctx.name}")
+    
+    # Add image files
+    if image_files:
+        for img in image_files:
+            if img.exists():
+                files.append({
+                    "path": str(img),
+                    "name": img.name,
+                    "purpose": "images",
+                })
+                msg_parts.append(f"Image: {img.name}")
+    
+    # Build final message
+    if msg_parts:
+        message = ", ".join(msg_parts) + "\n\n" + instruction
+    else:
+        message = instruction
+    
+    return message, files
+
+
 @main.command("generate")
-@click.argument("source", type=click.Path(exists=True, path_type=Path))
+@click.argument("source", type=click.Path(exists=True, path_type=Path), required=False)
+@click.argument("instruction", required=False)
+@click.option(
+    "-t", "--template",
+    type=click.Path(exists=True, path_type=Path),
+    help="PowerPoint template for theme extraction"
+)
+@click.option(
+    "-c", "--context",
+    type=click.Path(exists=True, path_type=Path),
+    multiple=True,
+    help="Additional context files (can be repeated)"
+)
+@click.option(
+    "--image",
+    type=click.Path(exists=True, path_type=Path),
+    multiple=True,
+    help="Image files for background or slides (can be repeated)"
+)
+@click.option(
+    "-p", "--project",
+    type=click.Path(exists=True, path_type=Path),
+    help="Continue from existing project directory"
+)
+@click.option(
+    "-i", "--instruction",
+    "instruction_opt",
+    help="Generation instruction (alternative to positional arg)"
+)
 @click.option(
     "-o", "--output",
     type=click.Path(path_type=Path),
     help="Output file path"
 )
 @click.option(
-    "--skip-research",
+    "--skip-search",
     is_flag=True,
-    help="Skip research stage (for confidential content)"
-)
-@click.option(
-    "-t", "--theme",
-    help="Pre-select theme name (skips theme selection)"
-)
-@click.option(
-    "-i", "--instruction",
-    help="Custom generation instructions"
+    help="Disable web search in research subagent"
 )
 @click.option(
     "-r", "--renderer",
     type=click.Choice(["antd", "original"]),
     default="antd",
-    help="Renderer choice (default: antd)"
-)
-@click.option(
-    "-s", "--stop-after",
-    type=click.Choice(["create", "research", "theme", "storyline", "layout"]),
-    help="Stop after specified stage"
+    help="Renderer (default: antd)"
 )
 @click.option(
     "-v", "--verbose",
@@ -81,190 +160,199 @@ def main():
     help="Show detailed progress"
 )
 @click.option(
-    "-c", "--config",
-    type=click.Path(exists=True, path_type=Path),
-    help="Config file path (.cliv2.yaml)"
+    "-vv", "--log-file",
+    type=click.Path(path_type=Path),
+    help="Write full untruncated LLM logs to file"
 )
 def generate_cmd(
-    source: Path,
-    output: Optional[Path],
-    skip_research: bool,
-    theme: Optional[str],
+    source: Optional[Path],
     instruction: Optional[str],
+    template: Optional[Path],
+    context: tuple[Path, ...],
+    image: tuple[Path, ...],
+    project: Optional[Path],
+    instruction_opt: Optional[str],
+    output: Optional[Path],
+    skip_search: bool,
     renderer: str,
-    stop_after: Optional[str],
     verbose: bool,
-    config: Optional[Path],
+    log_file: Optional[Path],
 ):
-    """Generate slides from a source markdown file.
+    """Generate slides via chat interface.
     
-    SOURCE is the path to the markdown file to process.
+    SOURCE is the content file (markdown, text, pptx).
+    INSTRUCTION describes what to generate.
     
     Examples:
     
-      cliv2 generate docs/pitch.md
+      cliv2 generate notes.md "Create 10 executive slides"
       
-      cliv2 generate docs/pitch.md --theme cyber
+      cliv2 generate notes.md -t brand.pptx "Match brand style"
       
-      cliv2 generate docs/pitch.md --skip-research -v
+      cliv2 generate deck.pptx "Redesign with modern layout"
+      
+      cliv2 generate -i "Create a blank 5-slide deck about AI"
     """
-    try:
-        # Progress callback for verbose mode
-        def progress_callback(result: StageResult):
-            if verbose:
-                click.echo(format_progress(result))
-        
-        # Convert CLI args to GenerationRequest
-        request = GenerationRequest(
-            source_path=source,
-            output_path=output,
-            skip_research=skip_research,
-            theme=theme,
-            instruction=instruction or "",
-            renderer=renderer,
-            stop_after=stop_after,
-            verbose=verbose,
-            progress_callback=progress_callback if verbose else None,
+    # Use positional or option instruction
+    final_instruction = instruction or instruction_opt or "Generate slides from the provided content"
+    
+    # Configure verbose file logging (full LLM input/output)
+    if log_file:
+        from cliv2.core import verbose_logger
+        verbose_logger.set_log_file(str(log_file))
+        click.echo(f"📝 Verbose logging to: {log_file}")
+    
+    # Configure logging
+    if verbose:
+        logging.basicConfig(
+            level=logging.DEBUG,
+            format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+            datefmt="%H:%M:%S",
         )
-        
-        # Show starting message
+        for noisy in ["httpx", "httpcore", "urllib3", "openai", "LiteLLM", "litellm", 
+                      "azure", "msal", "asyncio", "aiohttp", "charset_normalizer"]:
+            logging.getLogger(noisy).setLevel(logging.WARNING)
+    
+    # Format chat message
+    message, files = format_chat_message(
+        source=source,
+        template=template,
+        context_files=list(context) if context else None,
+        image_files=list(image) if image else None,
+        instruction=final_instruction,
+    )
+    
+    if verbose:
+        click.echo(f"📝 Message: {message[:100]}{'...' if len(message) > 100 else ''}")
+        click.echo(f"📎 Files: {[f['name'] for f in files]}")
+        click.echo("")
+    
+    # Progress callback
+    def progress_callback(result: StageResult):
         if verbose:
-            click.echo(f"Generating slides from: {source}")
-            click.echo("")
-        
-        # Call core orchestrator
-        result = asyncio.run(generate(request))
-        
-        # Format output for terminal
-        click.echo(format_summary(result, verbose))
-        
-        # Exit with appropriate code
-        if not result.is_success:
-            sys.exit(1)
-        
-    except ConfigError as e:
-        click.echo(format_error(e.message, e.hint), err=True)
-        sys.exit(2)
-    except Cliv2Error as e:
-        click.echo(format_error(e.message, e.hint), err=True)
-        sys.exit(1)
-    except KeyboardInterrupt:
-        click.echo("\nGeneration cancelled by user.", err=True)
-        sys.exit(130)
-
-
-@main.command("config")
-@click.option("--show", is_flag=True, help="Show current configuration")
-@click.option("--validate", is_flag=True, help="Validate configuration")
-@click.option("--init", is_flag=True, help="Create .cliv2.yaml template")
-def config_cmd(show: bool, validate: bool, init: bool):
-    """Show or validate configuration.
-    
-    Examples:
-    
-      cliv2 config --show
-      
-      cliv2 config --validate
-      
-      cliv2 config --init
-    """
-    if init:
-        _init_config()
-        return
-    
-    if show or validate:
-        _show_or_validate_config(validate)
-        return
-    
-    # Default: show help
-    ctx = click.get_current_context()
-    click.echo(ctx.get_help())
-
-
-def _init_config():
-    """Create a .cliv2.yaml template file."""
-    template = """# CLIv2 Configuration
-# See https://github.com/your-org/cliv2 for documentation
-
-# LLM settings (optional - uses environment variables by default)
-# llm:
-#   model: azure/gpt-4
-
-# Pipeline defaults
-pipeline:
-  default_theme: business
-  skip_research: false
-  renderer: antd
-  verbose: false
-
-# Tool paths (optional - uses defaults)
-# tools:
-#   mcp_servers_path: .claude/tools
-
-# Skill paths (optional - uses defaults)
-# skills:
-#   skills_path: .claude/skills
-"""
-    
-    config_path = Path(".cliv2.yaml")
-    if config_path.exists():
-        click.echo(f"Config file already exists: {config_path}")
-        if not click.confirm("Overwrite?"):
-            return
-    
-    config_path.write_text(template)
-    click.echo(f"Created config file: {config_path}")
-
-
-def _show_or_validate_config(validate_only: bool):
-    """Show or validate configuration."""
-    from cliv2.config.env import load_env, validate_azure_config
-    from cliv2.config.llm import get_llm_config
-    from cliv2.tools.mcp_config import get_mcp_config
-    from cliv2.skills.loader import discover_skills
-    from cliv2.interfaces.cli.formatters import CHECK, CROSS
-    
-    load_env()
+            status_icon = {"running": "🔄", "completed": "✅", "failed": "❌"}.get(result.status, "•")
+            click.echo(f"  {status_icon} {result.stage}: {result.message}")
     
     try:
-        llm_config = get_llm_config()
-        llm_status = f"{CHECK} Configured"
-    except ConfigError as e:
-        llm_config = {}
-        llm_status = f"{CROSS} {e.message}"
-    
-    mcp_config = get_mcp_config()
-    mcp_servers = list(mcp_config.get("mcpServers", {}).keys())
-    
-    skills = discover_skills()
-    skill_names = [s["name"] for s in skills]
-    
-    config_info = {
-        "LLM": llm_status,
-        "Model": llm_config.get("model", "Not configured"),
-        "MCP Servers": ", ".join(mcp_servers) if mcp_servers else "None found",
-        "Skills": ", ".join(skill_names) if skill_names else "None found",
-    }
-    
-    click.echo(format_config_info(config_info))
-    
-    if validate_only:
-        # Check for issues
-        issues = []
-        if CROSS in llm_status:
-            issues.append("LLM configuration missing")
-        if not mcp_servers:
-            issues.append("No MCP servers found in .claude/tools/")
-        if not skills:
-            issues.append("No skills found in .claude/skills/")
+        # Run orchestrator
+        from cliv2.core.orchestrator_session import OrchestratorSession
+        from cliv2.config.llm import create_llm
         
-        click.echo("")
-        if issues:
-            for issue in issues:
-                click.echo(f"  ! {issue}")
-            sys.exit(1)
+        click.echo("🚀 Starting slide generation...")
+        start_time = datetime.now()
+        
+        # Create session and run
+        llm = create_llm()
+        session = OrchestratorSession(llm, progress_callback if verbose else None, verbose)
+        
+        result = asyncio.run(session.chat(
+            message=message,
+            files=files if files else None,
+            project_dir=str(project) if project else None,
+            skip_search=skip_search,
+            renderer=renderer,
+        ))
+        
+        duration = (datetime.now() - start_time).total_seconds()
+        
+        # Show result
+        if result.get("success"):
+            project_id = result.get("project_id", "")
+            slide_count = len(result.get("completed_slides", []))
+            click.echo("")
+            click.echo(f"✅ Generated {slide_count} slides in {duration:.1f}s")
+            click.echo(f"📋 Project: {project_id}")
+            click.echo(f"🌐 Preview: http://localhost:3001/slides/{project_id}")
         else:
-            click.echo(f"{CHECK} Configuration is valid")
+            click.echo("")
+            click.echo(f"⚠️  Generation incomplete after {duration:.1f}s")
+            if result.get("project_id"):
+                click.echo(f"📋 Project: {result.get('project_id')}")
+        
+    except Exception as e:
+        click.echo(f"❌ Error: {e}", err=True)
+        if verbose:
+            import traceback
+            traceback.print_exc()
+        sys.exit(1)
+
+
+@main.command("chat")
+@click.option("-v", "--verbose", is_flag=True, help="Verbose output")
+def chat_cmd(verbose: bool):
+    """Interactive chat mode for slide generation.
+    
+    Start an interactive session where you can send multiple messages.
+    """
+    from cliv2.core.orchestrator_session import OrchestratorSession
+    from cliv2.config.llm import create_llm
+    
+    click.echo("🎯 CLIv2 Interactive Chat")
+    click.echo("Type your instructions. Use 'quit' to exit.")
+    click.echo("Upload files by prefixing with @: @notes.md @template.pptx")
+    click.echo("")
+    
+    # Configure logging
+    if verbose:
+        logging.basicConfig(level=logging.DEBUG, format="%(message)s")
+    
+    # Progress callback
+    def progress_callback(result: StageResult):
+        if verbose:
+            click.echo(f"  • {result.stage}: {result.message}")
+    
+    # Create session
+    llm = create_llm()
+    session = OrchestratorSession(llm, progress_callback if verbose else None, verbose)
+    
+    while True:
+        try:
+            user_input = click.prompt("You", default="", show_default=False)
+            
+            if not user_input:
+                continue
+            
+            if user_input.lower() in ("quit", "exit", "q"):
+                click.echo("Goodbye!")
+                break
+            
+            # Parse @file references
+            files = []
+            message_parts = []
+            for word in user_input.split():
+                if word.startswith("@"):
+                    file_path = Path(word[1:])
+                    if file_path.exists():
+                        files.append({"path": str(file_path), "name": file_path.name})
+                        click.echo(f"  📎 {file_path.name}")
+                    else:
+                        click.echo(f"  ⚠️  File not found: {word[1:]}")
+                else:
+                    message_parts.append(word)
+            
+            message = " ".join(message_parts)
+            
+            # Run
+            click.echo("🔄 Processing...")
+            result = asyncio.run(session.chat(
+                message=message,
+                files=files if files else None,
+            ))
+            
+            # Show result
+            if result.get("success"):
+                project_id = result.get("project_id", "")
+                slide_count = len(result.get("completed_slides", []))
+                click.echo(f"✅ {slide_count} slides ready")
+                click.echo(f"🌐 http://localhost:3001/slides/{project_id}")
+            else:
+                click.echo("⚠️  Processing incomplete")
+            
+            click.echo("")
+            
+        except (KeyboardInterrupt, EOFError):
+            click.echo("\nGoodbye!")
+            break
 
 
 if __name__ == "__main__":

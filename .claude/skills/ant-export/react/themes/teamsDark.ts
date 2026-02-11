@@ -10,9 +10,14 @@ import type { ThemeDefinition } from '@/utils/types';
 export const teamsDarkTheme: ThemeDefinition = {
   name: 'teamsDark',
   displayName: 'Teams Dark',
+  isDark: true,
+  background: {
+    color: 'linear-gradient(135deg, #0f0e14 0%, #1d1c29 50%, #28273a 100%)',
+  },
   colors: {
     bg: '#0f0e14',
     surface: '#1d1c29',
+    surfaceAlt: '#28273a',
     primary: '#7f85f5',
     secondary: '#4f52b2',
     accent: '#339cff',
@@ -28,11 +33,11 @@ export const teamsDarkTheme: ThemeDefinition = {
     fontDisplay: "'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
     fontBody: "'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
     fontMono: "'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
-    sizeDisplay: '3.25rem',
-    sizeHeading: '1.9rem',
-    sizeBody: '1.0625rem',
-    sizeCaption: '0.875rem',
-    lineHeight: '1.6',
+    sizeDisplay: '59px',
+    sizeHeading: '47px',
+    sizeBody: '34px',
+    sizeCaption: '27px',
+    lineHeight: '1.3',
     letterSpacing: '-0.01em',
   },
   spacing: {

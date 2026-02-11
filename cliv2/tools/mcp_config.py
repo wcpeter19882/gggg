@@ -33,6 +33,7 @@ def get_mcp_config(tools_dir: Optional[Path] = None) -> dict:
         ("create-project", "mcp_create_project.py"),
         ("apply-patch", "mcp_apply_patch.py"),
         ("export-mdx", "mcp_export_mdx.py"),
+        ("pptx-extractor", "mcp_pptx_extractor.py"),
     ]
     
     for server_name, script_name in mcp_scripts:

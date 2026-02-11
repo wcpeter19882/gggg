@@ -4,10 +4,16 @@ Creates OpenHands LLM instance configured for Azure OpenAI.
 Supports both API key and Azure AD authentication.
 """
 import os
+import time
 from typing import Optional
 
 from cliv2.config.env import load_env, validate_azure_config
 from cliv2.core.errors import ConfigError
+
+# Cache for Azure credential and token
+_cached_credential = None
+_cached_token = None
+_token_expires_at = 0
 
 
 def create_llm():
@@ -62,7 +68,8 @@ def create_llm():
 def _get_azure_ad_token() -> str:
     """Get Azure AD token for Azure OpenAI.
     
-    Uses DefaultAzureCredential for token acquisition.
+    Uses AzureCliCredential directly with caching (faster than DefaultAzureCredential
+    which tries IMDS first and times out on non-Azure machines).
     
     Returns:
         Azure AD access token
@@ -70,8 +77,14 @@ def _get_azure_ad_token() -> str:
     Raises:
         ConfigError: If token acquisition fails
     """
+    global _cached_credential, _cached_token, _token_expires_at
+    
+    # Check if cached token is still valid (with 5 min buffer)
+    if _cached_token and time.time() < (_token_expires_at - 300):
+        return _cached_token
+    
     try:
-        from azure.identity import DefaultAzureCredential
+        from azure.identity import AzureCliCredential
     except ImportError as e:
         raise ConfigError(
             message="azure-identity package not installed",
@@ -80,8 +93,15 @@ def _get_azure_ad_token() -> str:
         ) from e
     
     try:
-        credential = DefaultAzureCredential()
-        token = credential.get_token("https://cognitiveservices.azure.com/.default")
+        # Reuse cached credential if available
+        if _cached_credential is None:
+            _cached_credential = AzureCliCredential()
+        
+        token = _cached_credential.get_token("https://cognitiveservices.azure.com/.default")
+        
+        # Cache token and expiry
+        _cached_token = token.token
+        _token_expires_at = token.expires_on
         
         # Set for LiteLLM
         os.environ["AZURE_AD_TOKEN"] = token.token

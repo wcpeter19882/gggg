@@ -282,9 +282,9 @@ def _default_output_format(skill_name: str) -> str:
     format_map = {
         "research-agent": "text",
         "theme-generator": "json",
-        "storyline-planner": "json",
-        "ant-paged-layout": "jsx",
-        "paged-layout-content": "jsx",
+        "storyline-planner": "mdx",
+        "ant-paged-layout": "mdx",
+        "paged-layout-content": "mdx",
         "ant-slides-export": "text",
         "slides-export": "text",
     }
@@ -423,6 +423,24 @@ You are running in DIRECT OUTPUT mode.
     format_hints = {
         "json": "Return ONLY valid JSON.",
         "jsx": "Return ONLY JSX code with <Slide> wrappers.",
+        "mdx": """Return slides in YAML frontmatter + content format:
+---
+id: slide_01
+rank: 1
+density: moderate
+intent: statement
+category: Situation
+story: What audience should understand
+---
+# Headline
+
+Content (markdown for storyline, JSX for layout)
+
+---
+id: slide_02
+rank: 2
+...
+""",
         "text": "Return markdown/text content.",
     }
     user_parts.append(f"\n=== OUTPUT ===\n{format_hints.get(output_spec.format, '')}")

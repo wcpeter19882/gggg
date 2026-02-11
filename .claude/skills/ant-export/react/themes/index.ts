@@ -28,6 +28,7 @@ import {
   vibeAtMost,
 } from './vibes';
 
+import { templateTheme } from './template';
 // =============================================================================
 // Theme Registry
 // =============================================================================
@@ -45,6 +46,7 @@ export const themes: Record<ThemeName, ThemeDefinition> = {
   dark: darkTheme,
   teamsDark: teamsDarkTheme,
   teamsLight: teamsLightTheme,
+  template: templateTheme,
 };
 
 /** Get a theme by name, with fallback to business */
@@ -85,6 +87,7 @@ export function themeToCSSVariables(theme: ThemeDefinition): Record<string, stri
     // Colors
     '--theme-bg': theme.colors.bg,
     '--theme-surface': theme.colors.surface,
+    '--theme-surface-alt': theme.colors.surfaceAlt,
     '--theme-primary': theme.colors.primary,
     '--theme-secondary': theme.colors.secondary,
     '--theme-accent': theme.colors.accent,
@@ -126,6 +129,10 @@ export function themeToCSSVariables(theme: ThemeDefinition): Record<string, stri
     '--theme-shadow-lg': typeof theme.visuals.shadow === 'string' ? theme.visuals.shadow : theme.visuals.shadow.lg,
     
     '--theme-border-width': theme.visuals.borderWidth,
+    
+    // Background (for slides)
+    '--theme-bg-color': theme.background?.color || theme.colors.bg,
+    '--theme-bg-image': theme.background?.image || 'none',
   };
 
   // Component Overrides

@@ -54,7 +54,7 @@ Each stage is handled by a specialized subagent.
 
 When the user asks to "generate slides" / "produce a deck", you MUST run the pipeline end-to-end in the same turn:
 - Create Project → Research → (Theme if needed) → Plan Storyline → Generate Layouts → Export & Preview
-- If `constitution.refinement_rounds > 0`, run the refinement loop (Validate → Fix → Re-export) until `status=="ok"` or rounds exhausted.
+- If constitution.md specifies refinement rounds > 0, run the refinement loop (Validate → Fix → Re-export) until `status=="ok"` or rounds exhausted.
 
 Do NOT pause after project creation or theme selection waiting for user confirmation unless the user explicitly requests a pause or a choice.
 
@@ -128,8 +128,7 @@ Returns:
   "project_id": "golden_set_7a783fe4",
   "project_dir": "C:/Users/.../content-manager/golden_set_7a783fe4",
   "content_json": "C:/Users/.../content.json",
-  "source_file": "C:/Users/.../files/golden_set.md",
-  "constitution": { "tone": "professional", ... }
+  "source_file": "C:/Users/.../files/golden_set.md"
 }
 ```
 
@@ -138,18 +137,55 @@ Save `project_dir` for all subsequent steps.
 ## Project Files
 
 Each project contains:
-- `content.json` - Main data store (theme, slides)
-- `constitution.md` - User constraints and requirements
+- `content.json` - Main data store (slides, metadata)
+- `constitution.md` - User constraints and requirements (free-form markdown)
+- `research.md` - Enriched content from research phase
+- `files/` - Source files and optional template.pptx
+
+### PowerPoint Template Support (Optional)
+
+If user provides a `.pptx` template file, it will be copied to `{project_dir}/files/template.pptx`.
+
+**When template.pptx exists:**
+1. Theme step extracts colors and fonts from the PowerPoint
+2. Layout instructions from PowerPoint are generated as `{theme_name}_layout.md`
+3. Layout step uses extracted layout patterns instead of defaults
+4. Export uses the extracted theme colors
+
+**If no template.pptx:**
+- Normal preset theme selection applies
+- Default layout patterns are used
 
 ### constitution.md
 
-Contains user constraints that ALL subagents must respect:
-- `target_slides` - Target number of slides
-- `content_requirements` - Must-include topics
-- `content_exclusions` - Topics to avoid
-- `style_requirements` - Style constraints
-- `theme` - (Optional) Pre-selected theme name from preset list. If set, load directly without generation.
-- `verbose` - If true, save intermediate outputs to files
+Free-form markdown file containing user constraints that ALL subagents must respect.
+Extract requirements by reading the markdown content. Common sections include:
+- Target slides / slide count
+- Content requirements - Must-include topics
+- Content exclusions - Topics to avoid
+- Style requirements - Style constraints
+- Theme preference - If specified, use that theme name directly
+- Refinement rounds - If > 0, run validation loop
+
+**Example constitution.md:**
+```markdown
+# Presentation Requirements
+
+## Target
+- 10 slides total
+- Professional tone
+
+## Content Requirements
+- Include market analysis
+- Include competitive landscape
+
+## Exclusions
+- No technical deep-dives
+- No pricing details
+
+## Theme
+Use "business" preset
+```
 
 ### Available Preset Themes
 
@@ -350,7 +386,7 @@ Some environments may not provide a terminal execution tool. If you cannot run t
 **This step is SEPARATE from Export (Step 6).** Do NOT run validation during export.
 
 **Refinement is triggered ONLY when:**
-1. `constitution.refinement_rounds > 0`, OR
+1. Constitution.md specifies refinement rounds > 0, OR
 2. User explicitly requests refinement (e.g., "refine the slides", "fix the issues")
 
 **If neither condition is met, SKIP this step entirely.**
@@ -421,7 +457,7 @@ mcp_export-mdx_export_mdx({
 ### Refinement Loop Logic
 
 ```
-max_rounds = constitution.refinement_rounds (default: 0)
+max_rounds = refinement_rounds from constitution.md (default: 0)
 
 If max_rounds > 0:
   For round in 1..max_rounds:
@@ -509,9 +545,9 @@ Targets: theme, slides, issues, story, constitution
 
 ### apply_patch.py (CLI Fallback)
 
-Apply JSON patch to content.json. Check constitution.verbose to decide whether to persist:
+Apply JSON patch to content.json. Check constitution.md for verbose mode:
 
-**If verbose=true in constitution:**
+**If verbose mode specified in constitution.md:**
 ```bash
 python .claude/tools/apply_patch.py \
   --project "{project_dir}" \

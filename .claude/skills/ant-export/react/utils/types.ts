@@ -153,6 +153,7 @@ export type VibeLevel =
 export interface ThemeColors {
   bg: string;
   surface: string;
+  surfaceAlt: string;
   primary: string;
   secondary: string;
   accent: string;
@@ -228,10 +229,18 @@ export interface ThemeComponentOverrides {
   // Add other components as needed
 }
 
+/** Theme background settings */
+export interface ThemeBackground {
+  color: string;
+  image?: string;
+}
+
 /** Complete theme definition */
 export interface ThemeDefinition {
   name: ThemeName;
   displayName: string;
+  isDark?: boolean;
+  background?: ThemeBackground;
   colors: ThemeColors;
   typography: ThemeTypography;
   spacing: ThemeSpacing;

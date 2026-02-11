@@ -10,9 +10,14 @@ import type { ThemeDefinition } from '@/utils/types';
 export const duolingoTheme: ThemeDefinition = {
   name: 'duolingo',
   displayName: 'Duolingo',
+  isDark: false,
+  background: {
+    color: 'linear-gradient(145deg, #ffffff 0%, #f0fdf4 60%, #dcfce7 100%)',
+  },
   colors: {
     bg: '#ffffff',
     surface: '#f7f7f7',
+    surfaceAlt: '#efefef',
     primary: '#58cc02',
     secondary: '#1cb0f6',
     accent: '#ff9600',
@@ -28,12 +33,12 @@ export const duolingoTheme: ThemeDefinition = {
     fontDisplay: "'Nunito', 'Inter', system-ui, sans-serif",
     fontBody: "'Nunito', 'Inter', system-ui, sans-serif",
     fontMono: "'JetBrains Mono', ui-monospace, monospace",
-    sizeDisplay: '3.5rem',
-    sizeHeading: '2rem',
-    sizeBody: '1.125rem',
-    sizeCaption: '0.875rem',
-    lineHeight: '1.6',
-    letterSpacing: '0em',
+    sizeDisplay: '59px',
+    sizeHeading: '47px',
+    sizeBody: '34px',
+    sizeCaption: '27px',
+    lineHeight: '1.3',
+    letterSpacing: '-0.01em',
   },
   spacing: {
     gap: '3rem',

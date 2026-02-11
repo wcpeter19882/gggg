@@ -18,7 +18,7 @@ from cliv2.core.errors import (
     SkillError,
 )
 from cliv2.core.models import GenerationRequest, GenerationResult, StageResult
-from cliv2.core.orchestrator import generate, generate_sync
+from cliv2.core.orchestrator_session import OrchestratorSession, run_orchestrator_session
 
 __all__ = [
     # Errors
@@ -33,7 +33,7 @@ __all__ = [
     "GenerationRequest",
     "GenerationResult",
     "StageResult",
-    # Functions
-    "generate",
-    "generate_sync",
+    # Orchestration
+    "OrchestratorSession",
+    "run_orchestrator_session",
 ]

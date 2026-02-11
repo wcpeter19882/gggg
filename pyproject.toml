@@ -40,6 +40,7 @@ cliv2 = [
     "python-dotenv>=1.0.0",
     "azure-identity>=1.15.0",
     "pyyaml>=6.0.0",
+    "python-pptx>=1.0.0",
 ]
 
 [project.scripts]

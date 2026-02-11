@@ -3,6 +3,7 @@
 Defines the ordered pipeline stages and provides execution logic.
 Uses skill handlers for prompt building and MCP tools for I/O.
 """
+import logging
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional, TYPE_CHECKING
@@ -13,6 +14,7 @@ from cliv2.core.subagent import Subagent, SubagentResult
 
 if TYPE_CHECKING:
     from cliv2.skills.base import SkillHandler, SkillContext
+    from cliv2.core.task import Task
 
 
 # Ordered list of pipeline stages
@@ -269,3 +271,168 @@ def get_stage_index(stage: str) -> int:
 def is_valid_stage(stage: str) -> bool:
     """Check if a stage name is valid."""
     return stage in STAGES
+
+
+# =============================================================================
+# Task-based execution (new)
+# =============================================================================
+
+async def execute_task(
+    task: "Task",
+    request: "GenerationRequest",
+    current_result: "GenerationResult",
+    llm: Any,
+    mcp_config: dict,
+) -> dict:
+    """Execute a single task from the task DAG.
+    
+    Supports targeted execution (specific slide ranges) for storyline and layout.
+    
+    Args:
+        task: Task to execute
+        request: Generation request
+        current_result: Current result with project info
+        llm: LLM instance
+        mcp_config: MCP server configuration
+        
+    Returns:
+        Task result dict with status, completed, pending, summary
+    """
+    from cliv2.core.task import Task, SubagentResponse
+    from cliv2.skills import get_handler_for_stage, SkillContext
+    from cliv2.skills.base import SkillContextWithTarget
+    from cliv2.tools.mcp_client import (
+        call_create_project,
+        call_apply_patch,
+        call_export_mdx,
+        call_read_section,
+    )
+    
+    logger = logging.getLogger("cliv2.pipeline")
+    
+    stage = task.stage
+    target = task.target
+    params = task.params
+    
+    project_dir = str(current_result.project_dir) if current_result.project_dir else None
+    
+    # === MCP-only stages (no subagent) ===
+    
+    if stage == "create":
+        result = call_create_project(
+            source_path=str(request.source_path.resolve()),
+            instruction=request.instruction or "",
+            force=True,
+        )
+        
+        if "error" in result:
+            raise StageError(
+                message=result["error"],
+                stage=stage,
+                hint=result.get("hint", "Check source file path"),
+            )
+        
+        return {
+            "status": "complete",
+            "completed": [],
+            "pending": [],
+            "summary": f"Created project: {result['project_id']}",
+            "project_dir": result["project_dir"],
+            "project_id": result["project_id"],
+        }
+    
+    elif stage == "export":
+        if not project_dir:
+            raise StageError(message="No project directory", stage=stage)
+        
+        result = call_export_mdx(
+            project_dir=project_dir,
+            renderer=request.renderer,
+            start_server=True,
+        )
+        
+        if "error" in result:
+            raise StageError(message=result["error"], stage=stage)
+        
+        return {
+            "status": "complete",
+            "completed": [],
+            "pending": [],
+            "summary": f"Exported {result.get('slide_count', '?')} slides",
+            "output_path": result["output_path"],
+            "preview_url": result["preview_url"],
+            "port": result["port"],
+        }
+    
+    # === Subagent stages with target support ===
+    
+    if not project_dir:
+        raise StageError(message="No project directory", stage=stage)
+    
+    # Get skill handler for this stage
+    handler = get_handler_for_stage(stage, request.renderer)
+    if not handler:
+        raise StageError(message=f"No skill handler for stage: {stage}", stage=stage)
+    
+    # Read project context
+    project_context = call_read_section(project_dir, "all")
+    
+    # Build extended context with target info
+    existing_slides = project_context.get("slides", [])
+    
+    # Determine target slide indices
+    if target == "all":
+        target_indices = list(range(1, len(existing_slides) + 1)) if existing_slides else []
+    elif isinstance(target, list):
+        target_indices = target
+    else:
+        target_indices = []
+    
+    # Build SkillContext with target information
+    skill_context = SkillContextWithTarget(
+        project_dir=project_dir,
+        user_instruction=request.instruction or "",
+        source=project_context.get("source", ""),
+        constitution=project_context.get("constitution"),
+        theme=project_context.get("theme"),
+        slides=project_context.get("slides"),
+        # Extended fields for targeted execution
+        target_indices=target_indices,
+        task_params=params,
+    )
+    
+    # Log context
+    logger.info(f"[{stage}] Executing task {task.id} with target={target}")
+    logger.debug(f"[{stage}] Target indices: {target_indices}")
+    logger.debug(f"[{stage}] Task params: {params}")
+    
+    # === Execute handler's workflow ===
+    result_data = await handler.execute(skill_context, llm, logger)
+    
+    # Handle output saving based on handler's output spec
+    if handler.output_spec.target:
+        output = result_data.get("output")
+        if output is not None:
+            patch_result = call_apply_patch(
+                project_dir=project_dir,
+                target=handler.output_spec.target,
+                data=output,
+            )
+            if patch_result.get("error"):
+                raise StageError(
+                    message=f"Failed to save {handler.output_spec.target}: {patch_result['error']}",
+                    stage=stage,
+                )
+            result_data["patch_applied"] = True
+    
+    # Build response with completion info
+    completed = result_data.get("completed", target_indices)
+    pending = result_data.get("pending", [])
+    
+    return {
+        "status": "partial" if pending else "complete",
+        "completed": completed,
+        "pending": pending,
+        "summary": result_data.get("summary", f"Completed {stage} for {len(completed)} slides"),
+        "output": result_data.get("output"),
+    }

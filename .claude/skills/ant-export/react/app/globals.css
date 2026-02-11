@@ -4,7 +4,71 @@
 
 @import 'antd/dist/reset.css';
 
-/* 
+/*
+ * Theme utility classes - CSS variable based colors
+ * These work with CSS variables set by page.tsx
+ */
+@layer utilities {
+  /* Background colors */
+  .bg-theme-bg { background-color: var(--theme-bg); }
+  .bg-theme-surface { background-color: var(--theme-surface); }
+  .bg-theme-surface-alt { background-color: var(--theme-surface-alt); }
+  .bg-theme-primary { background-color: var(--theme-primary); }
+  .bg-theme-secondary { background-color: var(--theme-secondary); }
+  .bg-theme-accent { background-color: var(--theme-accent); }
+  .bg-theme-success { background-color: var(--theme-success); }
+  .bg-theme-danger { background-color: var(--theme-danger); }
+  .bg-theme-warning { background-color: var(--theme-warning); }
+  .bg-theme-info { background-color: var(--theme-info); }
+  .bg-theme-accent1 { background-color: var(--theme-accent1); }
+  .bg-theme-accent2 { background-color: var(--theme-accent2); }
+  .bg-theme-accent3 { background-color: var(--theme-accent3); }
+  .bg-theme-accent4 { background-color: var(--theme-accent4); }
+  .bg-theme-accent5 { background-color: var(--theme-accent5); }
+  .bg-theme-accent6 { background-color: var(--theme-accent6); }
+  
+  /* Background colors with opacity */
+  .bg-theme-surface\/60 { background-color: color-mix(in srgb, var(--theme-surface) 60%, transparent); }
+  .bg-theme-surface\/40 { background-color: color-mix(in srgb, var(--theme-surface) 40%, transparent); }
+  .bg-theme-primary\/10 { background-color: color-mix(in srgb, var(--theme-primary) 10%, transparent); }
+  .bg-theme-primary\/20 { background-color: color-mix(in srgb, var(--theme-primary) 20%, transparent); }
+  .bg-theme-primary\/30 { background-color: color-mix(in srgb, var(--theme-primary) 30%, transparent); }
+  .bg-theme-secondary\/20 { background-color: color-mix(in srgb, var(--theme-secondary) 20%, transparent); }
+  .bg-theme-accent\/20 { background-color: color-mix(in srgb, var(--theme-accent) 20%, transparent); }
+  .bg-theme-success\/20 { background-color: color-mix(in srgb, var(--theme-success) 20%, transparent); }
+  .bg-theme-danger\/20 { background-color: color-mix(in srgb, var(--theme-danger) 20%, transparent); }
+  .bg-theme-warning\/20 { background-color: color-mix(in srgb, var(--theme-warning) 20%, transparent); }
+  .bg-theme-info\/20 { background-color: color-mix(in srgb, var(--theme-info) 20%, transparent); }
+  .bg-theme-accent1\/20 { background-color: color-mix(in srgb, var(--theme-accent1) 20%, transparent); }
+  .bg-theme-accent2\/20 { background-color: color-mix(in srgb, var(--theme-accent2) 20%, transparent); }
+  .bg-theme-accent3\/20 { background-color: color-mix(in srgb, var(--theme-accent3) 20%, transparent); }
+  .bg-theme-accent4\/20 { background-color: color-mix(in srgb, var(--theme-accent4) 20%, transparent); }
+  .bg-theme-accent5\/20 { background-color: color-mix(in srgb, var(--theme-accent5) 20%, transparent); }
+  .bg-theme-accent6\/20 { background-color: color-mix(in srgb, var(--theme-accent6) 20%, transparent); }
+  
+  /* Text colors */
+  .text-theme-text { color: var(--theme-text); }
+  .text-theme-text-muted { color: var(--theme-text-muted); }
+  .text-theme-primary { color: var(--theme-primary); }
+  .text-theme-secondary { color: var(--theme-secondary); }
+  .text-theme-accent { color: var(--theme-accent); }
+  .text-theme-success { color: var(--theme-success); }
+  .text-theme-danger { color: var(--theme-danger); }
+  .text-theme-warning { color: var(--theme-warning); }
+  .text-theme-info { color: var(--theme-info); }
+  
+  /* Border colors */
+  .border-theme-border { border-color: var(--theme-border); }
+  .border-theme-primary { border-color: var(--theme-primary); }
+  .border-theme-secondary { border-color: var(--theme-secondary); }
+  .border-theme-accent { border-color: var(--theme-accent); }
+  .border-theme-success { border-color: var(--theme-success); }
+  .border-theme-danger { border-color: var(--theme-danger); }
+  .border-theme-warning { border-color: var(--theme-warning); }
+  .border-theme-info { border-color: var(--theme-info); }
+}
+
+/*
  * CSS Custom Properties - Minimal fallbacks only
  * Theme-specific values are injected by ThemeProvider from themes/*.ts
  */

@@ -10,9 +10,14 @@ import type { ThemeDefinition } from '@/utils/types';
 export const businessTheme: ThemeDefinition = {
   name: 'business',
   displayName: 'Business',
+  isDark: false,
+  background: {
+    color: 'linear-gradient(145deg, #ffffff 0%, #f8fafc 60%, #e2e8f0 100%)',
+  },
   colors: {
     bg: '#ffffff',
     surface: '#f8fafc',
+    surfaceAlt: '#f1f5f9',
     primary: '#1e40af',
     secondary: '#3b82f6',
     accent: '#f59e0b',
@@ -28,11 +33,11 @@ export const businessTheme: ThemeDefinition = {
     fontDisplay: "'Inter', system-ui, sans-serif",
     fontBody: "'Inter', system-ui, sans-serif",
     fontMono: "'JetBrains Mono', ui-monospace, monospace",
-    sizeDisplay: '3.5rem',
-    sizeHeading: '2rem',
-    sizeBody: '1.125rem',
-    sizeCaption: '0.875rem',
-    lineHeight: '1.6',
+    sizeDisplay: '59px',
+    sizeHeading: '47px',
+    sizeBody: '34px',
+    sizeCaption: '27px',
+    lineHeight: '1.3',
     letterSpacing: '-0.01em',
   },
   spacing: {

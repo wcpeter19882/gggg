@@ -14,15 +14,21 @@ const MIME_TYPES: Record<string, string> = {
   '.ico': 'image/x-icon',
 };
 
+function getContentManagerPath(): string {
+  if (process.env.CONTENT_MANAGER_PATH) return process.env.CONTENT_MANAGER_PATH;
+  return join(tmpdir(), 'content-manager');
+}
+
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ projectId: string; path: string[] }> }
+  { params }: { params: { projectId: string; path: string[] } }
 ) {
-  const { projectId, path } = await params;
+  const { projectId, path } = params;
   
   // Construct the image path
   const imagePath = path.join('/');
-  const projectDir = join(tmpdir(), 'content-manager', projectId);
+  const basePath = getContentManagerPath();
+  const projectDir = join(basePath, projectId);
   const fullPath = join(projectDir, 'images', imagePath);
   
   // Security check: ensure path doesn't escape project directory

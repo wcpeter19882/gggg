@@ -10,9 +10,14 @@ import type { ThemeDefinition } from '@/utils/types';
 export const creativeTheme: ThemeDefinition = {
   name: 'creative',
   displayName: 'Creative',
+  isDark: false,
+  background: {
+    color: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 50%, #fcd34d 100%)',
+  },
   colors: {
     bg: '#fef3c7',
     surface: '#fffbeb',
+    surfaceAlt: '#fef9e0',
     primary: '#7c3aed',
     secondary: '#ec4899',
     accent: '#f97316',
@@ -28,12 +33,12 @@ export const creativeTheme: ThemeDefinition = {
     fontDisplay: "'Space Grotesk', system-ui, sans-serif",
     fontBody: "'DM Sans', system-ui, sans-serif",
     fontMono: "'Fira Code', ui-monospace, monospace",
-    sizeDisplay: '4rem',
-    sizeHeading: '2.5rem',
-    sizeBody: '1.25rem',
-    sizeCaption: '0.875rem',
-    lineHeight: '1.5',
-    letterSpacing: '-0.02em',
+    sizeDisplay: '59px',
+    sizeHeading: '47px',
+    sizeBody: '34px',
+    sizeCaption: '27px',
+    lineHeight: '1.3',
+    letterSpacing: '-0.01em',
   },
   spacing: {
     gap: '4rem',
