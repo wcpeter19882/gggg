@@ -142,7 +142,7 @@ story: What audience should understand from this slide
 ## Subtitle (optional)
 
 ### Section Title
-- Bullet point [supporting data] → so what implication
+Content here using structured markdown (see below)
 ```
 
 Frontmatter fields (ONLY these, no content/headline/subtitle/sections):
@@ -150,14 +150,82 @@ Frontmatter fields (ONLY these, no content/headline/subtitle/sections):
 - rank: number (required)
 - state: draft (required)
 - density: minimal/moderate/dense (required)
-- intent: statement/evidence/comparison/process/structure (required)
+- intent: statement/evidence/comparison/process/structure/hierarchy/overlap (required)
 - story: 1-sentence narrative purpose (required)
+- images: list of image filenames from research.md Downloaded Images table (REQUIRED if images available)
 
-Markdown body contains ALL content:
-- # Headline (H1)
-- ## Subtitle (H2, optional)
-- ### Section titles (H3)
-- Bullet points with [data] and → implications
+### IMAGE ASSIGNMENT (MANDATORY if research.md has Downloaded Images)
+
+**CRITICAL: If research.md contains a Downloaded Images table, you MUST assign images to at least 3 slides.**
+
+Add images field to frontmatter (single object, not array):
+```
+---
+id: slide_03
+rank: 3
+state: draft
+density: moderate
+intent: evidence
+story: Show platform transformation impact
+images:
+  filename: diverse_business_leaders_01_abc123.jpg
+  dimensions: 1920x1080
+  description: "Business leaders in hybrid meeting"
+---
+```
+
+**Image Assignment Rules:**
+- **EACH IMAGE CAN ONLY BE USED ONCE** - never assign same filename to multiple slides
+- **MANDATORY**: Use ALL downloaded images across different slides
+- **Include dimensions from research.md** (e.g., 1920x1080) - layout uses this for aspect ratio
+- Match image description to slide topic conceptually
+- 3-4 images for a 12-slide deck (minimum 3)
+- Maximum 1 image per slide
+- Priority: evidence > process > comparison > cover
+
+### STRUCTURED MARKDOWN FORMAT (CRITICAL)
+
+Use these markdown patterns to express content structure. Layout will use these to select components.
+
+**1. Regular bullets (→ List component):**
+```
+- **Key point** — supporting explanation
+- Another point with [citation or data source]
+```
+
+**2. Statistics/Metrics (→ Statistic component):**
+```
+- [stat] 99.9% — reliability rate
+- [stat] $2.4M — annual savings
+- [stat] 136k — monthly active users
+```
+
+**3. Process/Steps (→ Timeline or Steps component):**
+```
+1. **Phase name** — description of this phase
+2. **Next phase** — what happens here
+3. **Final phase** — outcome
+```
+
+**4. Comparison (→ Table or side-by-side Cards):**
+```
+| Aspect | Option A | Option B |
+|--------|----------|----------|
+| Speed  | Fast     | Slow     |
+| Cost   | High     | Low      |
+```
+
+**5. Key takeaway (→ Alert component):**
+```
+> **Takeaway:** One-sentence insight or call to action.
+```
+
+**Match format to intent:**
+- `evidence` intent → use [stat] markers and tables
+- `process` intent → use numbered lists
+- `comparison` intent → use tables
+- `structure` intent → use regular bullets with sections
+- `summary` intent → mix of bullets and > takeaway
 
 When done with ALL slides, add completion marker:
 ```

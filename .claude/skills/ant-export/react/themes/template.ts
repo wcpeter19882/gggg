@@ -7,20 +7,29 @@ export const templateTheme: ThemeDefinition = {
   // Background settings - USE EXTRACTED VALUES
   background: {
     color: '#000000',
-    image: 'images/cover___01_bg.png',
+    image: 'images/cover_01_bg.png',
   },
   colors: {
     bg: '#000000',
-    surface: '#0b3b45', // lifted from average_color #018399
-    primary: '#38c0d6', // analogous lighter cyan from #018399
-    secondary: '#f4af4b', // muted complementary amber
-    accent: '#7bd9e7', // lightest analogous accent
+    // Lifted surface: derived from average_color (#3726ac) with +~15% luminance (cool indigo surface)
+    surface: '#4A3EC5',
+    // Accents derived for dark, saturated purple base:
+    // primary (analogous, desaturated lavender, high luminance)
+    primary: '#9575CD',
+    // secondary (muted complementary soft-gold, desaturated to avoid vibration)
+    secondary: '#FFE082',
+    // accent (lightest analogous lavender)
+    accent: '#B39DDB',
+    // Text
     text: '#ffffff',
-    textMuted: '#8fd1dd', // tinted neutral toward teal
-    border: '#1d4e58',
-    info: '#7dd3fc',
-    warning: '#fed7aa',
-    success: '#6ee7b7',
+    // Muted text tinted toward base hue (lavender-gray, high luminance)
+    textMuted: '#E6E0F3',
+    // Border lifted from base hue (+~25% luminance), not too bright
+    border: '#6A5AE0',
+    // Semantic colors (pastel-tinted for dark/saturated bg; target ~70% luminance)
+    info: '#93c5fd',
+    warning: '#fcd34d',
+    success: '#86efac',
     danger: '#fca5a5',
   },
   typography: {

@@ -174,7 +174,7 @@ def _parse_mdx_slides(data: str) -> list[dict]:
             }
             
             # Copy over known metadata fields
-            for field in ["density", "intent", "category", "story", "transition_to", "modifier"]:
+            for field in ["density", "intent", "category", "story", "transition_to", "modifier", "images"]:
                 if field in frontmatter:
                     slide[field] = frontmatter[field]
             

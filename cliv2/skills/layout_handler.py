@@ -56,6 +56,24 @@ class LayoutHandler(SkillHandler):
                         value = f'"{value}"'
                     frontmatter_lines.append(f"{key}: {value}")
             
+            # Include images if assigned by storyline (with dimensions for aspect ratio)
+            if "images" in slide and slide["images"]:
+                images = slide["images"]
+                if isinstance(images, dict):
+                    # Single image with dimensions
+                    filename = images.get('filename', '')
+                    dimensions = images.get('dimensions', '')
+                    frontmatter_lines.append(f"image: /images/{filename}")
+                    if dimensions:
+                        frontmatter_lines.append(f"image_dimensions: {dimensions}")
+                elif isinstance(images, list) and images:
+                    # First image as primary
+                    filename = images[0].get('filename', '')
+                    dimensions = images[0].get('dimensions', '')
+                    frontmatter_lines.append(f"image: /images/{filename}")
+                    if dimensions:
+                        frontmatter_lines.append(f"image_dimensions: {dimensions}")
+            
             # Mark if this slide needs JSX generation
             if is_target:
                 frontmatter_lines.append("generate_jsx: true")
@@ -155,8 +173,10 @@ class LayoutHandler(SkillHandler):
             is_targeted = bool(target_indices)
         
         # Add specific instructions from task_params (e.g., for regeneration with image)
-        if task_params.get("instructions"):
-            parts.append(f"\n=== REGENERATION INSTRUCTIONS ===\n{task_params['instructions']}")
+        # Check both "instructions" (plural) and "instruction" (singular) for compatibility
+        task_instruction = task_params.get("instructions") or task_params.get("instruction")
+        if task_instruction:
+            parts.append(f"\n=== REGENERATION INSTRUCTIONS ===\n{task_instruction}")
         
         # Show slides in same format as storyline output
         # Target slides have full content, others just metadata for context

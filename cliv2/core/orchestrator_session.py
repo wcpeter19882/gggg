@@ -93,6 +93,14 @@ You coordinate specialized subagents and make decisions about what to do based o
 - User may request changes to specific slides
 - New files may add context or replace existing content
 
+## CRITICAL: New Project vs Update Decision
+When a project already exists AND user provides new source content:
+- **CREATE NEW PROJECT** if user says: "create new slides", "new presentation", "new deck", "start fresh", "different topic"
+- **UPDATE EXISTING** if user says: "update", "change", "modify", "add to", "revise", "improve", "make more visual"
+- **When ambiguous**: Look at the source content - if it's a DIFFERENT topic than existing slides, create new project
+
+**Example:** Existing project has "AI Product Launch" slides. User uploads "brainstorm_set.md" about a different product and says "create new slides" → CREATE NEW PROJECT (don't ask, just do it)
+
 ## Available Subagents
 | Subagent | Purpose | When to Use |
 |----------|---------|-------------|
@@ -224,6 +232,11 @@ For copying files to project:
 For storyline (ONE call for all slides):
 ```json
 {"action": "call_subagent", "subagent": "storyline", "params": {}, "reasoning": "..."}
+```
+
+For theme update (with specific instruction):
+```json
+{"action": "call_subagent", "subagent": "theme", "params": {"instruction": "change text color to #ff0000"}, "reasoning": "..."}
 ```
 
 For layout (with slide IDs to process):
@@ -403,8 +416,7 @@ class OrchestratorSession:
     def _build_state_context(self) -> str:
         """Build current state context for LLM.
         
-        Orchestrator only tracks session-level info.
-        Subagents read content.json to understand persist state.
+        Orchestrator tracks session-level info AND reads content.json for project state.
         """
         # Format uploaded files
         files_info = []
@@ -414,15 +426,77 @@ class OrchestratorSession:
             files_info.append(f"  - {f.name} ({f.type}) - purpose: {purpose}, {status}")
         files_str = "\n".join(files_info) if files_info else "  (none)"
         
+        # Read project content state from content.json
+        content_state = self._get_content_state()
+        
         return f"""
 Current Session:
 - Project: {self.state.project_id or '(not created)'}
 - Project Dir: {self.state.project_dir or '(none)'}
 - Renderer: {self.state.renderer}
 
+{content_state}
 Uploaded Files (this session):
 {files_str}
 """
+
+    def _get_content_state(self) -> str:
+        """Read content.json and summarize what exists in the project."""
+        if not self.state.project_dir:
+            return "Project Content: (no project yet)\n"
+        
+        content_path = Path(self.state.project_dir) / "content.json"
+        if not content_path.exists():
+            return "Project Content: (empty - no content.json)\n"
+        
+        try:
+            import json
+            with open(content_path, 'r', encoding='utf-8') as f:
+                content = json.load(f)
+            
+            parts = ["Project Content:"]
+            
+            # Check theme
+            theme = content.get("theme")
+            if theme:
+                theme_name = theme.get("name", "unnamed")
+                parts.append(f"  - Theme: {theme_name} ✓")
+            else:
+                parts.append("  - Theme: (none)")
+            
+            # Check slides
+            slides = content.get("slides", [])
+            active_slides = [s for s in slides if s.get("active", True)]
+            if active_slides:
+                parts.append(f"  - Slides: {len(active_slides)} slides ✓")
+                # Show slide titles for context
+                titles = [s.get("title", f"Slide {i+1}") for i, s in enumerate(active_slides[:5])]
+                if len(active_slides) > 5:
+                    titles.append(f"... and {len(active_slides) - 5} more")
+                parts.append(f"    Titles: {', '.join(titles)}")
+            else:
+                parts.append("  - Slides: (none)")
+            
+            # Check atoms
+            atoms = content.get("atoms", [])
+            if atoms:
+                parts.append(f"  - Atoms: {len(atoms)} extracted ✓")
+            
+            # Check story
+            story = content.get("story")
+            if story:
+                parts.append(f"  - Story/Constitution: ✓")
+            
+            # Check research
+            research = content.get("research")
+            if research:
+                parts.append(f"  - Research: ✓")
+            
+            return "\n".join(parts) + "\n"
+            
+        except Exception as e:
+            logger.warning(f"Failed to read content.json: {e}")
+            return f"Project Content: (error reading: {e})\n"
     
     async def _get_next_actions(self) -> list[OrchestratorAction]:
         """Ask LLM for next action(s) using structured output."""

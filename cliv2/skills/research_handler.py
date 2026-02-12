@@ -235,16 +235,24 @@ class ResearchHandler(SkillHandler):
                     parts.append(f"- [{title}]({url})")
                     parts.append(f"  {snippet}")
             
-            # Summarize image results
+            # Summarize image results - CRITICAL for storyline to assign images to slides
             image_results = self._search_results.get("image_results", [])
             if image_results:
                 parts.append(f"\n### Images Downloaded ({len(image_results)} concepts)")
+                parts.append("**CRITICAL: Include ALL downloaded images in the `images` section of research.md!**")
+                parts.append("**Storyline agent needs this table to assign images to slides.**")
+                parts.append("")
                 for ir in image_results:
                     concept = ir.get("concept", "")
                     images = ir.get("images", [])
-                    parts.append(f"- {concept}: {len(images)} images")
+                    parts.append(f"**Concept: {concept}** ({len(images)} images)")
                     for img in images:
-                        parts.append(f"  - {img.get('filename')}: {img.get('description', '')[:50]}")
+                        # Use title field (description may be empty)
+                        desc = img.get('title') or img.get('description', 'No description')
+                        filename = img.get('filename', '')
+                        width = img.get('width', 'unknown')
+                        height = img.get('height', 'unknown')
+                        parts.append(f"  - `{filename}` ({width}x{height}): {desc[:80]}")
         else:
             parts.append("No search results available.")
         
@@ -271,7 +279,7 @@ class ResearchHandler(SkillHandler):
     {
       "operation": "create",
       "section": "images",
-      "content": "## Downloaded Images\\n\\n| File | Description |\\n|------|-------------|\\n| team_collab.jpg | Team collaboration |"
+      "content": "## Downloaded Images\\n\\n| File | Dimensions | Description | Suggested Use |\\n|------|------------|-------------|---------------|\\n| team_collab.jpg | 1200x800 | Team collaboration meeting | Slide on teamwork benefits |\\n| abstract_ai.jpg | 1600x900 | Abstract AI visualization | Opener or tech overview slide |"
     },
     {
       "operation": "create",
@@ -286,8 +294,14 @@ class ResearchHandler(SkillHandler):
         parts.append("- `header`: File header with user goal/instruction")
         parts.append("- `source_summary`: **CRITICAL** - Key points from source content")
         parts.append("- `topic_{id}`: External research findings per topic")
-        parts.append("- `images`: Downloaded images catalog")
+        parts.append("- `images`: **CRITICAL** - Downloaded images catalog with ALL images from 'Images Downloaded' section above")
         parts.append("- `citations`: Source URLs and references")
+        parts.append("")
+        parts.append("**IMAGES SECTION RULES:**")
+        parts.append("- MUST include ALL images from the 'Images Downloaded' section")
+        parts.append("- Use exact filenames (e.g., `team_collab_01_abc123.jpg`)")
+        parts.append("- Include dimensions and a brief description")
+        parts.append("- Suggest which slide topics each image fits")
         parts.append("")
         parts.append("Operation types:")
         parts.append("- `create`: Create new section (or replace if exists)")

@@ -7,13 +7,31 @@ description: |
 
 # Ant Design Layout Generator
 
-You are an expert presentation designer. Transform draft slides into polished **Ant Design 6.x** JSX.
+Transform draft slides into **Ant Design 6.x** JSX. Components are shadow implementations accepting Ant Design props.
 
-**Important:** Generate code using Ant Design 6.x API syntax. Components are shadow implementations that accept Ant Design props but render with custom styling.
+**String Quoting:** Use backticks for object property values in `dataSource` arrays.
 
-## String Quoting Rule (CRITICAL)
+## ⚠️ CRITICAL CONSTRAINTS (DO NOT VIOLATE)
 
-**Use backticks for object property values** (e.g., in `dataSource` arrays) to avoid apostrophe/quote escaping issues.
+| Constraint | Limit | Violation = Failure |
+|------------|-------|---------------------|
+| **List per slide** | **MAX 2** | 3+ Lists on one slide = REJECT |
+| **List per deck** | **MAX 20** | 21+ Lists total = REJECT |
+| **Consecutive List slides** | **MAX 2** | 3+ slides with List-primary = REJECT |
+| **Statistic per slide** | **MAX 4** | 5+ Statistics on one slide = overflow |
+| **Statistic per deck** | **MAX 8** | 9+ Statistics total = overuse |
+| **Grid 3-col per deck** | **MAX 3** | 4+ 3-column layouts = REJECT |
+| **Consecutive same layout** | **MAX 2** | 3+ slides with same grid pattern = REJECT |
+| **Nested grids** | **FORBIDDEN** | 3-col + 2-col on same slide = REJECT |
+| **comparison + table** | **MUST use `<Table>`** | Using List for table data = REJECT |
+
+**Layout Variety Rule:** After using 3-col, next slide MUST use different layout (60/40, 2-col, stacked, or single).
+
+**When you have 3+ bullet groups on a slide, you MUST convert:**
+- Numbered items → `<Steps>` or `<Timeline>`
+- Metrics/numbers → `<Statistic>` grid (2-4 per slide, max 8 per deck)
+- Categories → `<Card>` grid (title + 2-3 bullets each)
+- Comparisons / markdown tables → `<Table>` (NOT two-column Lists)
 
 ## Workflow
 
@@ -21,13 +39,10 @@ You are an expert presentation designer. Transform draft slides into polished **
 
 Read all context with ONE call:
 ```
-mcp_apply-patch_read_section({
-  project_dir: "{project_dir}",
-  section: "all"
-})
+mcp_apply-patch_read_section({ project_dir: "{project_dir}", section: "all" })
 ```
 
-This returns source files, theme, and draft slides. Constitution is stored in constitution.md.
+Returns source files, theme, and draft slides. Constitution in constitution.md.
 
 #### Custom Layout Override (Workflow Pre-Processing)
 
@@ -55,48 +70,14 @@ Use the loaded data to:
 
 Save ALL slides with ONE call:
 ```
-mcp_apply-patch_apply_patch({
-  project_dir: "{project_dir}",
-  target: "slides",
-  data: [ {id, rank, state, mdx}, ... ]
-})
+mcp_apply-patch_apply_patch({ project_dir: "{project_dir}", target: "slides", data: [ {id, rank, state, mdx}, ... ] })
 ```
 
-**IMPORTANT:** Use the `mdx` field for JSX content (NOT `layout`). The MCP tool will merge with existing slide fields.
+Use `mdx` field for JSX content (NOT `layout`).
 
 ### Summary
 
-After generation, return layout variety report:
-```
-Generated N slides:
-
-Layout Distribution:
-- Symmetric: X slides (Y%) — must be ≤40%
-- Asymmetric: X slides (Y%) — must be ≥40%
-- Compound: X slides
-
-Visual Balance:
-- Heavy visuals: X slides (Y%) — must be ≥30%
-- Text-only: X slides (Y%) — must be ≤40%
-- Diagrams used: [Venn, Pyramid, Funnel, Scatter, Bar, Pie, etc.]
-- Images used: X slides (list which images on which slides)
-
-Layout Usage:
-- Centered: X (Cover, Closing)
-- Split 50/50: X (max 2)
-- Split 60/40: X (max 3)
-- Split 70/30: X (max 2)
-- Grid 2x2: X (max 2)
-- Grid 3-col: X (max 3)
-- T-Shape: X (≥1 required)
-- L-Shape: X (≥1 required for 10+ slides)
-- Stacked: X (≥1 required for 8+ slides)
-- Other: X
-
-✓ No consecutive repeats
-✓ Variety constraints met
-✓ Visual balance met
-```
+Return layout variety report showing: Layout Distribution (Symmetric ≤40%, Asymmetric ≥40%), Visual Balance (Heavy ≥30%, Text-only ≤40%), Layout Usage counts vs budgets, and constraint verification.
 
 ---
 
@@ -104,378 +85,223 @@ Layout Usage:
 
 ### 1.1 Layout Patterns
 
-Layouts are grouped by **symmetry** to enable variety planning. Use `intent` from slide to filter candidates, then select based on content.
+| Category | Intent | Pattern | Layout | Structure | Constraints |
+|----------|--------|---------|--------|-----------|-------------|
+| **Symmetric** | statement | cover | Cover | `flex flex-col justify-center h-full px-16` | **Title + Subtitle ONLY. NO List, NO Alert, NO bullets.** |
+| Symmetric | statement | section-break | Centered | `flex items-center justify-center h-full` | — |
+| Symmetric | statement | quote | Billboard | `flex flex-col justify-center items-center h-full text-center px-16` | `max-w-4xl`-`max-w-6xl` |
+| Symmetric | hierarchy | pyramid, funnel | Centered | `flex items-center justify-center h-full` | Use Pyramid/Funnel |
+| Symmetric | overlap | venn | Centered | `flex items-center justify-center h-full` | Use Venn |
+| Symmetric | comparison | side-by-side | Split 50/50 | `grid grid-cols-2 gap-6 items-start` | Max 2. Top-aligned, balanced content. |
+| Symmetric | structure | pillars-4 | Grid 2x2 | `grid grid-cols-2 grid-rows-2 gap-4 items-start` | Max 2. **≤2 bullets/card, ≤8 words/bullet.** |
+| Symmetric | structure | pillars-3, kpi | Grid 3-col | `grid grid-cols-3 gap-4 items-start` | Max 3. **≤3 bullets/card, ≤10 words/bullet.** |
+| **Asymmetric** | evidence, focal | main+support | Split 60/40 | `grid grid-cols-5 gap-6 items-start` → `col-span-3`+`col-span-2` | Max 3. Top-aligned. |
+| Asymmetric | focal | main+accent | Split 70/30 | `grid grid-cols-10 gap-6 items-start` → `col-span-7`+`col-span-3` | Max 2 |
+| Asymmetric | focal | accent+main | Split 40/60 | `grid grid-cols-5 gap-6 items-start` → `col-span-2`+`col-span-3` | Max 3 |
+| Asymmetric | evidence | main+2 accents | L-Shape | `grid grid-cols-3 gap-4 items-start` → `col-span-2`+stacked | ≥1 req (10+ slides) |
+| Asymmetric | structure, process | header+3 parts | T-Shape | Full-width row + `grid grid-cols-3 items-start` | ≥1 required |
+| Asymmetric | — | TOC+main | Sidebar Left | `grid grid-cols-4 gap-6 items-start` → `col-span-1`+`col-span-3` | Single group, no void |
+| Asymmetric | — | main+aside | Sidebar Right | `grid grid-cols-4 gap-6 items-start` → `col-span-3`+`col-span-1` | Single group, no void |
+| **Compound** | process, summary | flow | Stacked 2 | `flex flex-col gap-6` with 2 sections | ≥1 req (8+ slides) |
+| Compound | hierarchy | layers | Stacked 3 | `flex flex-col gap-4` with 3 sections | — |
+| Compound | comparison | cost-benefit | Grid 2+1 | `grid-cols-2 items-start` top + full-width bottom | — |
+| Compound | summary | — | Grid 1+2 | Full-width top + `grid-cols-2` bottom | — |
+| Compound | structure | — | Grid 4-col | `grid grid-cols-4 gap-4` | — |
+| Compound | overlap | hub-spoke | Bento | `grid-cols-12` + varied `col-span-*` | — |
 
-| Category | Intent | Pattern | Layout | Structure | Best For | Constraints |
-|----------|--------|---------|--------|-----------|----------|-------------|
-| **Symmetric** | statement | cover | Cover | `flex flex-col justify-center h-full px-16` | Title slide | Max 4 elements. No tags, no metadata. |
-| Symmetric | statement | section-break | Centered | `flex items-center justify-center h-full` | Closing, transition | — |
-| Symmetric | statement | quote, callout | Billboard | `flex flex-col justify-center items-center h-full text-center px-16` | Statement, quote | Use `max-w-4xl` to `max-w-6xl`. |
-| Symmetric | hierarchy | pyramid, funnel | Centered | `flex items-center justify-center h-full` | Hierarchy | Use Pyramid/Funnel component |
-| Symmetric | overlap | venn | Centered | `flex items-center justify-center h-full` | Intersection | Use Venn component |
-| Symmetric | comparison | side-by-side | Split 50/50 | `grid grid-cols-2 gap-6` | Two equal items | Max 2 per deck. **NEVER add `h-full` to grid.** |
-| Symmetric | structure | pillars-4, quadrant | Grid 2x2 | `grid grid-cols-2 grid-rows-2 gap-4` | 4 equal items | Max 2 per deck. **NEVER add `h-full` to grid.** |
-| Symmetric | structure | pillars-3, kpi | Grid 3-col | `grid grid-cols-3 gap-4` | 3 equal items | Max 3 per deck. **NEVER add `h-full` to grid.** |
-| **Asymmetric** | evidence, focal | 1 main + 1 support | Split 60/40 | `grid grid-cols-5 gap-6` → `col-span-3` + `col-span-2` | Visual + explanation | Max 3. **NEVER add `h-full` to grid.** |
-| Asymmetric | focal | 1 main + 1 accent | Split 70/30 | `grid grid-cols-10 gap-6` → `col-span-7` + `col-span-3` | Content + callout | Max 2. Accent col: single centered group. |
-| Asymmetric | focal | 1 accent + 1 main | Split 40/60 | `grid grid-cols-5 gap-6` → `col-span-2` + `col-span-3` | Lead with accent | Max 3. **NEVER add `h-full` to grid.** |
-| Asymmetric | evidence | 1 main + 2 accents | L-Shape | `grid grid-cols-3 gap-4` → `col-span-2` + stacked | Main + 2 details | ≥1 required (10+ slides). Stacked items in one container. |
-| Asymmetric | structure, process | Header + 3 parts | T-Shape | Full-width row + `grid grid-cols-3` | Section intro + 3 pillars | ≥1 required |
-| Asymmetric | — | TOC + main | Sidebar Left | `grid grid-cols-4 gap-6` → `col-span-1` + `col-span-3` | Agenda + content | Sidebar: single group, no void. |
-| Asymmetric | — | Main + aside | Sidebar Right | `grid grid-cols-4 gap-6` → `col-span-3` + `col-span-1` | Content + callout | Sidebar: single group, no void. |
-| **Compound** | process, summary | flow | Stacked 2 | `flex flex-col gap-6` with 2 sections | Numbered List | ≥1 required (8+ slides) |
-| Compound | hierarchy | layers | Stacked 3 | `flex flex-col gap-4` with 3 sections | Title + 2 blocks | — |
-| Compound | comparison | cost-benefit | Grid 2+1 | `grid-cols-2` top + full-width bottom | 2 items + summary | — |
-| Compound | summary | — | Grid 1+2 | Full-width top + `grid-cols-2` bottom | Header + 2 details | — |
-| Compound | structure | — | Grid 4-col | `grid grid-cols-4 gap-4` | 4+ small items | — |
-| Compound | overlap | hub-spoke | Bento | `grid-cols-12` + varied `col-span-*` | Mixed sizes | — |
+**Selection:** Match content structure first, then intent.
 
-**Selection priority:** Match content structure first, then intent.
+**MANDATORY:** Every column: `flex flex-col justify-start`. **Grid centering:** Outer wrapper `flex flex-col justify-center h-full`, inner grid NO `h-full`.
 
-**MANDATORY:** Every column in split/grid layouts must use `flex flex-col justify-center` — this applies to BOTH main AND sidebar columns.
+**Multi-Column Balance (CRITICAL):**
+- All columns in 2-col/3-col layouts must be **top-aligned** (`items-start` on grid, `justify-start` on children)
+- Content height should be **similar across columns** (±20% variance)
+- If one column has 5 bullets and another has 2, **rebalance** by: (1) moving content, (2) adding supporting text, or (3) using different component
+- FORBIDDEN: One column with 8 bullets, another with 2 — split into separate slides instead
 
-**CRITICAL - Diagram + Text Coordination:** When using Pyramid, Funnel, Venn, or Scatter:
-- **Diagram = abstract concept/structure** — labels should be short titles only
-- **Text = supplementary details** — adds context NOT shown in diagram
-- **NO redundant content** — if diagram label says "Shared capabilities: local inference + RAG", text should NOT repeat "Local inference + local RAG: privacy, offline..."
-- When storyline has detailed bullets that overlap with diagram labels, either:
-  - Simplify diagram labels (title only) and keep detailed text, OR
-  - Use diagram with descriptions and omit redundant text sections
-- Max combined height: diagram ≤450px when paired with supporting text
+**Diagram + Text:** Diagram labels = short titles only. Text = supplementary (non-redundant). Max diagram height 450px when paired with text.
 
 ### 1.2 Layout Rules
 
-#### Forbidden Display Elements
-- `content.category` (Situation, Complication, Question, Answer) — narrative metadata only
-- Image descriptions — use as `alt` attribute only
-- Transition fields (`transition_from`, `transition_to`) — internal structure only
-- **Ordinal structural labels** ("Pillar 1", "Step 1", "Point 1") — position implies structure
-- Semantic prefixes ("Punchline:", "Takeaway:") — formatting signals importance
+**Forbidden:** `content.category`, image descriptions (use as `alt`), transition fields, ordinal labels ("Step 1"), semantic prefixes ("Takeaway:").
 
-#### Source References
-References appear as **superscript** numbered links inline using `<sup><a href="...">` pattern. **NEVER show reference URLs as text on slides.**
+**References:** Superscript links `<sup><a href="..." style={{ color: 'var(--theme-primary)' }}>`. FORBIDDEN: URL lists, plain text URLs.
 
-**Rules:**
-- Inline citations: Use `<sup>` for superscript with `<a href="..." target="_blank">` inside
-- Link color: Use `style={{ color: 'var(--theme-primary)' }}`
-- **FORBIDDEN:** Reference lists at slide bottom showing URLs (e.g., "[1] arxiv.org/...")
-- **FORBIDDEN:** Plain text URLs anywhere on slides
+**Images:**
+- Max 20-30% slides. Path: `/images/{filename}`.
+- **CRITICAL: Each image file can only be used ONCE in entire deck.** NO duplicate image usage.
+- Use `<img>` with `className="w-full h-full object-cover rounded-xl"`.
+- **Use `image_dimensions` from frontmatter to determine aspect ratio:**
+  - Wide landscape (3:1, 2:1) → image panel 70% width (col-span-4 in grid-cols-5)
+  - Standard landscape (16:9, 3:2) → image panel 60% width (col-span-3 in grid-cols-5)
+  - Square-ish (4:3, 1:1) → image panel 40% width (col-span-2 in grid-cols-5)
+  - Portrait → image panel 30% width, or use as accent
 
-#### Using Images from Content
-Use images selectively — max 20-30% of slides. Images work best for cover/closing, section dividers, concept reinforcement.
+**Design System:** Tailwind + `<div>` only. FORBIDDEN: Ant `Row`, `Col`, `Layout`, `Sider`, `Flex`.
 
-| Aspect Ratio | Rendering | Panel Width |
-|--------------|-----------|-------------|
-| 16:9, 21:9 | Contained in Card or 60% hero panel | ≥60% |
-| 4:3, 3:2 | 50/50 or 60/40 split, `object-cover` | 40-60% |
-| 1:1 | Small accent in Card (64-128px) | ≤40% |
-| 2:3, 9:16 | Sidebar or narrow accent column | ≤30% |
+**Canvas:** Fixed 16:9. Content vertically centered. Use `flex flex-col justify-center h-full`.
 
-**FORBIDDEN:** Full-bleed background images with text overlay.
+**Density:** ≤30% panel: 2-3 bullets. 40-50%: 3-4 bullets. ≥60%: max 5 bullets. Exceeds → split slide.
 
-**Multiple images:** 1 = hero/accent; 2 = split or primary+accent; 3 = grid or 1 hero + 2 accents
-
-**Image path:** Use relative path `images/{filename}`
-
-**Image styling:** Images should NOT have background color. Use `bg-transparent` or no bg class on image containers.
-
-#### Design System Compliance
-**Layout layer uses Tailwind + `<div>` only** — `grid`, `flex`, `gap-*`, `h-full`, `col-span-*`
-
-**FORBIDDEN:** `Row`, `Col`, `Layout`, `Sider`, `Content`, `Flex` (Ant Design layout components)
-
-#### Slide Canvas Rule
-**Slides are fixed 16:9 canvases, not scrolling pages.** Content must be vertically centered.
-
-| ❌ Wrong | ✅ Correct |
-|---------|-----------|
-| `flex flex-col h-full` | `flex flex-col justify-center h-full` |
-| `grid ... h-full` on inner grid | `grid ...` without `h-full` — let grid size to content |
-| Grid stretches to fill, content at top | Parent `flex justify-center` centers the whole block |
-
-**Grid centering pattern:** Outer wrapper uses `flex flex-col justify-center h-full`, inner grid has NO `h-full`. This way the grid sizes to its content, and the wrapper centers everything vertically.
-
-#### Text Density Rules
-| Panel Width | Max Text |
-|-------------|----------|
-| ≤30% (accent) | 2-3 bullet points, no paragraphs |
-| 40-50% | 3-4 bullets OR 1 paragraph + 2 bullets |
-| ≥60% (main) | Max 5 bullets OR 2 paragraphs |
-
-**If content exceeds limit → split into two slides.**
-
-#### Void Prevention Rules
-**Minimum content per panel:**
-- ≤30% width: 1 Heavy OR 1 Medium + 1 line
-- 40-50% width: 1 Heavy + caption OR 1 Medium + 3 items
-- ≥60% width: Heading + 4+ items OR 2 paragraphs OR Heavy + explanation
-
-**Accidental void detection:**
-- If narrow column has 2+ items with `gap-6` between them → items should be in ONE container, not separate
-- If column has empty vertical space between components → either add content or use single centered group
-- **FORBIDDEN:** Two small items at top and bottom of column with void in middle
-
-**Sidebar cards:** Remove `h-full` — let them size to content.
-
-**Density ceiling:** Max 2 content-heavy cards per slide.
+**Void Prevention:** Min content per panel width. FORBIDDEN: isolated items with void between.
 
 ### 1.3 Hard Constraints
 
-| Category | Rule | Constraint |
-|----------|------|------------|
-| **Variety** | No consecutive repeats | Never use same layout twice in a row |
-| Variety | Image swap ≠ variety | 60/40 image-left vs image-right = SAME pattern |
-| Variety | Layout+Component variety | No two slides may have identical Layout + Component |
-| Variety | Centered text-only limit | Max 2 (cover + 1 section break) |
-| **Budgets** | 50/50 split | Max 2 per deck |
-| Budgets | 60/40 split | Max 3 per deck |
-| Budgets | 70/30 split | Max 2 per deck |
-| Budgets | Grid 2x2 | Max 2 per deck |
-| Budgets | Grid 3-col | Max 3 per deck |
-| **Heavy Diagrams** | Pyramid | Max 1 per deck |
-| Heavy Diagrams | Funnel | Max 1 per deck |
-| Heavy Diagrams | Venn | Max 1 per deck |
-| Heavy Diagrams | Scatter | Max 1 per deck |
-| Heavy Diagrams | Steps | Max 1 per deck |
-| Heavy Diagrams | Timeline | Max 1 per deck |
-| **Requirements** | T-Shape | ≥1 required |
-| Requirements | L-Shape | ≥1 required (for 10+ slides) |
-| Requirements | Stacked | ≥1 required (for 8+ slides) |
-| Requirements | Images (if provided) | Use on ≥3 slides |
-| **Visual Balance** | Heavy visual floor | Min 30% of slides with Chart/Diagram/Mockup |
-| Visual Balance | Text-only ceiling | Max 40% of slides |
+| Category | Constraint |
+|----------|------------|
+| **Variety** | No 3+ consecutive same-category layouts. No 3+ consecutive List-primary slides. Image swap ≠ variety. Centered text-only: max 2. |
+| **Budgets** | 50/50: max 2. **60/40: max 2** (not 3). 70/30: max 2. Grid 2x2: max 2. Grid 3-col: max 3. |
+| **Heavy Diagrams** | Pyramid, Funnel, Venn, Scatter, Steps, Timeline: max 1 each. |
+| **List Budget** | Max 2 List per slide. Max 20 List total per deck. Prefer: Table, Statistic, Steps, Card grid. |
+| **Requirements** | T-Shape: ≥1. L-Shape: ≥1 (10+ slides). Stacked: ≥1 (8+ slides). Images: ≥3 slides. |
+| **Visual Balance** | Heavy visuals: ≥30%. Text-only: ≤40%. |
+| **Image Uniqueness** | **Each image filename used exactly ONCE.** Duplicate image usage is FORBIDDEN. |
 
 ### 1.4 Pre-Generation Planning
 
-**Internal planning only — do NOT output this budget plan.** Plan silently, then output JSX directly.
+**Internal only.** Mentally plan budgets, verify constraints, then generate JSX directly.
 
-Before generating JSX, mentally plan:
-- Heavy diagrams: Max 1 each of Pyramid, Funnel, Venn, Scatter, Steps, Timeline
-- Layout budgets: 50/50 (max 2), 60/40 (max 3), 70/30 (max 2), Grid 2x2 (max 2), Grid 3-col (max 3)
-- Requirements: T-Shape (≥1), L-Shape (≥1 for 10+ slides), Stacked (≥1 for 8+ slides)
+### 1.5 Visual Rhythm
 
-**Verify mentally:** No consecutive repeats, all budgets respected, requirements met.
+After 50/50 → use 70/30 or T-Shape. After 60/40 → use Stacked or L-Shape. After Grid 2x2 → use Stacked or L-Shape. Cover/Closing → Centered.
 
-**Then immediately generate all JSX slides.**
+### 1.6 Visual Monotony Break
 
-### 1.5 Visual Rhythm Guidance
-
-| Position | Recommended | Rationale |
-|----------|-------------|-----------|
-| Cover/Closing | Centered | Clean, focused |
-| After 50/50 | 60/40, 70/30, or T-Shape | Break symmetry |
-| After Grid 2x2 | Stacked, L-Shape, or 60/40 | Change weight distribution |
-| Consecutive "Answer" | Alternate asymmetric | Prevent fatigue |
-| Process slides | Stacked 2 or T-Shape | Full-width visibility |
-
-### 1.6 Visual Monotony Break (Override Rule)
-
-**Problem:** 3+ consecutive text-only slides create visual fatigue, even if storyline intent allows text.
-
-**Rule:** After 2 consecutive text-only slides, the 3rd slide MUST add a visual break — override storyline intent if necessary.
-
-**Light Visual Interventions (choose one):**
-| Intervention | When to Use | Example |
-|--------------|-------------|---------|
-| **Icon-enhanced Cards** | Cards listing features/capabilities | Add `<IconName />` prefix to each card title |
-| **Accent border/highlight** | Differentiating a key point | `border-l-4 border-theme-primary` on one card |
-| **Color gradient progression** | Sequential/phase content | `bg-theme-primary/10` → `/20` → `/30` across cards |
-| **Large Statistic callout** | Any slide with a number | Pull one metric into `<Statistic>` even if not "evidence" intent |
-| **Quote/Billboard format** | Statement slide with strong claim | Use `Billboard` layout with large centered text |
-| **Visual divider** | Dense content that needs breathing room | Add horizontal rule or spacing between sections |
-
-**NOT required to add:** Heavy diagrams (Pyramid, Funnel, Venn) — these have budget limits. Light interventions are unlimited.
-
-**Detection during planning:** Count consecutive text-only slides. If count reaches 2, flag the next slide for visual intervention.
+After 2 consecutive text-only slides, 3rd MUST add visual: icon-enhanced cards, accent border, color gradient, Statistic callout, or Billboard format. Heavy diagrams NOT required (budget limits).
 
 ---
 
 ## 2. Components
 
-### 2.1 Content-to-Component Mapping
+### 2.1 Component Reference
 
-Use slide's `intent` and story element to select visual component.
+| Component | Use For | Intents |
+|-----------|---------|---------|
+| **Typography.Title** | Headlines, section headers | all |
+| **Typography.Paragraph** | Narrative text (20-40 words) | statement, focal |
+| **List** | Bullet points, details | evidence, structure, summary (fallback) |
+| **Table** | Structured data, comparisons | comparison, summary |
+| **Card** | Grouped content with title | structure, comparison, focal |
+| **Statistic** | Numeric KPIs (`$2.4M`, `99.9%`) | evidence, focal |
+| **Alert** | Takeaways, callouts | any (max 25% slides) |
+| **Tag/Badge** | Labels, status indicators | any (light, not alone) |
+| **Descriptions** | Key-value pairs | summary |
+| **Image** | Visual support (20-30% slides) | focal, evidence, comparison |
+| **Timeline** | Temporal sequence (≤5 items) | process |
+| **Steps** | Step-by-step flow (≤6 items) | process |
+| **Bar/Column** | Quantity comparison | evidence |
+| **Line** | Trends over time | evidence |
+| **Pie** | Proportions | evidence |
+| **Funnel** | Narrowing flow | hierarchy, process |
+| **Pyramid** | Layered hierarchy | hierarchy, structure |
+| **Venn** | Overlapping concepts | overlap |
+| **Scatter** | 2D matrix/quadrant | matrix |
 
-| Intent / Element | Primary Component | Fallback | When to Use Fallback |
-|------------------|-------------------|----------|----------------------|
-| `statement` | `Typography.Title` + `Paragraph` | — | Always text-only |
-| `evidence` | `Bar`, `Line`, `Statistic` (2+) | List with `so_what` | No numeric data |
-| `comparison` | Side-by-side Cards, `Bar` | `Table` | >4 items |
-| `process` | Phase Cards, Numbered List, Color-Gradient Cards, Icon Cards | `Funnel` | Stages filter/narrow |
-| `structure` | Card grid (3-4), `Pyramid` | List | <3 or >5 items |
-| `focal` | Hero visual + text | Large `Statistic` + List | No visual asset |
-| `summary` | `Table`, Card grid | List | Simple action list |
-| `matrix` | `Scatter` (quadrant), 2x2 Cards | — | Always visual |
-| `hierarchy` | `Pyramid`, `Funnel` | Stacked Cards | — |
-| `overlap` | `Venn` | Intersecting Cards | >3 sets |
-| HEADLINE | `Typography.Title level={2}` | — | Bold, no emoji |
-| NARRATIVE | `Typography.Paragraph` (20-40 words) | — | Regular weight |
-| DETAIL | `List` | — | `**Key** — explanation` |
-| EVIDENCE (number) | `Statistic` or Chart | — | Chart left + bullets right |
-| EVIDENCE (flow) | Numbered List, Phase Cards, `Funnel` | — | Funnel when narrowing |
-| TAKEAWAY | `Alert` in colored box | — | `type="info"` at bottom |
-| COMPARISON | Side-by-side Cards | — | Contrasting `bg-*-50` |
+**Story Element Mapping:**
+- HEADLINE → `Typography.Title level={2}`
+- NARRATIVE → `Typography.Paragraph`
+- DETAIL → `List` with `**Key** — explanation`
+- EVIDENCE (number) → `Statistic` or Chart
+- EVIDENCE (flow) → Timeline, Steps, Phase Cards, or Funnel
+- TAKEAWAY → `Alert type="info"`
+- COMPARISON → `<Table>` (preferred) or Side-by-side Cards
 
-**RULE:** If `intent` is matrix, hierarchy, or overlap → MUST use diagram. Text-only forbidden.
+**RULE:** `matrix`, `hierarchy`, `overlap` → MUST use diagram.
 
-### 2.2 Component Weight Classification
+**RULE:** `process` intent with numbered list in content → MUST use Steps or Timeline (not List). If >6 items, use Phase Cards.
 
-| Weight | Component | Source | Notes |
-|--------|-----------|--------|-------|
-| **Heavy** | `Line`, `Bar`, `Column`, `Pie`, `Area` | `@/components/antd` | Charts — ONE per slide max |
-| Heavy | `Funnel`, `Radar` | `@/components/antd` | Diagrams |
-| Heavy | `Venn` | `@/components/antd` | Overlapping concepts |
-| Heavy | `Pyramid` | `@/components/antd` | Hierarchy |
-| Heavy | `Scatter` | `@/components/antd` | 2D positioning (quadrant labels) |
-| Heavy | UI Mockup | Custom | Browser chrome + interface |
-| **Medium** | `Statistic` (2+ grouped) | `@/components/antd` | With supporting list |
-| Medium | `Timeline` | `@/components/antd` | 3+ items, supports `orientation` |
-| Medium | `Steps` | `@/components/antd` | 3+ steps |
-| Medium | `Table` | `@/components/antd` | 3+ rows |
-| Medium | `Card` grid | `@/components/antd` | 2+ cards |
-| Medium | `Progress` | `@heroui/react` | Progress bars |
-| Medium | `List` (3+ items) | `@/components/antd` | Medium weight |
-| **Light** | `Tag`, `Badge` | `@/components/antd` | Labels, inline only |
-| Light | `Alert` | `@/components/antd` | ONE per slide |
-| Light | `Descriptions` | `@/components/antd` | Key-value pairs |
-| Light | `Statistic` (single) | `@/components/antd` | Inline callout only |
-| Light | `List` (1-2 items) | `@/components/antd` | Light weight |
-| Light | `Typography.Title` | `@/components/antd` | Heading only |
-| Light | `Typography.Paragraph` | `@/components/antd` | Depends on length |
+**RULE:** `comparison` intent with markdown table in content → MUST use `<Table>` component. DO NOT convert markdown tables to two-column List layouts.
 
-**Never use Light components alone to fill a panel.**
+### 2.2 Component Weight
 
-### 2.3 Component Selection Guide
+| Heavy (1/slide max) | Medium (2-3/slide) | Light (accent only) |
+|---------------------|--------|-------------------|
+| Charts: Line, Bar, Column, Pie, Area | Timeline, Steps, Table (3+ rows), Card grid (3+), List (4+) | Tag, Badge, Alert (1/slide), Descriptions, List (1-3) |
+| Diagrams: Funnel, Venn, Pyramid, Scatter | **Statistic grid (2-4)** | |
 
-| Content Type | Visual Relationship | Component | Budget |
-|--------------|---------------------|-----------|--------|
-| Concepts balance/complement | Overlap | `Venn` | Max 1 |
-| Items have priority | Hierarchy | `Pyramid` | Max 1 |
-| Something narrows/filters | Funnel | `Funnel` | Max 1 |
-| Two dimensions matter | Matrix | `Scatter` (quadrant) | Max 1 |
-| Temporal sequence | Timeline | `Timeline` | Max 1 |
-| Step-by-step with status | Process | `Steps` | Max 1 |
-| Quantities differ | Comparison | `Bar` or `Column` | Unlimited |
-| Proportions/share | Part-of-whole | `Pie` | Unlimited |
-| Single key NUMERIC metric | Evidence | `Statistic` | Unlimited |
-| Multiple NUMERIC metrics (3-6) | Evidence | `Statistic` grid in `<div>` (not Card) | Unlimited |
-| Qualitative labels/status | Evidence | Card grid with icons, or Tags | Unlimited |
-| Stages or phases | Process | Phase Cards, Numbered List | Unlimited |
-| Group membership | Collection | `List` | Unlimited |
-| Item attributes | Comparison | `Table` | Unlimited |
-| Discrete stages | Process | Phase Cards | Unlimited |
-| Progression flow | Process | Color-Gradient Cards | Unlimited |
-| Memorable phases | Process | Icon-Driven Cards | Unlimited |
-| Visual storytelling | Focal | Image from content | ≥3 slides |
+**Statistic is Medium weight, not Light.** A grid of 2-4 Statistics is a focal element, not decoration.
 
-**Default for process:** Phase Cards, Numbered List, Color-Gradient Cards, or Icon Cards (unlimited). Use Steps/Timeline only if budget available.
+### 2.3 Component Selection
+
+| Relationship | Component | Budget |
+|--------------|-----------|--------|
+| Overlap | Venn | Max 1 |
+| Hierarchy | Pyramid | Max 1 |
+| Funnel/filter | Funnel | Max 1 |
+| Matrix (2D) | Scatter | Max 1 |
+| Temporal | Timeline | Max 1 |
+| Step-by-step | Steps | Max 1 |
+| Quantities | Bar, Column | Max 2 |
+| Proportions | Pie | Max 1 |
+| NUMERIC metric | Statistic | **Max 8 total per deck** (2-4 per slide when used) |
+| Process phases | Phase Cards, Numbered List | Unlimited |
+
+**List monotony rule:** No 3+ consecutive slides with List as primary component. After 2 List-heavy slides, use Table, Phase Cards, Statistic grid, or Chart.
+
+**List budget per slide:** Max 2 List components per slide. If content has 3+ distinct bullet groups:
+- Merge related bullets into fewer lists
+- Convert to Card grid (each card = title + short list)
+- Convert numeric items to Statistic components
+- Convert sequential items to Steps or Timeline
+
+**List → Alternative Conversion (CRITICAL):**
+| Content Pattern | Instead of List | Use This |
+|-----------------|-----------------|----------|
+| 3-5 numbered steps | List | `<Steps items={[...]}/>` |
+| Dates/milestones | List | `<Timeline items={[...]}/>` |
+| Metrics with numbers | List | `<Statistic>` grid (2-4 cards) |
+| A vs B comparison | 2 Lists | `<Table columns={...} dataSource={...}/>` |
+| 3-4 categories | 3-4 Lists | Card grid (each card = title + 2-3 bullets) |
+| Feature highlights | List | `<Card>` with icon + short description |
 
 ### 2.4 Component Rules
 
-#### List Discipline
-- **Single-item lists FORBIDDEN** — use `Typography.Paragraph`
-- Card = Title + Paragraph OR Title + List(2+) — never Title + List(1)
-- `List` requires `dataSource` and `renderItem` props
-- `List.Item` content must use `Typography.Text` or `Typography.Paragraph`
-- **Two-line items (text + secondary) are HEAVY** — use sparingly (max 30% of lists). Default to single-line items.
+**List:** No single-item lists → use Paragraph. Card = Title + List(2+) or Title + Paragraph. Two-line items are HEAVY (max 30% of lists).
 
-#### Alert Discipline
-Alert is a "stop and think" signal — not a slide summary. Max 25% of slides. If every slide has Alert, audience ignores them.
+**List JSX format:** Use `dataSource` array with JSX elements, `renderItem` returns `<List.Item>`. 
+- `dataSource`: array of JSX elements (NOT strings with markdown)
+- `renderItem`: `(item) => <List.Item>{item}</List.Item>`
+- FORBIDDEN: `List.Item.Meta`, `itemLayout="horizontal"`, objects with `{title, description}`, markdown `**bold**` in strings
 
-**Alert Placement Rules:**
-- Alert must be **grouped with the content it comments on** — never isolated in a corner
-- In split layouts, Alert belongs in the **same column as related content**, directly below it
-- **FORBIDDEN:** Alert floating alone in a narrow column with empty space above
-- If Alert relates to the whole slide, place it at **bottom of main content column**, not in sidebar
+**Text emphasis in JSX (CRITICAL):** Convert markdown to JSX tags:
+- `**bold**` → `<strong>` or `<Typography.Text strong>`
+- `*italic*` → `<em>`
+- `==highlight==` or key metrics → `<Typography.Text mark>` (yellow background)
+- FORBIDDEN: Raw markdown `**` or `*` in JSX strings — renderer cannot parse them
+- FORBIDDEN: Double closing tags like `</strong></strong>` — verify tag matching before output
 
-#### Statistic Discipline
-**Statistic is for NUMERIC values only** (e.g., `$2.4M`, `99.9%`, `<50ms`). For qualitative labels like "Near-zero" or "Domain-tuned", use Card with icon, Tag, or Typography pairs instead.
+**Use `<Typography.Text mark>` for:** Key numbers, percentages, KPIs, critical terms that need visual pop. E.g., `<Typography.Text mark>99.9%</Typography.Text>`
 
-#### Card Styling
+**Alert:** Max 25% slides. Group with related content, not isolated. Bottom of main column, not sidebar.
 
-**Card is for content, not layout.** If you're using Card just for background/grouping, use `<div className="bg-theme-surface rounded-xl p-6">` instead.
+**Statistic:** NUMERIC only (`$2.4M`, `99.9%`). Qualitative → Card with icon or Tag.
 
-**CRITICAL:** Always use CSS variables for theme-aware styling. Never hardcode light colors like `bg-slate-50` or `bg-white` — they break on dark themes.
+**Card Styling:**
+- Default: `bg-theme-surface rounded-xl`
+- Subtle: `bg-theme-surface/60`
+- Accent: `border-l-4 border-theme-primary bg-theme-surface rounded-r-xl`
+- Comparison: `bg-theme-success/20` vs `bg-theme-danger/20`
 
-| Visual Intent | Tailwind Classes |
-|---------------|------------------|
-| Default | `bg-theme-surface rounded-xl` |
-| Subtle | `bg-theme-surface/60 rounded-xl` |
-| Outlined | `border border-theme-border rounded-xl` |
-| Accent/callout | `border-l-4 border-theme-primary bg-theme-surface rounded-r-xl` |
-| Elevated/hero | `bg-theme-surface shadow-lg rounded-xl` |
-| Comparison A | `bg-theme-success/20 rounded-xl` |
-| Comparison B | `bg-theme-danger/20 rounded-xl` or `bg-theme-info/20 rounded-xl` |
+Max 2 distinct bg colors per slide. Grid cards must have Title + List(2+) or Title + Statistic.
 
-**Variety Rules:**
-- Same-level items: Use same styling
-- Hierarchy: Mix styles (hero with shadow, supporting with `bg-theme-surface/60`)
-- Comparison: Use contrasting theme semantic colors (`bg-theme-success/20`, `bg-theme-danger/20`, `bg-theme-info/20`)
-- Across deck: Vary default styles
+### 2.5 Process Alternatives (when Steps/Timeline exhausted)
 
-**Color Budget:** Max 2 distinct background color tokens per slide for cards. Too many colors = visual noise.
-
-**Background Usage:**
-- Summary/concept cards: No background needed (use `border` or plain)
-- Cards with sub-content (lists, details): Use background color to group content
-
-**Grid Card Minimum:** Each card in a grid MUST contain Title + List(2+) OR Title + Statistic OR Icon + Title + paragraph. A card with just Title + 1 sentence is too sparse — collapse into a simple List instead.
-
-### 2.5 Process-Heavy Content Alternatives
-
-When Steps/Timeline budget exhausted, use these **equally effective** alternatives:
-
-#### 1. Phase Cards (Horizontal Grid)
-`grid-cols-3` or `grid-cols-4` with Cards. Each card: number/icon + title + 1-2 bullets.
-
-#### 2. Color Gradient Cards
-Cards with progressively changing opacity: `bg-theme-primary/10` → `bg-theme-primary/20` → `bg-theme-primary/30`
-
-#### 3. Numbered List with Subheadings
-List where each item has bold number prefix: `1. Discovery — understand user needs`
-
-#### 4. Icon-Driven Phase Cards
-Each card has distinct icon: 🔍 Research → ✏️ Design → ⚙️ Build → 🚀 Launch
-
-#### 5. Stacked Sections with Dividers
-`flex flex-col gap-6` with distinct Cards per phase, visual dividers between.
-
-#### 6. Arrow/Chevron Layout
-Cards styled with CSS borders for directional flow.
-
-**Process Variety Rule:** If deck has 3+ process-intent slides, use ≥2 different representations.
+1. Phase Cards: `grid-cols-3` with number/icon + title + bullets
+2. Color Gradient: `bg-theme-primary/10` → `/20` → `/30`
+3. Numbered List: `1. Phase — description`
+4. Icon-Driven Cards: distinct icon per phase
+5. Stacked Sections with dividers
 
 ### 2.6 Chart Reference
 
-| Chart | Key Props | Min Height | Recommended Height |
-|-------|-----------|------------|-------------------|
-| `Line`, `Area` | `data`, `xField`, `yField`, `height` | 280px | 350-450px |
-| `Bar` | `data`, `xField` (category), `yField` (value), `height` | 280px | 350-450px |
-| `Column` | `data`, `xField`, `yField`, `height` | 280px | 350-450px |
-| `Pie` | `data`, `angleField`, `colorField`, `height` | 280px | 350-400px |
-| `Funnel` | `data`, `xField`, `yField`, `height` | 350px | 400-500px |
-| `Venn` | `data` (`sets`, `size`, `label`), `height` | 350px | 400-500px |
-| `Pyramid` | `data` (`label`, `description?`, `value`, `color?`), `height` | 350px | 400-500px |
-| `Scatter` | `data` (`label`, `x`, `y`, `color?`), `xLabel`, `yLabel` | 450px | 550-650px |
+| Chart | Props | Height |
+|-------|-------|--------|
+| Line, Bar, Column | `data`, `xField`, `yField`, `height` | 350-450px |
+| Pie | `data`, `angleField`, `colorField` | 350-400px |
+| Funnel, Venn, Pyramid | `data`, `height` | 400-500px |
+| Scatter | `data`, `xLabel`, `yLabel` | 550-650px |
 
-**Timeline** supports: `items`, `mode` (`left`|`alternate`|`right`), `orientation` (`vertical`|`horizontal`)
-
-#### Chart Sizing
-| Use Case | Width | Height |
-|----------|-------|--------|
-| Full-slide hero (diagram only) | `90%` | 550-650 |
-| Diagram + heading only | `90%` | 450-500 |
-| Diagram + supporting content | `90%` | 350-400 |
-| Main panel (60/40) | `100%` | 400-500 |
-| Accent panel (40/60) | `100%` | 300-400 |
-| Chart in Card | Omit | 250-350 |
-
-#### Common Mistakes
-| Problem | Cause | Fix |
-|---------|-------|-----|
-| Tiny illegible chart | No height, container collapsed | Add `height: 500+` |
-| Chart overflows | Height too large | Reduce height |
-| Axis labels cut off | Width too narrow | Use `width: 80%+` |
+Sizing: Full-slide 550-650, with content 350-400, in Card 250-350.
 
 ---
 
@@ -483,244 +309,118 @@ Cards styled with CSS borders for directional flow.
 
 ### 3.1 List Formatting
 
-| Style | Example | When to Use |
-|-------|---------|-------------|
-| Fragment/phrase | "Zero-latency autocomplete" | Quick scans, capability lists |
-| Verb-lead | "Enables offline AI inference" | Action items, benefits |
-| Full sentence | "Users can work without connectivity." | Narrative flow |
-| Question format | "How do we compete with OS AI?" | Problem framing |
-| Numbered sequence | "1. Extract → 2. Process → 3. Deploy" | Ordered steps |
+| Style | Example | Use |
+|-------|---------|-----|
+| Fragment | "Zero-latency autocomplete" | Capability lists |
+| Verb-lead | "Enables offline inference" | Benefits, actions |
+| Full sentence | "Users work offline." | Narrative |
+| Numbered | "1. Extract → 2. Process" | Ordered steps |
 
-**Rules:**
-- Default to fragments or verb-lead
-- Same style within a slide
-- ≥3 different styles across deck
-- Match intent: Capabilities → fragments; Benefits → verb-lead
+**Rules:** Default to fragments. Same style within slide. ≥3 styles across deck.
 
-### 3.2 Text Length Rules
+### 3.2 Text Length (STRICT)
 
-| Container | Words Per Item | Max Items | Total Words |
-|-----------|----------------|-----------|-------------|
-| 2x2 Grid cell | 8-10 | 2-3 | 25-40 per cell |
-| 3-col Grid cell | 10-12 | 3-4 | 30-50 per cell |
-| 4-col Grid cell | 6-8 | 2 | 15-25 per cell |
-| 30% accent panel | 3-6 per bullet | 2-3 | 15-25 total |
-| 40-50% panel | 8-15 per bullet | 3-4 | 40-70 total |
-| 60%+ main panel | 12-20 per bullet | 5 | 60-100 total |
-| Statistic caption | 3-5 | N/A | N/A |
-| Card title | 2-5 | N/A | N/A |
-| Alert takeaway | 10-20 | 1 | Single statement |
+| Container | Words/Item | Max Items | Total Words |
+|-----------|------------|----------|-------------|
+| 3-col Grid | 8-10 | 3 | ≤30/card |
+| 2x2 Grid | 6-8 | 2-3 | ≤24/card |
+| 30% panel | 3-5 | 2-3 | ≤15 |
+| 40-50% panel | 6-12 | 3-4 | ≤48 |
+| 60%+ panel | 10-15 | 4-5 | ≤75 |
 
-**Principles:**
-1. Smaller container = fewer words, shorter phrases
-2. Count columns before writing (3-col = must be scannable)
-3. Visual components consume word budget (Card with Statistic → caption only)
+**CRITICAL:** Exceeding word limits → split slide or reduce content. Never compress by shrinking font.
 
-### 3.3 Slide Overflow Prevention
-**When slide has multiple text-heavy components (cards with lists, tables), apply stricter limits:**
+### 3.3 Overflow Prevention
 
-| Slide Composition | Max Items Per List | Max Words Per Item |
-|-------------------|--------------------|--------------------|
-| Single card/list | 4-5 | 15-20 |
-| 2 cards side-by-side | 2-3 | 10-12 |
-| 2 cards + ANY other element | 2 | 8-10 |
-| 3+ cards on slide | 2 | 6-8 |
-| Grid 3-col cards | 2 | 6-8 |
-| Grid 2x2 cards | 2 | 6-8 |
+**Multi-card slides:** 2-3 items/list, 6-8 words/item. **Grid 3-col:** max 3 bullets per card, max 10 words per bullet.
 
-**Table limits:** Max 3 rows when table is the ONLY content. Max 2 rows when table shares slide with cards. Truncate action text to 8-10 words.
+**Nested Grid FORBIDDEN:** Do NOT stack grids (e.g., 3-col on top + 2-col on bottom). Choose ONE layout:
+- Use 3-col OR 2-col, not both
+- If content needs both, SPLIT into 2 slides
+- Compound layouts (Stacked, T-Shape) are vertical stacking, not nested grids
 
-**Content triage (CRITICAL for `summary` intent):** If storyline has sections + next_steps + callout, choose 2 of 3:
-- Sections as cards (primary content)
-- Next_steps as simplified list (NOT table) OR omit entirely
-- Callout as Alert
-- **NEVER render all three at full detail**
+**Dense slide limits:**
+- Max 4 Statistic components per slide
+- Max 1 List (with max 4 items) per slide
+- Max 1 Alert per slide
+- **Card grids:** Each Card with List → max 2-3 bullets per Card (not 4+)
 
-**Summary slide rules:**
-- `summary` intent slides are HIGH OVERFLOW RISK — default to aggressive triage
-- If 2 sections with 3+ bullets each: **reduce each section to 2 bullets max**
-- If next_steps exist: convert to 2-item list inside one card, NOT separate table
-- If 3+ sections in storyline: render only top 2, or collapse into single list
-- **Ending/closing slides:** Prefer clean layout over completeness
-- **Bullet text limit:** On summary slides, each bullet should be 6-10 words max (fragment style)
+**Overflow cascade (MANDATORY):** 
+1. **Summarize** — Condense 3 bullets to 2, merge related points
+2. **Shorten** — Cut words per bullet (≤10 words)
+3. **Split slide** — Last resort if content cannot fit
 
-**Overflow resolution order:**
-1. Remove Alert/callout first (least critical)
-2. Merge next_steps into section card as sub-bullets
-3. Reduce bullets per section to 2
-4. Shorten bullet text to fragments (5-8 words)
-5. If still overflowing: split into 2 slides
+**You MUST fit content to layout constraints. NEVER render more bullets than layout allows.**
+Example: Grid 2x2 with 4 Cards, storyline provides 12 bullets → YOU summarize to 8 bullets (2 per card).
+
+**List item format:** Prefer `**Key** — short explanation` (≤12 words total). Two-line items only when essential.
 
 ### 3.4 Data Integrity
-- Use ONLY numbers from source — no invented baselines
-- Each data point appears ONCE — Chart shows data, text explains implication
-- Dates are not chart values — use Timeline or text
-- **NO redundant content** — diagram and text should complement, not repeat each other
 
-### 3.5 Heavy Diagram Pairing
-**Heavy diagrams (Pyramid, Funnel, Venn, Scatter) demand visual space.** When paired with text:
+Use ONLY numbers from source. Each data point appears ONCE. Diagram + text must complement, not repeat.
 
-| Pairing | Allowed | Diagram Height |
-|---------|---------|----------------|
-| Diagram only | ✅ Full slide | 500-600px |
-| Diagram + heading/subtitle | ✅ | 450-500px |
-| Diagram + supplementary text (non-redundant) | ✅ | 350-400px |
-| Diagram + text that repeats diagram labels | ❌ Redundant | — |
-| Diagram + dense content (2-col grid, 3+ bullets) | ❌ Overflow | — |
+### 3.5 Pyramid Text Format
 
-**Complementary content rule:** Text should add NEW information not visible in diagram:
-- ✅ Diagram shows hierarchy → Text explains implications or next steps
-- ✅ Diagram shows structure → Text provides supporting evidence or context
-- ❌ Diagram label: "Local inference + RAG" → Text: "Local inference + local RAG: privacy..."
+Pyramid uses `label` + `description` pattern:
+- `label`: 2-4 words (bold, larger) — e.g., "Platform foundation"
+- `description`: optional explanation (muted, smaller) — e.g., "local-first + hybrid compute"
 
-### 3.6 Pyramid Text Format
-Pyramid layers use **title + description** pattern to avoid text overflow:
-- `label`: Short title (2-4 words max, bold, larger font) — e.g., "Platform foundation"
-- `description`: Longer explanation (optional, muted, smaller font) — e.g., "local-first + hybrid compute"
-
-**ALWAYS split long text:** If original text is >5 words, extract the key concept as `label` and put the rest in `description`.
-
-Labels display on alternating sides with dashed connector lines.
+If text >5 words, split into label + description.
 
 ---
 
 ## 4. Styling
 
-### 4.1 Icons
+### 4.1 Theme Colors
 
-**Use icons to add visual interest**, especially on `structure` intent slides with 3+ cards. 1-2 icons per card. Import from `@ant-design/icons`.
+**CRITICAL:** Use theme tokens only. FORBIDDEN: `bg-slate-50`, `bg-white`, hardcoded hex.
 
-| Purpose | Icon |
-|---------|------|
-| Privacy/Security | `<LockOutlined />`, `<SafetyOutlined />` |
-| Speed/Performance | `<ThunderboltOutlined />`, `<RocketOutlined />` |
-| Success/Positive | `<CheckCircleOutlined />`, `<CheckOutlined />` |
-| Problem/Negative | `<CloseCircleOutlined />`, `<WarningOutlined />` |
-| Timeline phases | `<FlagOutlined />`, `<CalendarOutlined />` |
-| Integration | `<ApiOutlined />`, `<LinkOutlined />` |
+```
+Background: bg-theme-surface, bg-theme-bg, bg-theme-surface-alt
+Semantic:   bg-theme-success/20, bg-theme-danger/20, bg-theme-warning/20, bg-theme-info/20
+Accents:    bg-theme-accent1 through bg-theme-accent6 (with /20 for tints)
+Text:       text-theme-text, text-theme-text-muted, text-theme-primary
+Border:     border-theme-border, border-theme-primary
+```
+
+Semantics = meaning (good/bad). Accents = variety without meaning.
 
 ### 4.2 Typography
 
-| Element | Component | Size Token |
-|---------|-----------|------------|
-| Cover title | `Typography.Title level={1}` | `var(--theme-size-display)` |
-| Slide heading | `Typography.Title level={2}` | `var(--theme-size-heading)` |
-| Section heading | `Typography.Title level={3}` or `level={4}` | — |
-| Body text | `List`, `Typography.Paragraph` | `var(--theme-size-body)` |
-| Captions | `Typography.Text type="secondary"` | `var(--theme-size-caption)` |
+| Element | Component |
+|---------|-----------|
+| Cover title | Typography.Title level={1} |
+| Slide heading | Typography.Title level={2} — at slide root, not inside Card |
+| Section heading | Typography.Title level={3} or {4} |
+| Body | List, Typography.Paragraph |
+| Caption | Typography.Text type="secondary" |
 
-**Rules:**
-- **Slide heading belongs at slide root, not inside Card** — `Typography.Title level={2}` should be a direct child of the slide container
-- Body text must be noticeably smaller than headings
-- Never use `size="small"` for List
-- `type="secondary"` only for attributions/captions
-- Limit Timeline/Steps to 3-4 items for readable spacing
+### 4.3 Icons
 
-### 4.3 Inline Emphasis
+Use on `structure` intent with 3+ cards. 1-2 icons per card. Import from `@ant-design/icons`.
 
-| Purpose | How to Apply |
-|---------|--------------|
-| Key term | `<Text strong>` or `<strong>` |
-| Highlighted metric | `<Text mark>` |
-| Semantic color | `<Text type="success|warning|danger">` |
+| Purpose | Icons |
+|---------|-------|
+| Privacy/Security | `LockOutlined`, `SafetyOutlined` |
+| Speed/Performance | `ThunderboltOutlined`, `RocketOutlined` |
+| Success/Problem | `CheckCircleOutlined`, `CloseCircleOutlined` |
+| Timeline | `FlagOutlined`, `CalendarOutlined` |
+| Integration | `ApiOutlined`, `LinkOutlined` |
 
-**Emphasis should be selective.** 1-2 per slide max.
+### 4.4 Inline Emphasis
 
-### 4.4 Colors & Patterns
+- Key term: `<Text strong>` or `<strong>`
+- **Highlighted metric/KPI: `<Text mark>`** — use for numbers, percentages, critical data points
+- Semantic: `<Text type="success|warning|danger">`
 
-**CRITICAL:** Use theme variables for colors to support both light and dark themes.
+**Highlight target:** Each slide with metrics should have 1-2 `<Text mark>` on the most important numbers.
 
-#### Safelisted Utility Classes (Preferred)
-These classes are pre-defined and guaranteed to work:
-```
-Background: bg-theme-bg, bg-theme-surface, bg-theme-surface-alt, bg-theme-primary, bg-theme-secondary, bg-theme-accent
-            bg-theme-success, bg-theme-danger, bg-theme-warning, bg-theme-info
-            bg-theme-accent1, bg-theme-accent2, bg-theme-accent3, bg-theme-accent4, bg-theme-accent5, bg-theme-accent6
-Text:       text-theme-text, text-theme-text-muted, text-theme-primary, text-theme-secondary, text-theme-accent
-            text-theme-success, text-theme-danger, text-theme-warning, text-theme-info
-Border:     border-theme-border, border-theme-primary, border-theme-secondary, border-theme-accent
-            border-theme-success, border-theme-danger, border-theme-warning, border-theme-info
-```
+### 4.5 Consistency
 
-#### Semantic Colors (use when meaning matters)
-| Color | Meaning |
-|-------|--------|
-| `bg-theme-success` or `bg-theme-success/20` | Positive, solution, our approach |
-| `bg-theme-danger` or `bg-theme-danger/20` | Problem, risk, competitor |
-| `bg-theme-warning` or `bg-theme-warning/20` | Caution, timeline, attention |
-| `bg-theme-info` or `bg-theme-info/20` | Neutral info, stats, context |
-
-#### Accent Colors (use for visual variety without semantic meaning)
-| Color | Use case |
-|-------|----------|
-| `bg-theme-accent1` or `bg-theme-accent1/20` | Primary accent (matches primary) |
-| `bg-theme-accent2` or `bg-theme-accent2/20` | Secondary accent (orange/warm) |
-| `bg-theme-accent3` or `bg-theme-accent3/20` | Tertiary accent |
-| `bg-theme-accent4` or `bg-theme-accent4/20` | Fourth accent (cyan/cool) |
-| `bg-theme-accent5` or `bg-theme-accent5/20` | Fifth accent (purple) |
-| `bg-theme-accent6` or `bg-theme-accent6/20` | Sixth accent (green) |
-
-**When to use accents vs semantics:**
-- **Semantics** (success/danger/warning/info): When color conveys meaning (good/bad/caution)
-- **Accents** (accent1-6): When you need variety without implying meaning (categories, steps, teams)
-
-#### Surface & Background
-| Token | Use |
-|-------|-----|
-| `bg-theme-surface` | Default card background |
-| `bg-theme-bg` | Page background (rarely needed) |
-| `bg-theme-primary/20` | Primary-tinted background |
-| `border-theme-border` | Card/section borders |
-
-#### Text Colors
-| Token | Use |
-|-------|-----|
-| `text-theme-text` | Primary text (default, rarely needed) |
-| `text-theme-text-muted` | Secondary/caption text |
-| `text-theme-primary` | Emphasized links, highlights |
-| `text-theme-accent1` | Accent-colored text |
-| `text-theme-success` | Positive values, gains |
-| `text-theme-danger` | Negative values, losses |
-
-#### Complete Token Reference
-```
-Background:  --theme-bg, --theme-surface
-Text:        --theme-text, --theme-text-muted
-Brand:       --theme-primary, --theme-secondary, --theme-accent
-Semantic:    --theme-success, --theme-danger, --theme-warning, --theme-info
-Accents:     --theme-accent1, --theme-accent2, --theme-accent3, --theme-accent4, --theme-accent5, --theme-accent6
-Utility:     --theme-border, --theme-shadow-sm, --theme-shadow-md, --theme-shadow-lg
-Radius:      --theme-radius-sm, --theme-radius-md, --theme-radius-lg
-```
-
-**CRITICAL: Never use hardcoded colors** like `bg-slate-50`, `text-gray-600`, `#ffffff`. Always use theme tokens.
-
-**Theme shadows:** `--theme-shadow-sm`, `--theme-shadow-md`, `--theme-shadow-lg`
-
-### 4.5 Sibling Consistency
-
-**Typography levels must match across siblings:**
-- Cards in same row use SAME heading level
-- For emphasis, vary card styling (border, background) — NOT heading level
-
-**Grid alignment:**
-- All cards in row should have similar content structure
-- Empty space should be intentional
-
-### 4.6 Density Targets
-
-| Density | Elements | Coverage |
-|---------|----------|----------|
-| sparse | 2-3 | 40-60% |
-| moderate | 4-5 | 60-80% |
-| dense | 5-7 | 70-90% |
+Same heading level across sibling cards. Vary styling (bg, border) not heading level.
 
 ---
 
 ## Output Format
 
-Wrap each slide in `<Slide id="slide_XX" rank={N}>`. The MCP tool merges into existing slide objects.
-
-**Required:** `id` (matches draft), `rank` (order), JSX content inside.
-
-**Wrapper pattern:** `<div className="flex flex-col justify-center h-full gap-6">` for vertical centering.
+Wrap slides: `<Slide id="slide_XX" rank={N}>`. Use `<div className="flex flex-col justify-center h-full gap-6">` wrapper.

@@ -66,58 +66,7 @@ class ThemeHandler(SkillHandler):
             return template_path
         return None
     
-    def _register_theme_in_react(self, theme_name: str, theme_ts: str, logger: Any) -> None:
-        """Copy generated theme.ts to React themes folder for runtime use.
-        
-        This allows the generated theme to be used as a built-in theme option,
-        avoiding conflicts between template tokens and built-in tokens.
-        """
-        try:
-            # Find React themes directory
-            react_themes_dir = Path(__file__).parent.parent.parent / ".claude" / "skills" / "ant-export" / "react" / "themes"
-            
-            if not react_themes_dir.exists():
-                logger.warning(f"React themes directory not found: {react_themes_dir}")
-                return
-            
-            # Write theme file
-            theme_file = react_themes_dir / f"{theme_name}.ts"
-            theme_file.write_text(theme_ts, encoding="utf-8")
-            logger.info(f"Registered theme in React: {theme_file}")
-            
-            # Update index.ts to include the new theme
-            index_file = react_themes_dir / "index.ts"
-            if index_file.exists():
-                index_content = index_file.read_text(encoding="utf-8")
-                
-                # Check if theme is already imported
-                import_line = f"import {{ {theme_name}Theme }} from './{theme_name}';"
-                if import_line not in index_content:
-                    # Add import after existing imports
-                    import_section_end = index_content.find("// =============")
-                    if import_section_end > 0:
-                        index_content = (
-                            index_content[:import_section_end] +
-                            import_line + "\n" +
-                            index_content[import_section_end:]
-                        )
-                
-                # Check if theme is already in registry
-                registry_entry = f"  {theme_name}: {theme_name}Theme,"
-                if registry_entry not in index_content:
-                    # Add to themes registry
-                    registry_marker = "  teamsLight: teamsLightTheme,"
-                    if registry_marker in index_content:
-                        index_content = index_content.replace(
-                            registry_marker,
-                            registry_marker + f"\n  {theme_name}: {theme_name}Theme,"
-                        )
-                
-                index_file.write_text(index_content, encoding="utf-8")
-                logger.info(f"Updated themes index.ts with {theme_name}")
-                
-        except Exception as e:
-            logger.warning(f"Failed to register theme in React: {e}")
+    # NOTE: _register_theme_in_react removed - only project-local theme should be used
     
     def _get_pptx_cache_key(self, template_path: Path) -> str:
         """Generate cache key from PPTX file hash."""
@@ -210,7 +159,7 @@ class ThemeHandler(SkillHandler):
         
         return "\n\n".join(parts)
     
-    def _build_pptx_prompt(self, context: SkillContext, extracted_data: dict, existing_theme_ts: str | None = None, existing_layout_md: str | None = None) -> str:
+    def _build_pptx_prompt(self, context: SkillContext, extracted_data: dict, existing_theme_ts: str | None = None, existing_layout_md: str | None = None, task_instruction: str = "") -> str:
         """Build USER prompt with extracted PowerPoint data.
         
         Args:
@@ -218,6 +167,7 @@ class ThemeHandler(SkillHandler):
             extracted_data: Data extracted from PPTX template
             existing_theme_ts: Existing theme.ts content if modifying (optional)
             existing_layout_md: Existing layout.md content if modifying (optional)
+            task_instruction: Task-specific instruction from orchestrator (for theme updates)
         
         Note: This is the USER prompt only. The SKILL.md is loaded as system prompt
         by the Subagent class. SKILL.md contains all instructions for generating
@@ -227,12 +177,15 @@ class ThemeHandler(SkillHandler):
         
         parts = []
         
-        # If user has instruction and we have existing files, this is a MODIFICATION
-        if context.user_instruction and (existing_theme_ts or existing_layout_md):
+        # Use task_instruction if provided, otherwise fall back to context.user_instruction
+        update_instruction = task_instruction or context.user_instruction
+        
+        # If we have instruction and existing files, this is a MODIFICATION
+        if update_instruction and (existing_theme_ts or existing_layout_md):
             parts.extend([
                 "## MODIFICATION REQUEST",
                 "",
-                f"**User instruction:** {context.user_instruction}",
+                f"**User instruction:** {update_instruction}",
                 "",
             ])
             
@@ -448,6 +401,38 @@ class ThemeHandler(SkillHandler):
         
         return "\n".join(parts)
     
+    def _get_theme_modification_prompt(self) -> str:
+        """Build system prompt for modifying existing theme.ts files."""
+        return """You are an expert at modifying TypeScript theme configuration files.
+
+## Task
+Modify the provided theme.ts file according to the user's instruction.
+**ONLY change what the user explicitly asks for.** Keep everything else EXACTLY the same.
+
+## Rules
+1. Preserve the exact TypeScript structure (export const, types, imports, etc.)
+2. **ONLY change properties directly related to the user's request**
+3. **DO NOT change font sizes, spacing, or other values unless explicitly requested**
+4. Use valid CSS color values (#hex, rgb(), etc.)
+5. Maintain proper TypeScript syntax
+6. Copy unchanged sections character-for-character
+
+## CRITICAL: Preserve These Unless Explicitly Changed
+- typography.sizeDisplay, sizeHeading, sizeBody, sizeCaption
+- typography.fontDisplay, fontBody, fontMono
+- typography.lineHeight, letterSpacing
+- spacing.gap, padding, margin
+- visuals.radius, shadow
+
+## Output Format
+Return the complete modified theme.ts content wrapped in:
+
+=== THEME.TS START ===
+<complete modified file content>
+=== THEME.TS END ===
+
+Output ONLY the delimited content, no explanations."""
+    
     def _strip_code_fences(self, content: str) -> str:
         """Remove markdown code fences from content."""
         # Remove opening code fence with optional language
@@ -458,8 +443,11 @@ class ThemeHandler(SkillHandler):
     
     def _parse_pptx_response(self, response: str, theme_name: str) -> tuple[str, str]:
         """Parse LLM response into theme.ts and layout.md content."""
-        # Extract theme.ts
+        # Extract theme.ts - try both delimiter formats
         theme_ts_match = re.search(r'---THEME_TS---\s*(.*?)\s*---END_THEME_TS---', response, re.DOTALL)
+        if not theme_ts_match:
+            # Try alternate format: === THEME.TS START/END ===
+            theme_ts_match = re.search(r'===\s*THEME\.TS\s+START\s*===\s*(.*?)\s*===\s*THEME\.TS\s+END\s*===', response, re.DOTALL | re.IGNORECASE)
         theme_ts = self._strip_code_fences(theme_ts_match.group(1)) if theme_ts_match else ""
         
         # Extract layout.md
@@ -493,11 +481,14 @@ class ThemeHandler(SkillHandler):
                 theme_name = extracted_data.get("theme_name", "template")
                 logger.info(f"Extracted theme: {theme_name}")
                 
-                # Check cache - but skip if user has instruction (they want changes)
+                # Check cache - but skip if user has specific instruction (they want changes)
+                # Check both context.user_instruction AND task_params.instruction for subagent-specific updates
                 cache_key = self._get_pptx_cache_key(template_path)
+                task_instruction = context.task_params.get("instruction", "") if context.task_params else ""
+                has_update_instruction = bool(task_instruction)
                 
-                if context.user_instruction:
-                    logger.info(f"User has instruction, skipping cache")
+                if has_update_instruction:
+                    logger.info(f"Task has update instruction: {task_instruction}, skipping cache")
                     cached_ts, cached_md, cached_json = None, None, None
                 else:
                     cached_ts, cached_md, cached_json = self._get_cached_theme(cache_key)
@@ -528,9 +519,7 @@ class ThemeHandler(SkillHandler):
                     theme_json["fonts"] = extracted_data.get("fonts", {})
                     theme_json["background"] = extracted_data.get("background", {})
                     
-                    # Register in React
-                    if theme_ts:
-                        self._register_theme_in_react(theme_name, theme_ts, logger)
+                    # NOTE: Removed _register_theme_in_react - only use project-local theme
                     
                     return {"output": theme_json}
                 
@@ -542,7 +531,8 @@ class ThemeHandler(SkillHandler):
                 existing_theme_ts = None
                 existing_layout_md = None
                 
-                if context.user_instruction:
+                # Load existing theme files if we have update instruction
+                if has_update_instruction:
                     existing_ts_path = project_dir / f"{theme_name}.ts"
                     existing_md_path = project_dir / f"{theme_name}_layout.md"
                     
@@ -555,7 +545,8 @@ class ThemeHandler(SkillHandler):
                         logger.info(f"Found existing layout to modify: {existing_md_path}")
                 
                 # Build user prompt with extracted data (and existing files if modifying)
-                user_prompt = self._build_pptx_prompt(context, extracted_data, existing_theme_ts, existing_layout_md)
+                # Pass task_instruction for theme updates
+                user_prompt = self._build_pptx_prompt(context, extracted_data, existing_theme_ts, existing_layout_md, task_instruction)
                 
                 # Use a minimal system prompt for PPTX conversion (NOT the full SKILL.md)
                 # The full SKILL.md is 24K+ chars which slows down LLM significantly
@@ -609,9 +600,7 @@ class ThemeHandler(SkillHandler):
                     theme_json["source"] = "pptx_template"
                     theme_json["template_path"] = str(template_path)
                     
-                    # Register theme.ts in React (if we have it)
-                    if theme_ts:
-                        self._register_theme_in_react(theme_name, theme_ts, logger)
+                    # NOTE: Removed _register_theme_in_react - only use project-local theme
                     
                     # Cache for future use
                     self._cache_theme(cache_key, theme_ts, layout_md, theme_json)
@@ -623,6 +612,117 @@ class ThemeHandler(SkillHandler):
                     # Fall through to default behavior
             else:
                 logger.warning(f"Failed to extract template data: {extracted_data}")
+        
+        # Check for update instruction even without PPTX template
+        # This handles cases like "change text color to red" on existing theme
+        # ONLY modify if there's already a theme file in the project (user is updating, not first run)
+        task_instruction = context.task_params.get("instruction", "") if context.task_params else ""
+        if task_instruction:
+            logger.info(f"Theme instruction received: {task_instruction}")
+            
+            # Find existing theme.ts file in project
+            project_dir = Path(context.project_dir)
+            existing_theme_ts = None
+            theme_name = None
+            
+            # Look for any .ts theme file in project directory
+            for ts_file in project_dir.glob("*.ts"):
+                if ts_file.name.endswith(".d.ts"):
+                    continue
+                content = ts_file.read_text(encoding="utf-8")
+                # Check if it looks like a theme file
+                if "colors:" in content or "typography:" in content:
+                    existing_theme_ts = content
+                    theme_name = ts_file.stem
+                    logger.info(f"Found existing theme to modify: {ts_file}")
+                    break
+            
+            # ONLY modify if there's already a project theme file
+            # On first run, there's no theme file yet - use default preset selection instead
+            if not existing_theme_ts:
+                # Check if content.json has a theme.id that we can copy from built-in
+                project_dir = Path(context.project_dir)
+                content_json_path = project_dir / "content.json"
+                if content_json_path.exists():
+                    import json as json_module
+                    content_data = json_module.loads(content_json_path.read_text(encoding="utf-8"))
+                    current_theme_id = content_data.get("theme", {}).get("id")
+                    
+                    if current_theme_id:
+                        # User has a theme set in content.json - copy it for modification
+                        builtin_themes_dir = Path(__file__).parent.parent.parent / ".claude" / "skills" / "ant-export" / "react" / "themes"
+                        builtin_theme_path = builtin_themes_dir / f"{current_theme_id}.ts"
+                        
+                        if builtin_theme_path.exists():
+                            logger.info(f"Copying built-in theme {current_theme_id} to project for modification")
+                            existing_theme_ts = builtin_theme_path.read_text(encoding="utf-8")
+                            theme_name = current_theme_id
+                            
+                            # Copy to project directory first
+                            project_theme_path = project_dir / f"{theme_name}.ts"
+                            project_theme_path.write_text(existing_theme_ts, encoding="utf-8")
+                            logger.info(f"Copied built-in theme to: {project_theme_path}")
+                        else:
+                            logger.warning(f"Built-in theme not found: {builtin_theme_path}")
+                
+                # If still no theme, fall through to default preset selection
+                if not existing_theme_ts:
+                    logger.info(f"No existing theme to modify - using default preset selection")
+                    # Fall through to default subagent behavior (preset selection)
+            
+            if existing_theme_ts and theme_name:
+                # Build modification prompt
+                system_prompt = self._get_theme_modification_prompt()
+                user_prompt = f"""## MODIFICATION REQUEST
+
+**User instruction:** {task_instruction}
+
+**Current theme.ts to modify:**
+```typescript
+{existing_theme_ts}
+```
+
+Apply the user's instruction to the existing theme file. Output ONLY the modified theme.ts content wrapped in:
+
+=== THEME.TS START ===
+<modified content>
+=== THEME.TS END ===
+
+Keep everything else unchanged unless directly affected by the instruction."""
+                
+                messages = [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt},
+                ]
+                
+                try:
+                    response = llm.completion(messages=messages)
+                    content = response.choices[0].message.content if hasattr(response, 'choices') else str(response)
+                    content = content.strip()
+                    
+                    logger.debug(f"[theme-modify] LLM Output length: {len(content)} chars")
+                    
+                    # Parse response
+                    new_theme_ts, _ = self._parse_pptx_response(content, theme_name)
+                    
+                    if new_theme_ts:
+                        # Save modified theme
+                        ts_path = project_dir / f"{theme_name}.ts"
+                        ts_path.write_text(new_theme_ts, encoding="utf-8")
+                        logger.info(f"Updated theme TypeScript: {ts_path}")
+                        
+                        theme_json = {
+                            "id": theme_name,
+                            "name": theme_name.replace("_", " ").title(),
+                            "theme_ts_path": str(ts_path),
+                            "source": "modified",
+                        }
+                        return {"output": theme_json}
+                    else:
+                        logger.warning(f"LLM did not return valid theme.ts content")
+                        
+                except Exception as e:
+                    logger.error(f"Failed to modify theme: {e}")
         
         # Default: use subagent for preset theme selection
         subagent = Subagent(self.name, llm)
