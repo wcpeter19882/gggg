@@ -286,7 +286,7 @@ class OrchestratorSession:
     
     def __init__(
         self,
-        llm: Any,  # OpenHands LLM instance
+        llm: Any,  # LLM instance from cliv2.config.llm
         progress_callback: Optional[Callable] = None,
         verbose: bool = False,
     ):
@@ -513,7 +513,7 @@ Uploaded Files (this session):
             import litellm
             from cliv2.core import verbose_logger
             
-            # Get model info from OpenHands LLM config
+            # Get model info from LLM config
             model = self.llm.config.model
             api_key = self.llm.config.api_key
             base_url = self.llm.config.base_url

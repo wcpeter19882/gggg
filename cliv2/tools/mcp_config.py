@@ -1,7 +1,7 @@
-"""MCP tool configuration for OpenHands SDK.
+"""MCP tool configuration.
 
 Discovers MCP server scripts from .claude/tools/ and builds
-configuration for OpenHands Agent.
+configuration for the slide generation pipeline.
 """
 import sys
 from pathlib import Path
@@ -9,7 +9,7 @@ from typing import Optional
 
 
 def get_mcp_config(tools_dir: Optional[Path] = None) -> dict:
-    """Build MCP server configuration for OpenHands SDK.
+    """Build MCP server configuration.
     
     Discovers mcp_*.py scripts and creates server configs.
     
@@ -18,7 +18,7 @@ def get_mcp_config(tools_dir: Optional[Path] = None) -> dict:
                    Defaults to .claude/tools/ in current directory.
     
     Returns:
-        MCP configuration dict for OpenHands Agent
+        MCP configuration dict
     """
     if tools_dir is None:
         tools_dir = Path(".claude/tools")

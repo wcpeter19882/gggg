@@ -297,6 +297,15 @@ Convert to Tailwind:
 | 4 slots in 2x2 grid | `grid grid-cols-2 grid-rows-2 gap-4` |
 | Picture left + text right | `grid-cols-5` → `col-span-2` (img) + `col-span-3` (text) |
 
+**CRITICAL: Structure Column Format**
+
+The Structure column MUST be **short Tailwind classes ONLY**. No prose, no descriptions.
+
+✅ CORRECT: `flex flex-col justify-center h-full px-16`  
+✅ CORRECT: `grid grid-cols-5 gap-6` → `col-span-3` + `col-span-2`  
+❌ WRONG: `flex flex-col h-full px-16 with a full-width header row on top...`  
+❌ WRONG: `grid grid-cols-5 gap-6 h-full px-16 → use col-span-3 for main text area and col-span-2 for supporting visual`
+
 **Background Images:**
 
 If a layout has a background image (indicated by `**Background: image** → images/filename.png`), add a `bg_image` column to the layout table:
@@ -326,12 +335,17 @@ This file replaces section 1.1 in ant-paged-layout SKILL.md.
 
 | Category | Intent | Pattern | Layout | Structure | Best For | Constraints |
 |----------|--------|---------|--------|-----------|----------|-------------|
-| **Symmetric** | statement | cover | Cover | `{derived from Cover 01 slots}` | Cover 01 | Max 4 elements |
-| Symmetric | statement | section-break | Centered | `{derived from Section Page slots}` | L1 Section Page | — |
-| Symmetric | comparison | side-by-side | Split 50/50 | `{derived from 2-column layout slots}` | Statement - 2 columns | Max 2 per deck |
-| **Asymmetric** | evidence, focal | 1 main + 1 support | Split 60/40 | `{derived from Mockup layout slots}` | Mockup - narrow | Max 3 per deck |
+| **Symmetric** | statement | cover | Cover | `flex flex-col justify-center h-full px-16` | Cover 01 | Max 4 elements |
+| Symmetric | statement | section-break | Centered | `flex items-center justify-center h-full` | L1 Section Page | — |
+| Symmetric | comparison | side-by-side | Split 50/50 | `grid grid-cols-2 gap-6 h-full px-16` | Statement - 2 columns | Max 2 per deck |
+| **Asymmetric** | evidence, focal | 1 main + 1 support | Split 60/40 | `grid grid-cols-5 gap-6` → `col-span-3` + `col-span-2` | Mockup - narrow | Max 3 per deck |
 | ... (include ALL predefined patterns) |
 ```
+
+**CRITICAL Table Rules:**
+- Keep each row on ONE LINE - no line breaks within cells
+- Structure column: Tailwind classes ONLY, no descriptions
+- Each cell should be under 60 characters
 
 **Best For column**: Put the PowerPoint layout name that was mapped to this pattern.
 

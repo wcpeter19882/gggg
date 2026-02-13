@@ -41,22 +41,22 @@ logger = logging.getLogger("app_v3")
 
 
 def _prewarm_llm():
-    """Pre-warm LLM imports and Azure credential at startup.
+    """Pre-warm LLM and Azure credential at startup.
     
-    OpenHands import takes ~40s (loads tokenizers, model registries).
+    LiteLLM import is fast (~1s).
     Azure AD token acquisition takes ~4s.
     """
     import time
     start = time.time()
     
-    # 1. Import OpenHands (the slow part - ~40s first time)
-    logger.info("Pre-warming LLM imports (this may take ~40s on first run)...")
+    # 1. Import LiteLLM (fast)
+    logger.info("Pre-warming LLM...")
     try:
-        from openhands.core.config import LLMConfig
-        from openhands.llm import LLM
-        logger.info(f"OpenHands imported ({time.time()-start:.1f}s)")
+        import litellm
+        from cliv2.config.llm import LLM, LLMConfig
+        logger.info(f"LiteLLM imported ({time.time()-start:.1f}s)")
     except ImportError as e:
-        logger.warning(f"OpenHands not installed: {e}")
+        logger.warning(f"LiteLLM not installed: {e}")
         return
     
     # 2. Get Azure AD token (~4s)
@@ -118,6 +118,10 @@ def get_preview_html(project_id: str = "", status_text: str = "", force_reload: 
         project_id: Project ID for preview URL
         status_text: Status text to show when no project
         force_reload: If True, add timestamp to force iframe reload (use sparingly - preview uses WebSocket)
+    
+    Note: Preview URL rules:
+        - If host has port 7860 → use same host with port 3001
+        - If host starts with "gradio." (no port) → use preview.{rest_of_host}
     """
     if not project_id:
         status = status_text or "Upload a file and send instructions to start"
@@ -127,11 +131,37 @@ def get_preview_html(project_id: str = "", status_text: str = "", force_reload: 
             <div style='font-size:3rem;margin-bottom:1rem;'>🎯</div>
             <div style='font-size:1.2rem;text-align:center;max-width:400px;'>{status}</div>
         </div>"""
-    # No timestamp by default - preview page uses WebSocket for auto-refresh
-    url = f"http://localhost:3001/preview/{project_id}"
-    if force_reload:
-        url += f"?t={datetime.now().timestamp()}"
-    return f'<iframe src="{url}" width="100%" height="100%" style="border:none;border-radius:8px;min-height:calc(100vh - 120px);"></iframe>'
+    # Use srcdoc with a script that builds the correct preview URL based on current host
+    timestamp_param = f"?t={datetime.now().timestamp()}" if force_reload else ""
+    redirect_html = f'''<!DOCTYPE html>
+<html><head>
+<script>
+(function() {{
+    var host = window.parent.location.hostname;
+    var port = window.parent.location.port;
+    var protocol = window.parent.location.protocol;
+    var previewUrl;
+    
+    if (port === "7860") {{
+        // Local dev: same host, port 3001
+        previewUrl = protocol + "//" + host + ":3001/preview/{project_id}{timestamp_param}";
+    }} else if (host.startsWith("gradio.")) {{
+        // Gradio cloud: gradio.X.Y → preview.X.Y
+        previewUrl = protocol + "//preview." + host.substring(7) + "/preview/{project_id}{timestamp_param}";
+    }} else {{
+        // Fallback: assume port 3001 on same host
+        previewUrl = protocol + "//" + host + ":3001/preview/{project_id}{timestamp_param}";
+    }}
+    
+    window.location.href = previewUrl;
+}})();
+</script>
+</head><body style="background:#111;color:#888;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;">
+<p>Loading preview...</p>
+</body></html>'''
+    # Escape quotes for srcdoc attribute
+    escaped = redirect_html.replace('"', '&quot;')
+    return f'<iframe srcdoc="{escaped}" width="100%" height="100%" style="border:none;border-radius:8px;min-height:calc(100vh - 120px);"></iframe>'
 
 
 def list_recent_projects() -> List[str]:
@@ -437,6 +467,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="UCE Slide Generator v3")
     parser.add_argument("--port", "-p", type=int, default=7860)
     parser.add_argument("--host", type=str, default="0.0.0.0")
+    parser.add_argument("--share", action="store_true",
+                       help="Create public Gradio link (bypasses tunnel limitations)")
     parser.add_argument("--log-file", "-vv", type=str, default=None,
                        help="Write full untruncated LLM logs to file")
     args = parser.parse_args()
@@ -449,11 +481,15 @@ if __name__ == "__main__":
     
     print("🚀 Starting UCE Slide Generator v3...")
     print(f"   UI: http://127.0.0.1:{args.port}")
-    print(f"   Note: Ensure React preview server is running at http://localhost:3001")
+    if args.share:
+        print("   📡 Share mode enabled - public URL will be generated")
+    else:
+        print(f"   Note: Ensure React preview server is running at http://localhost:3001")
     
     # Pre-warm LLM imports and Azure credential to avoid first-request delay
     _prewarm_llm()
     
     app = create_app()
     app.queue(default_concurrency_limit=5)  # Support 5 parallel requests
-    app.launch(server_name=args.host, server_port=args.port)
+    # max_file_size: Allow larger files (100MB) for PPTX templates and documents
+    app.launch(server_name=args.host, server_port=args.port, max_file_size="100mb", share=args.share)

@@ -25,8 +25,24 @@ export async function GET(
     return new Response("Project not found", { status: 404 });
   }
 
-  // Get initial mtime
+  // Get initial mtime for content.json
   let lastMtime = fs.statSync(contentJsonPath).mtimeMs;
+  
+  // Get initial state for theme files (.ts files in project dir)
+  const getThemeFilesState = (): Map<string, number> => {
+    const state = new Map<string, number>();
+    try {
+      const files = fs.readdirSync(projectDir);
+      for (const file of files) {
+        if (file.endsWith('.ts') && !file.endsWith('.d.ts')) {
+          const filePath = path.join(projectDir, file);
+          state.set(file, fs.statSync(filePath).mtimeMs);
+        }
+      }
+    } catch { /* ignore */ }
+    return state;
+  };
+  let lastThemeState = getThemeFilesState();
 
   const stream = new ReadableStream({
     start(controller) {
@@ -41,10 +57,31 @@ export async function GET(
             return;
           }
 
+          let hasChanges = false;
+
+          // Check content.json
           const currentMtime = fs.statSync(contentJsonPath).mtimeMs;
           if (currentMtime > lastMtime) {
             lastMtime = currentMtime;
-            controller.enqueue(`data: {"type":"update","mtime":${currentMtime}}\n\n`);
+            hasChanges = true;
+          }
+          
+          // Check theme files (.ts)
+          const currentThemeState = getThemeFilesState();
+          if (currentThemeState.size !== lastThemeState.size) {
+            hasChanges = true; // File added or removed
+          } else {
+            for (const [file, mtime] of currentThemeState) {
+              if (lastThemeState.get(file) !== mtime) {
+                hasChanges = true; // File modified
+                break;
+              }
+            }
+          }
+          lastThemeState = currentThemeState;
+          
+          if (hasChanges) {
+            controller.enqueue(`data: {"type":"update","mtime":${Date.now()}}\n\n`);
           }
         } catch (err) {
           // File might be locked during write, ignore

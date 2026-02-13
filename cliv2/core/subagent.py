@@ -251,7 +251,7 @@ You are running in DIRECT OUTPUT mode.
     ):
         """Execute subagent with streaming LLM response.
         
-        Uses LiteLLM directly for streaming since OpenHands LLM doesn't support it.
+        Uses LiteLLM for streaming completion.
         
         Args:
             handler: Skill handler for prompt building

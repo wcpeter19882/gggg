@@ -1,11 +1,14 @@
 """LLM configuration for Azure OpenAI via LiteLLM.
 
-Creates OpenHands LLM instance configured for Azure OpenAI.
+Lightweight wrapper around LiteLLM for Azure OpenAI.
 Supports both API key and Azure AD authentication.
 """
 import os
 import time
-from typing import Optional
+from dataclasses import dataclass
+from typing import Any, Optional
+
+import litellm
 
 from cliv2.config.env import load_env, validate_azure_config
 from cliv2.core.errors import ConfigError
@@ -16,8 +19,67 @@ _cached_token = None
 _token_expires_at = 0
 
 
-def create_llm():
-    """Create OpenHands LLM with Azure OpenAI configuration.
+@dataclass
+class LLMConfig:
+    """LLM configuration for Azure OpenAI."""
+    model: str
+    api_key: str
+    base_url: str
+    api_version: str
+
+
+class LLM:
+    """LiteLLM wrapper for Azure OpenAI completions."""
+    
+    def __init__(self, config: LLMConfig):
+        self.config = config
+        
+        # Set environment for LiteLLM Azure
+        os.environ["AZURE_API_KEY"] = config.api_key
+        os.environ["AZURE_API_BASE"] = config.base_url
+        os.environ["AZURE_API_VERSION"] = config.api_version
+    
+    def completion(self, messages: list[dict], **kwargs) -> Any:
+        """Synchronous completion using LiteLLM.
+        
+        Args:
+            messages: List of message dicts with role and content
+            **kwargs: Additional args passed to litellm.completion
+            
+        Returns:
+            LiteLLM completion response
+        """
+        return litellm.completion(
+            model=self.config.model,
+            messages=messages,
+            api_key=self.config.api_key,
+            api_base=self.config.base_url,
+            api_version=self.config.api_version,
+            **kwargs
+        )
+    
+    async def acompletion(self, messages: list[dict], **kwargs) -> Any:
+        """Async completion using LiteLLM.
+        
+        Args:
+            messages: List of message dicts with role and content
+            **kwargs: Additional args passed to litellm.acompletion
+            
+        Returns:
+            LiteLLM completion response
+        """
+        return await litellm.acompletion(
+            model=self.config.model,
+            messages=messages,
+            api_key=self.config.api_key,
+            api_base=self.config.base_url,
+            api_version=self.config.api_version,
+            **kwargs
+        )
+
+
+def create_llm() -> LLM:
+    """Create LLM with Azure OpenAI configuration.
     
     Uses LiteLLM format for Azure OpenAI: azure/<deployment>
     
@@ -36,17 +98,6 @@ def create_llm():
     # Build LiteLLM model string for Azure
     model = f"azure/{config['deployment']}"
     
-    # Import here to avoid import errors if SDK not installed
-    try:
-        from openhands.core.config import LLMConfig
-        from openhands.llm import LLM
-    except ImportError as e:
-        raise ConfigError(
-            message="OpenHands SDK not installed",
-            details=str(e),
-            hint="Install with: pip install openhands-ai"
-        ) from e
-    
     # Handle authentication
     api_key = config['api_key']
     if not api_key:
@@ -61,8 +112,7 @@ def create_llm():
         api_version=config['api_version'],
     )
     
-    # Create LLM instance with service_id
-    return LLM(config=llm_config, service_id="cliv2")
+    return LLM(config=llm_config)
 
 
 def _get_azure_ad_token() -> str:

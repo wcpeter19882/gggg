@@ -1,7 +1,7 @@
-"""CLIv2: Headless slide generation with OpenHands SDK.
+"""CLIv2: Headless slide generation with LiteLLM.
 
 This package provides a command-line interface for generating slide presentations
-from markdown source files using OpenHands SDK for LLM orchestration.
+from markdown source files using LiteLLM for LLM orchestration.
 
 Public API:
     generate: Async function to generate slides (linear mode)

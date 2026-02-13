@@ -3,7 +3,7 @@
 This module contains interface-agnostic logic for slide generation:
 - models.py: Data models (GenerationRequest, GenerationResult, StageResult)
 - errors.py: Error hierarchy (Cliv2Error, ConfigError, GenerationError)
-- agent.py: OpenHands Agent factory
+- subagent.py: Subagent executor for skills
 - pipeline.py: Pipeline stage definitions and execution
 - orchestrator.py: Main orchestration logic
 """
