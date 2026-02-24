@@ -100,8 +100,10 @@ def load_context_for_skill(
     project_context = call_read_section(project_dir, "all") if project_dir else {}
     
     # Load source files (from files/ directory)
+    # Can be skipped via task_params.skip_source for light tasks (e.g., image search only)
     source_content = ""
-    if input_spec.needs_source:
+    skip_source = (task_params or {}).get("skip_source", False)
+    if input_spec.needs_source and not skip_source:
         source_content = project_context.get("source", "")
     
     # Load constitution.md as markdown string

@@ -26,7 +26,7 @@ import concurrent.futures
 from pathlib import Path
 from typing import Any, Optional
 
-from cliv2.skills.base import SkillHandler, SkillInput, SkillOutput, SkillContext
+from cliv2.skills.base import SkillHandler, SkillInput, SkillOutput, SkillContext, SkillContextWithTarget
 
 
 class ResearchHandler(SkillHandler):
@@ -83,7 +83,7 @@ class ResearchHandler(SkillHandler):
             needs_source=True,
             needs_constitution=True,
             needs_theme=False,
-            needs_slides=False,
+            needs_slides=True,  # Needed for targeted research (slide context)
             needs_research=True,  # Read existing research.md for incremental updates
         )
     
@@ -102,40 +102,94 @@ class ResearchHandler(SkillHandler):
             raise ValueError("Step 2 is tool execution, not LLM call")
     
     def _build_step1_prompt(self, context: SkillContext) -> str:
-        """Step 1: Generate search queries.
+        """Step 1: Analyze task and generate queries.
         
-        If research.md exists, identify gaps to fill.
-        Otherwise, generate comprehensive queries.
+        Based on task instruction and context, decide what to do:
+        - Generate web queries for content research
+        - Generate image queries for visual content
+        - Analyze user-provided images (no search needed)
+        - Or combination of above
+        
+        If research.md exists, only identify gaps to fill.
         """
+        # Get task params
+        task_params = {}
+        task_instruction = ""
+        if isinstance(context, SkillContextWithTarget):
+            task_params = context.task_params
+            task_instruction = task_params.get("instruction", "") or task_params.get("instructions", "")
+        
+        # Check for target slides context and skip_source flag
+        target_slides = task_params.get("slide_ids", [])
+        skip_source = task_params.get("skip_source", False)
+        
+        # Determine if this is a new project (no existing research.md)
+        is_new_project = not context.research
+        
         parts = [
-            "You are executing Step 1 of the research workflow: Generate Search Queries.",
+            "You are executing Step 1 of the research workflow: Analyze Task & Generate Queries.",
             "",
             f"Project directory: {context.project_dir}",
         ]
         
-        if context.user_instruction:
-            parts.append(f"User instruction: {context.user_instruction}")
+        # Guide search behavior based on project state
+        if is_new_project:
+            parts.append("\n**🔍 NEW PROJECT: Web search and image search are ENABLED by default.**")
+            parts.append("- Generate 2-3 web queries to enrich content with up-to-date data, statistics, or citations")
+            parts.append("- Generate 2-4 image queries to find visual assets (photos, illustrations) for slides")
+            parts.append("- Check constitution below for any search restrictions")
         
-        parts.append("\n=== SOURCE CONTENT ===")
-        if context.source:
-            parts.append(context.source)
+        if task_instruction:
+            parts.append(f"\n**Task instruction:** {task_instruction}")
+        if context.user_instruction:
+            parts.append(f"**User instruction:** {context.user_instruction}")
+        if target_slides:
+            parts.append(f"**Target slides:** {target_slides}")
+        if skip_source:
+            parts.append("**Mode:** Light research (source files skipped)")
+        
+        # Show existing slides context if targeting specific slides
+        if target_slides and context.slides:
+            parts.append("\n=== TARGET SLIDE CONTEXT ===")
+            # Build slide_id -> slide mapping (skip non-dict slides)
+            slide_id_to_slide = {}
+            for s in context.slides:
+                if isinstance(s, dict) and s.get("id"):
+                    slide_id_to_slide[s.get("id")] = s
+            for sid in target_slides:
+                slide = slide_id_to_slide.get(sid)
+                if slide:
+                    parts.append(f"\n**{sid}:**")
+                    parts.append(f"  Title: {slide.get('title', 'N/A')}")
+                    parts.append(f"  Intent: {slide.get('intent', 'N/A')}")
+                    content = slide.get('content')
+                    if isinstance(content, dict) and content.get('headline'):
+                        headline = content.get('headline', '')[:80]
+                        parts.append(f"  Headline: {headline}")
+        
+        # Only show source if not skipped
+        if not skip_source:
+            parts.append("\n=== SOURCE CONTENT ===")
+            if context.source:
+                parts.append(context.source)
+            else:
+                parts.append("(No source files provided)")
         
         parts.append("\n=== CONSTITUTION ===")
         if context.constitution:
-            # Constitution is now markdown string
             parts.append(context.constitution)
         
         # Include existing research for incremental updates
         if context.research:
-            parts.append("\n=== EXISTING RESEARCH (for reference) ===")
-            parts.append("Review existing research and identify gaps to fill:")
+            parts.append("\n=== EXISTING RESEARCH.MD ===")
+            parts.append("This project already has research. Only add what's needed:")
             parts.append(context.research)
-            parts.append("\n**Focus on:** Topics not yet researched, outdated data, missing citations")
         
         parts.append("\n=== OUTPUT FORMAT ===")
-        parts.append("Return ONLY valid JSON:")
+        parts.append("Analyze the task and return ONLY valid JSON:")
         parts.append("""```json
 {
+  "analysis": "Brief explanation of what research is needed",
   "topics": [
     {
       "id": "topic_unique_id",
@@ -149,21 +203,38 @@ class ResearchHandler(SkillHandler):
     {
       "concept": "Visual concept description",
       "query": "search query for images",
-      "priority": "primary"
+      "priority": "primary",
+      "for_slide": "slide_05"
     }
-  ]
+  ],
+  "analyze_attachments": false
 }
 ```""")
         parts.append("")
-        parts.append("Rules:")
-        parts.append("- `id`: Unique identifier like 'topic_ai_adoption' (used for section tracking)")
-        parts.append("- `is_update`: true if updating existing research, false if new topic")
-        parts.append("- 3-5 topics with 1-2 web queries each")
-        parts.append("- Skip topics already well-covered in existing research")
-        parts.append("- 2 primary + 2 backup image queries")
-        parts.append("- Image queries should be visual metaphors, not literal tech terms")
+        
+        # Different rules for new vs incremental
+        if is_new_project:
+            parts.append("**Decision Rules (New Project):**")
+            parts.append("- **Check constitution for search restrictions** (e.g., '[RULE: NO WEB SEARCH]')")
+            parts.append("  - If restricted: return empty `topics` and `image_queries` arrays")
+            parts.append("  - If NOT restricted (default): generate queries as below")
+            parts.append("- **ALWAYS generate `image_queries`** - slides need visual assets (photos, illustrations)")
+            parts.append("  - 2-4 image queries based on main themes in source content")
+            parts.append("  - Use descriptive concepts: 'team collaboration', 'data analytics dashboard', 'business growth'")
+            parts.append("- **Generate `topics` with web queries** if source lacks:")
+            parts.append("  - Recent statistics or market data")
+            parts.append("  - Industry benchmarks or best practices")
+            parts.append("  - External validation or citations")
+            parts.append("- `priority`: 'primary' for must-have images, 'backup' for alternatives")
+        else:
+            parts.append("**Decision Rules (Incremental Update):**")
+            parts.append("- Check constitution for any search restrictions")
+            parts.append("- If task is about finding/searching images → populate `image_queries`")
+            parts.append("- If task is about adding content/data → populate `topics` with web queries")
+            parts.append("- If research.md already covers the topic → return empty arrays")
+        
         parts.append("")
-        parts.append("IMPORTANT: Be concise. Output ONLY the JSON, no explanations.")
+        parts.append("IMPORTANT: Output ONLY the JSON, no explanations.")
         
         return "\n".join(parts)
     
@@ -177,33 +248,64 @@ class ResearchHandler(SkillHandler):
         - External research findings
         - Downloaded images catalog
         """
+        # Get task context
+        task_params = {}
+        task_instruction = ""
+        if isinstance(context, SkillContextWithTarget):
+            task_params = context.task_params
+            task_instruction = task_params.get("instruction", "") or task_params.get("instructions", "")
+        
+        # Determine what was actually researched - drives what sections to update
+        has_web_results = bool(self._search_results and self._search_results.get("web_results"))
+        has_image_results = bool(self._search_results and self._search_results.get("image_results"))
+        has_attachment_analysis = bool(self._queries and self._queries.get("analyze_attachments"))
+        is_incremental = bool(context.research)  # Has existing research.md
+        
         parts = [
             "You are executing Step 3 of the research workflow: Consolidate Content.",
             "",
-            "**CRITICAL: research.md will be the ONLY input for storyline.**",
-            "Include ALL content the storyline needs - it won't see source files.",
-            "",
-            f"Project directory: {context.project_dir}",
         ]
+        
+        # Explain what to do based on what was researched
+        if is_incremental:
+            parts.append("**INCREMENTAL UPDATE: Only update sections relevant to what was researched.**")
+            if has_image_results and not has_web_results:
+                parts.append("- Only new images were searched → update images section only")
+            elif has_web_results and not has_image_results:
+                parts.append("- Only web topics were searched → update relevant topic sections")
+            elif has_attachment_analysis:
+                parts.append("- User attachments were analyzed → incorporate into relevant sections")
+        else:
+            parts.append("**CRITICAL: research.md will be the ONLY input for storyline.**")
+            parts.append("Include ALL content the storyline needs - it won't see source files.")
+        
+        parts.append("")
+        parts.append(f"Project directory: {context.project_dir}")
+        
+        if task_instruction:
+            parts.append(f"\nTask instruction: {task_instruction}")
         
         if context.user_instruction:
             parts.append(f"\n=== USER INSTRUCTION ===")
             parts.append(context.user_instruction)
-            parts.append("(Include this context in research.md so storyline knows the goal)")
+            if not is_incremental:
+                parts.append("(Include this context in research.md so storyline knows the goal)")
         
-        # SOURCE CONTENT - must be summarized into research.md
-        parts.append("\n=== SOURCE CONTENT (must consolidate into research.md) ===")
-        if context.source:
-            parts.append(context.source)
-            parts.append("\n**Extract key points from above into research.md sections.**")
-        else:
-            parts.append("(No source files provided)")
-        
-        # Constitution context
-        parts.append("\n=== CONSTITUTION ===")
-        if context.constitution:
-            # Constitution is now markdown string
-            parts.append(context.constitution)
+        # For incremental updates, only include source if needed
+        if not is_incremental:
+            # SOURCE CONTENT - must be summarized into research.md
+            parts.append("\n=== SOURCE CONTENT (must consolidate into research.md) ===")
+            if context.source:
+                parts.append(context.source)
+                parts.append("\n**Extract key points from above into research.md sections.**")
+            else:
+                parts.append("(No source files provided)")
+            
+            # Constitution context
+            parts.append("\n=== CONSTITUTION ===")
+            if context.constitution:
+                # Constitution is now markdown string
+                parts.append(context.constitution)
         
         # Show existing research for incremental updates
         if context.research:
@@ -211,29 +313,44 @@ class ResearchHandler(SkillHandler):
             parts.append(context.research)
         
         # Show queries from Step 1
-        parts.append("\n=== SEARCH QUERIES (from Step 1) ===")
         if self._queries:
+            parts.append("\n=== RESEARCH PLAN (from Step 1) ===")
             topics = self._queries.get("topics", [])
-            parts.append(f"Topics researched: {len(topics)}")
-            for t in topics:
-                parts.append(f"- {t.get('id')}: {t.get('name')}")
+            image_queries = self._queries.get("image_queries", [])
+            analyze_attachments = self._queries.get("analyze_attachments", False)
+            
+            if topics:
+                parts.append(f"Web topics researched: {len(topics)}")
+                for t in topics:
+                    parts.append(f"- {t.get('id')}: {t.get('name')}")
+            if image_queries:
+                parts.append(f"Image concepts searched: {len(image_queries)}")
+                for iq in image_queries:
+                    for_slide = iq.get('for_slide', '')
+                    if for_slide:
+                        parts.append(f"- {iq.get('concept')} (for {for_slide})")
+                    else:
+                        parts.append(f"- {iq.get('concept')}")
+            if analyze_attachments:
+                parts.append("User attachments were analyzed")
         
         parts.append("\n=== SEARCH RESULTS SUMMARY ===")
         if self._search_results:
-            # Summarize web results - only include title, snippet, and URL
+            # Summarize web results if any
             web_results = self._search_results.get("web_results", [])
-            parts.append(f"\n### Web Results ({len(web_results)} queries)")
-            for wr in web_results:
-                topic_id = wr.get("topic_id", "unknown")
-                query = wr.get("query", "")
-                results = wr.get("results", [])
-                parts.append(f"\n**{topic_id}** - Query: \"{query}\"")
-                for r in results[:3]:  # Top 3 results per query
-                    title = r.get("title", "")[:80]
-                    snippet = r.get("snippet", "")[:200]
-                    url = r.get("link", "")
-                    parts.append(f"- [{title}]({url})")
-                    parts.append(f"  {snippet}")
+            if web_results:
+                parts.append(f"\n### Web Results ({len(web_results)} queries)")
+                for wr in web_results:
+                    topic_id = wr.get("topic_id", "unknown")
+                    query = wr.get("query", "")
+                    results = wr.get("results", [])
+                    parts.append(f"\n**{topic_id}** - Query: \"{query}\"")
+                    for r in results[:3]:  # Top 3 results per query
+                        title = r.get("title", "")[:80]
+                        snippet = r.get("snippet", "")[:200]
+                        url = r.get("link", "")
+                        parts.append(f"- [{title}]({url})")
+                        parts.append(f"  {snippet}")
             
             # Summarize image results - CRITICAL for storyline to assign images to slides
             image_results = self._search_results.get("image_results", [])
@@ -253,12 +370,62 @@ class ResearchHandler(SkillHandler):
                         width = img.get('width', 'unknown')
                         height = img.get('height', 'unknown')
                         parts.append(f"  - `{filename}` ({width}x{height}): {desc[:80]}")
+            
+            # Summarize attachment analysis results if any
+            attachment_results = self._search_results.get("attachment_analysis", [])
+            if attachment_results:
+                parts.append(f"\n### User-Provided Images ({len(attachment_results)} attachments)")
+                parts.append("**Include these in the images section so storyline can assign them to slides.**")
+                for ar in attachment_results:
+                    filename = ar.get("filename", "unknown")
+                    width = ar.get("width", "unknown")
+                    height = ar.get("height", "unknown")
+                    parts.append(f"- `{filename}` ({width}x{height})")
         else:
             parts.append("No search results available.")
         
         parts.append("\n=== OUTPUT FORMAT ===")
         parts.append("Return ONLY valid JSON with edit operations:")
-        parts.append("""```json
+        
+        # Provide appropriate example based on what was researched
+        if is_incremental and has_image_results and not has_web_results:
+            # Image-only incremental update
+            parts.append("""```json
+{
+  "operations": [
+    {
+      "operation": "append",
+      "section": "images",
+      "content": "| new_image.jpg | 1200x800 | Description | For slide X |"
+    }
+  ]
+}
+```""")
+            parts.append("")
+            parts.append("**Incremental image update: Only add new images to the images section.**")
+        elif is_incremental:
+            # General incremental update
+            parts.append("""```json
+{
+  "operations": [
+    {
+      "operation": "edit",
+      "section": "topic_existing",
+      "content": "## Topic Name\\n\\n### Updated Findings\\n- New data point..."
+    },
+    {
+      "operation": "append",
+      "section": "images",
+      "content": "| new_image.jpg | 1200x800 | Description | For slide X |"
+    }
+  ]
+}
+```""")
+            parts.append("")
+            parts.append("**Incremental update: Only update sections with new data.**")
+        else:
+            # Full research.md creation
+            parts.append("""```json
 {
   "operations": [
     {
@@ -289,33 +456,31 @@ class ResearchHandler(SkillHandler):
   ]
 }
 ```""")
+            parts.append("")
+            parts.append("**Full research.md creation with all sections.**")
+        
+        # Common rules
         parts.append("")
-        parts.append("**REQUIRED SECTIONS:**")
-        parts.append("- `header`: File header with user goal/instruction")
-        parts.append("- `source_summary`: **CRITICAL** - Key points from source content")
-        parts.append("- `topic_{id}`: External research findings per topic")
-        parts.append("- `images`: **CRITICAL** - Downloaded images catalog with ALL images from 'Images Downloaded' section above")
-        parts.append("- `citations`: Source URLs and references")
+        parts.append("**SECTION RULES:**")
+        if not is_incremental:
+            parts.append("- `header`: File header with user goal/instruction")
+            parts.append("- `source_summary`: **CRITICAL** - Key points from source content")
+            parts.append("- `topic_{id}`: External research findings per topic")
+        parts.append("- `images`: Downloaded images catalog (filename, dimensions, description, suggested use)")
+        if not is_incremental:
+            parts.append("- `citations`: Source URLs and references")
         parts.append("")
-        parts.append("**IMAGES SECTION RULES:**")
-        parts.append("- MUST include ALL images from the 'Images Downloaded' section")
-        parts.append("- Use exact filenames (e.g., `team_collab_01_abc123.jpg`)")
-        parts.append("- Include dimensions and a brief description")
-        parts.append("- Suggest which slide topics each image fits")
-        parts.append("")
-        parts.append("Operation types:")
+        parts.append("**Operation types:**")
         parts.append("- `create`: Create new section (or replace if exists)")
         parts.append("- `edit`: Update existing section content")
         parts.append("- `append`: Add to existing section")
         parts.append("")
-        parts.append("Rules:")
-        parts.append("- Only include sections that changed or are new")
-        parts.append("- Use 'edit' to update existing sections with new data")
+        parts.append("**Rules:**")
+        parts.append("- Only include sections that have new or changed data")
+        parts.append("- For incremental updates, prefer `edit` or `append` over `create`")
         parts.append("- Keep content concise - this is for slide enrichment")
-        parts.append("- Include source URLs in citations")
         parts.append("")
-        parts.append("IMPORTANT: Be concise. Output ONLY the JSON operations, no explanations.")
-        parts.append("Keep each section content brief - this is for slide enrichment, not a full report.")
+        parts.append("IMPORTANT: Output ONLY the JSON operations, no explanations.")
         
         return "\n".join(parts)
     
@@ -433,7 +598,12 @@ class ResearchHandler(SkillHandler):
         self.save_output(project_dir, result.output)
         queries = self.get_queries()
         
-        if not queries or not queries.get("topics"):
+        # Check if there's any work to do (topics, images, or attachment analysis)
+        has_topics = bool(queries and queries.get("topics"))
+        has_image_queries = bool(queries and queries.get("image_queries"))
+        has_attachments = bool(queries and queries.get("analyze_attachments"))
+        
+        if not has_topics and not has_image_queries and not has_attachments:
             logger.warning("[research] No queries generated, skipping search")
             # Fall back to summarization without search results
             self.set_step(3)
@@ -477,18 +647,25 @@ class ResearchHandler(SkillHandler):
     async def _execute_searches(self, queries: dict, project_dir: str, logger: Any) -> dict:
         """Execute web and image searches using serper.dev API (fully parallelized).
         
+        Also handles user-provided images/attachments when analyze_attachments is True.
+        
         Args:
-            queries: Queries from Phase 1 (topics with web_queries, image_queries)
+            queries: Queries from Phase 1 (topics with web_queries, image_queries, analyze_attachments)
             project_dir: Project directory for saving images
             logger: Logger instance
             
         Returns:
-            Dict with web_results and image_results
+            Dict with web_results, image_results, and attachment_analysis
         """
         from cliv2.tools.serper_search import search_web, search_images
         
         web_results = []
         image_results = []
+        attachment_analysis = []
+        
+        # Handle user-provided attachments first
+        if queries.get("analyze_attachments"):
+            attachment_analysis = self._analyze_user_attachments(project_dir, logger)
         
         # Prepare web search tasks
         web_tasks = []
@@ -620,4 +797,49 @@ class ResearchHandler(SkillHandler):
         return {
             "web_results": web_results,
             "image_results": valid_image_results,
+            "attachment_analysis": attachment_analysis,
         }
+    
+    def _analyze_user_attachments(self, project_dir: str, logger: Any) -> list[dict]:
+        """Analyze user-uploaded images in the project's images folder.
+        
+        Args:
+            project_dir: Project directory path
+            logger: Logger instance
+            
+        Returns:
+            List of attachment analysis results
+        """
+        attachments = []
+        images_folder = Path(project_dir) / "files" / "images"
+        
+        if not images_folder.exists():
+            logger.debug("[research] No images folder found for attachment analysis")
+            return attachments
+        
+        # Supported image extensions
+        image_extensions = {".png", ".jpg", ".jpeg", ".webp", ".gif", ".svg"}
+        
+        for filepath in images_folder.iterdir():
+            if filepath.suffix.lower() in image_extensions and filepath.is_file():
+                # Get image info
+                try:
+                    from PIL import Image
+                    with Image.open(filepath) as img:
+                        width, height = img.size
+                except Exception:
+                    width, height = "unknown", "unknown"
+                
+                attachments.append({
+                    "filename": filepath.name,
+                    "path": str(filepath),
+                    "width": width,
+                    "height": height,
+                    "summary": f"User-provided image: {filepath.name}",
+                })
+                logger.debug(f"[research] Found user attachment: {filepath.name}")
+        
+        if attachments:
+            logger.info(f"[research] Analyzed {len(attachments)} user attachments")
+        
+        return attachments

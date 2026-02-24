@@ -183,8 +183,21 @@ def _parse_mdx_slides(data: str) -> list[dict]:
             if content_stripped:
                 # If content looks like JSX (has < tags), put in mdx field
                 if re.search(r'<[A-Z][a-zA-Z]*', content_stripped):
-                    slide["mdx"] = content_stripped
+                    # Validate and repair JSX before storing
+                    from cliv2.tools.jsx_validator import JSXValidator
+                    validator = JSXValidator()
+                    validation = validator.validate_and_repair(content_stripped)
+                    
+                    # Store repaired content
+                    slide["mdx"] = validation.repaired_content
                     slide["state"] = "active"
+                    
+                    # Store unresolved issues if any
+                    if validation.has_unresolved:
+                        slide["issues"] = validation.get_unresolved_issues()
+                    elif "issues" in slide:
+                        # Clear previous issues if now resolved
+                        del slide["issues"]
                 else:
                     # Markdown content
                     slide["content"] = content_stripped
@@ -410,12 +423,23 @@ def call_apply_patch(
                     rank = int(match[2]) if match[2] else index
                     content_mdx = match[3].strip()
                     
-                    new_slides.append({
+                    # Validate and repair JSX
+                    from cliv2.tools.jsx_validator import JSXValidator
+                    validator = JSXValidator()
+                    validation = validator.validate_and_repair(content_mdx)
+                    
+                    slide_data = {
                         "id": slide_id,
                         "rank": rank,
-                        "mdx": content_mdx,
+                        "mdx": validation.repaired_content,
                         "state": "active"
-                    })
+                    }
+                    
+                    # Store unresolved issues if any
+                    if validation.has_unresolved:
+                        slide_data["issues"] = validation.get_unresolved_issues()
+                    
+                    new_slides.append(slide_data)
             
             if not new_slides:
                 # Fallback: try JSON format (legacy)
@@ -535,15 +559,31 @@ def call_export_mdx(
     output_path = project_path / output_file
     output_path.write_text(output_text, encoding="utf-8")
     
+    # Final validation pass for antd renderer (safety net - most issues fixed at parse time)
+    validation_repairs = 0
+    if renderer == "antd":
+        from cliv2.tools.jsx_validator import JSXValidator
+        validator = JSXValidator()
+        validation_result = validator.validate_and_repair(output_text)
+        
+        if validation_result.had_errors:
+            output_path.write_text(validation_result.repaired_content, encoding="utf-8")
+            validation_repairs = len(validation_result.repairs)
+    
     project_id = project_path.name
     
-    return {
+    result = {
         "success": True,
         "output_path": str(output_path),
         "preview_url": f"http://localhost:{port}/slides/{project_id}",
         "port": port,
         "slide_count": len(slides),
     }
+    
+    if validation_repairs > 0:
+        result["jsx_repairs"] = validation_repairs
+    
+    return result
 
 
 def call_read_section(

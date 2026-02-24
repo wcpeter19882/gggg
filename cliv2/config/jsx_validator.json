@@ -1,0 +1,11 @@
+{
+  "_comment": "JSX Validator configuration - edit to enable/disable repair rules",
+  
+  "fix_extra_closing_tags": true,
+  "fix_unclosed_inline_tags": true,
+  "fix_unescaped_ampersands": true,
+  "fix_unescaped_less_than": true,
+  "fix_className_quotes": true,
+  
+  "report_only": false
+}

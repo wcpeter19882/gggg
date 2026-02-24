@@ -104,7 +104,7 @@ When a project already exists AND user provides new source content:
 ## Available Subagents
 | Subagent | Purpose | When to Use |
 |----------|---------|-------------|
-| research | Consolidate source → research.md | ALWAYS before storyline (mandatory) |
+| research | Consolidate source, web search, image search → research.md | ALWAYS before storyline (mandatory); also for adding images |
 | theme | Select/generate theme | If theme not pre-set, or user provides template.pptx |
 | storyline | Plan ALL slides in ONE call | After research creates research.md |
 | layout | Generate visual JSX layouts | After storyline completes, or to update specific slides |
@@ -117,14 +117,27 @@ After create_project, use `write_constitution` to extract and save user requirem
 - **Must include:** required topics from user instruction
 - **Must NOT include:** excluded topics or constraints
 
+**⚠️ IMPORTANT: Do NOT add `[RULE: NO WEB SEARCH]` unless user EXPLICITLY says:**
+- "skip search", "no web search", "don't search the web", "use only the source", etc.
+- By default, web/image search is ENABLED to enrich slides with data and visuals
+
 ## Research Rules (MANDATORY)
 Research is **REQUIRED** before storyline if research.md does not exist.
 Research consolidates source content into research.md, which is the ONLY input for storyline.
 
-**Web Search** is controlled via constitution.md:
-- If constitution contains "[RULE: NO WEB SEARCH]" → research only consolidates (no web search)
-- Otherwise → research also does web search for citations/data
-- User can override via prompt: "skip search", "no external data", etc.
+**Research ALWAYS does by default (unless [RULE: NO WEB SEARCH] in constitution):**
+1. **Web search** - Find up-to-date statistics, citations, industry data
+2. **Image search** - Find visual assets (photos, illustrations) for slides
+
+**When calling research subagent:**
+- Do NOT include "consolidate only" or similar phrasing in instruction
+- DO include focus areas: "Focus on market trends, team collaboration visuals"
+- Research handler decides what to search based on source content
+
+**Search Control:**
+- `skip_search: true` in params → Disable web/image search (consolidation only)
+- `[RULE: NO WEB SEARCH]` in constitution → Same effect
+- Neither present → Search is ENABLED (default)
 
 **Data Flow:**
 - Source files (from files/) → Research → research.md
@@ -181,12 +194,38 @@ When user provides substantial text content (facts, data, background info) in th
 7. Layout (batches in PARALLEL)
 8. Export (MCP: export_mdx)
 
-## Update Flow (Follow-up Messages)
-When user provides follow-up instruction on existing project:
-1. Analyze what needs updating (specific slides? theme? content?)
-2. Copy any new files with appropriate purpose
-3. Run only necessary subagents (e.g., layout for specific slides)
-4. Re-export to refresh preview
+## Update Flow: Layer-Based Task Dependencies
+
+Changes cascade through layers. Always run the FULL chain from the modified layer down:
+
+| User Request | Layer Modified | Task Chain |
+|--------------|----------------|------------|
+| "Add more data", "include X topic", new source file | **Content** | research → storyline → layout → export |
+| "Find an image for slide X", "add a photo of Y" | **Content** | research (image search) → storyline (slide X only) → layout (slide X only) → export |
+| "Restructure slides", "change order", "different narrative" | **Narrative** | storyline → layout → export |
+| "Change colors", "new template", "darker theme" | **Theme/Style** | theme → export (NO layout needed) |
+| "Make slide 3 more visual", "fix layout on X" | **Layout** | layout (specific slides) → export |
+
+**TARGETED UPDATES (Minimize Work):**
+
+When updating specific slides, pass `slide_ids` to storyline and layout:
+```json
+research: {"instruction": "find image for slide 5", "skip_source": true}  // skip_source=true for image/light tasks (no need to reload source files)
+storyline: {"slide_ids": ["slide_05"]}  // Update slide 5 only, preserve others
+layout: {"slide_ids": ["slide_05"]}  // Regenerate layout for slide 5 only
+```
+
+**Research skip_source flag:**
+- `skip_source: true` → Only load research.md and slides context (for image search, small updates)
+- `skip_source: false` (default) → Load all source files (for full research, content changes)
+
+**CRITICAL: Never run a higher layer without its downstream dependencies:**
+- ❌ `storyline` alone → makes no sense (slides have no layout)
+- ✅ `storyline → layout → export` → correct chain
+- ❌ `research` alone → makes no sense (outdated storyline)
+- ✅ `research → storyline → layout → export` → correct chain
+- ✅ `theme → export` → correct (theme is styling, no layout regen needed)
+- ✅ `layout → export` → correct for per-slide visual fixes
 
 ## EFFICIENCY: Batch Multiple Actions
 **CRITICAL: Return multiple actions when they can run sequentially without waiting for results.**
@@ -229,9 +268,14 @@ For copying files to project:
 {"action": "call_mcp", "params": {"tool": "copy_to_project", "file_path": "/path/to/file", "dest_name": "template.pptx", "purpose": "template"}, "reasoning": "..."}
 ```
 
-For storyline (ONE call for all slides):
+For storyline (ALL slides - full generation):
 ```json
 {"action": "call_subagent", "subagent": "storyline", "params": {}, "reasoning": "..."}
+```
+
+For storyline (SPECIFIC slides only - targeted update):
+```json
+{"action": "call_subagent", "subagent": "storyline", "params": {"slide_ids": ["slide_05"], "instruction": "assign new image from research"}, "reasoning": "..."}
 ```
 
 For theme update (with specific instruction):
@@ -671,17 +715,26 @@ Uploaded Files (this session):
         # Create handler - it will load its own context
         handler = self._get_handler_for_skill(subagent_name, params)
         
-        # Convert slide_ids to slide_indices for layout
+        # Convert slide_ids to slide_indices for layout and storyline
         target_indices = []
-        if subagent_name == "layout" and params.get("slide_ids"):
-            # Convert slide_01, slide_02, ... to [1, 2, ...]
+        if params.get("slide_ids"):
+            # Look up actual index by slide ID (slides may be reordered)
+            content_path = Path(self.state.project_dir) / "content.json" if self.state.project_dir else None
+            slide_id_to_index = {}
+            if content_path and content_path.exists():
+                try:
+                    import json
+                    with open(content_path, 'r', encoding='utf-8') as f:
+                        content = json.load(f)
+                    for i, s in enumerate(content.get("slides", [])):
+                        if isinstance(s, dict) and s.get("id"):
+                            slide_id_to_index[s.get("id")] = i + 1  # 1-indexed
+                except Exception:
+                    pass
+            
             for sid in params["slide_ids"]:
-                if sid.startswith("slide_"):
-                    try:
-                        idx = int(sid.replace("slide_", ""))
-                        target_indices.append(idx)
-                    except ValueError:
-                        pass
+                if sid in slide_id_to_index:
+                    target_indices.append(slide_id_to_index[sid])
         else:
             target_indices = params.get("slide_indices", [])
         
@@ -734,9 +787,14 @@ Uploaded Files (this session):
                         logger.warning(f"[layout] Failed to mark {slide_id} as draft: {e}")
             
             def on_slide_complete(slide_id: str, jsx_content: str):
-                """Apply patch for each completed slide."""
+                """Apply patch for each completed slide.
+                
+                JSX validation happens in call_apply_patch -> _parse_mdx_slides.
+                Issues are stored in the slide's 'issues' field automatically.
+                """
                 if self.state.project_dir:
                     from cliv2.tools.mcp_client import call_apply_patch
+                    
                     # Format as MDX for single slide
                     mdx = f"---\nid: {slide_id}\n---\n{jsx_content}"
                     try:

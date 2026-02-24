@@ -3,9 +3,11 @@
 Lightweight wrapper around LiteLLM for Azure OpenAI.
 Supports both API key and Azure AD authentication.
 """
+import logging
 import os
+import threading
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Optional
 
 import litellm
@@ -13,10 +15,16 @@ import litellm
 from cliv2.config.env import load_env, validate_azure_config
 from cliv2.core.errors import ConfigError
 
+logger = logging.getLogger(__name__)
+
 # Cache for Azure credential and token
 _cached_credential = None
 _cached_token = None
 _token_expires_at = 0
+
+# Background refresh thread
+_refresh_thread = None
+_refresh_stop_event = threading.Event()
 
 
 @dataclass
@@ -103,6 +111,8 @@ def create_llm() -> LLM:
     if not api_key:
         # Use Azure AD authentication
         api_key = _get_azure_ad_token()
+        # Start background refresh thread to prevent token expiration during idle
+        start_token_refresh_thread(interval_minutes=30)
     
     # Create LLM config
     llm_config = LLMConfig(
@@ -163,6 +173,47 @@ def _get_azure_ad_token() -> str:
             details=str(e),
             hint="Run 'az login' to authenticate with Azure CLI"
         ) from e
+
+
+def start_token_refresh_thread(interval_minutes: int = 30) -> None:
+    """Start background thread to refresh Azure AD token periodically.
+    
+    This prevents token expiration during idle periods.
+    Token is refreshed every `interval_minutes` (default 30 min).
+    Azure AD tokens typically last 1 hour.
+    
+    Args:
+        interval_minutes: How often to refresh (default 30 min)
+    """
+    global _refresh_thread, _refresh_stop_event
+    
+    if _refresh_thread and _refresh_thread.is_alive():
+        logger.debug("Token refresh thread already running")
+        return
+    
+    _refresh_stop_event.clear()
+    
+    def refresh_loop():
+        while not _refresh_stop_event.wait(timeout=interval_minutes * 60):
+            try:
+                _get_azure_ad_token()
+                logger.debug(f"Background token refresh successful, expires at {_token_expires_at}")
+            except Exception as e:
+                logger.warning(f"Background token refresh failed: {e}")
+    
+    _refresh_thread = threading.Thread(target=refresh_loop, daemon=True, name="azure-token-refresh")
+    _refresh_thread.start()
+    logger.info(f"Started Azure AD token refresh thread (every {interval_minutes} min)")
+
+
+def stop_token_refresh_thread() -> None:
+    """Stop the background token refresh thread."""
+    global _refresh_thread, _refresh_stop_event
+    
+    if _refresh_thread and _refresh_thread.is_alive():
+        _refresh_stop_event.set()
+        _refresh_thread.join(timeout=5)
+        logger.info("Stopped Azure AD token refresh thread")
 
 
 def get_llm_config() -> dict:

@@ -79,13 +79,32 @@ class StorylineHandler(SkillHandler):
             target_indices = context.target_indices
             task_params = context.task_params
         
+        # Also check slide_ids in task_params (alternative way to specify targets)
+        if task_params.get("slide_ids") and not target_indices:
+            slides = context.slides or []
+            # Build slide_id -> index mapping (skip any non-dict slides)
+            slide_id_to_index = {}
+            for i, s in enumerate(slides):
+                if isinstance(s, dict) and s.get("id"):
+                    slide_id_to_index[s.get("id")] = i + 1  # 1-indexed
+            for sid in task_params["slide_ids"]:
+                if sid in slide_id_to_index:
+                    target_indices.append(slide_id_to_index[sid])
+            is_targeted = bool(target_indices)
+        
+        # Get task instruction if present
+        task_instruction = task_params.get("instruction") or task_params.get("instructions")
+        
         if is_targeted:
             parts.append(f"\n=== TARGETED EXECUTION ===")
             parts.append(f"**Generate/update ONLY slides: {target_indices}**")
-            parts.append(f"Action: {task_params.get('action', 'generate')}")
+            if task_instruction:
+                parts.append(f"Instruction: {task_instruction}")
+            parts.append(f"Action: {task_params.get('action', 'update')}")
             if task_params.get('focus'):
                 parts.append(f"Focus: {task_params['focus']}")
             parts.append("Preserve all other slides exactly as they are.")
+            parts.append("Output ONLY the targeted slides, not the entire deck.")
         
         # Research.md is the ONLY source of content - it consolidates:
         # - Original source files
@@ -115,11 +134,15 @@ class StorylineHandler(SkillHandler):
         if is_targeted and context.slides:
             parts.append("\n=== EXISTING SLIDES (for reference) ===")
             for i, slide in enumerate(context.slides):
+                if not isinstance(slide, dict):
+                    continue  # Skip non-dict slides
                 slide_num = i + 1
                 marker = "→ UPDATE THIS" if slide_num in target_indices else ""
-                parts.append(f"Slide {slide_num} {marker}: {slide.get('id', 'unknown')}")
-                if slide.get('content', {}).get('headline'):
-                    parts.append(f"  Headline: {slide['content']['headline'][:50]}")
+                slide_id = slide.get('id', 'unknown')
+                parts.append(f"Slide {slide_num} {marker}: {slide_id}")
+                content = slide.get('content')
+                if isinstance(content, dict) and content.get('headline'):
+                    parts.append(f"  Headline: {content['headline'][:50]}")
         
         parts.append("\n=== OUTPUT ===")
         parts.append("""Return ALL slides in YAML frontmatter + markdown format.

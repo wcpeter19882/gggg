@@ -162,14 +162,17 @@ class LayoutHandler(SkillHandler):
             task_params = context.task_params
         
         # Convert slide_ids from params to target_indices if present
+        # Must look up by ID, not assume numeric suffix is index (slides may be reordered)
         if task_params.get("slide_ids") and not target_indices:
+            slides = context.slides or []
+            # Build slide_id -> index mapping (skip any non-dict slides)
+            slide_id_to_index = {}
+            for i, s in enumerate(slides):
+                if isinstance(s, dict) and s.get("id"):
+                    slide_id_to_index[s.get("id")] = i + 1  # 1-indexed
             for sid in task_params["slide_ids"]:
-                if sid.startswith("slide_"):
-                    try:
-                        idx = int(sid.replace("slide_", ""))
-                        target_indices.append(idx)
-                    except ValueError:
-                        pass
+                if sid in slide_id_to_index:
+                    target_indices.append(slide_id_to_index[sid])
             is_targeted = bool(target_indices)
         
         # Add specific instructions from task_params (e.g., for regeneration with image)
